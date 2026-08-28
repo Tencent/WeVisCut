@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "近五年新能源车渗透率"}, {"id": "series", "type": "string", "label": "数据序列", "default": "[{\"label\": \"2020\", \"value\": 5.4}, {\"label\": \"2021\", \"value\": 13.4}, {\"label\": \"2022\", \"value\": 25.6}, {\"label\": \"2023\", \"value\": 31.6}, {\"label\": \"2024\", \"value\": 40.9}]"}, {"id": "unit", "type": "string", "label": "数值单位", "default": "%"}, {"id": "source_note", "type": "string", "label": "数据来源", "default": "来源：乘联会 2025"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      /* @hf-visual: clean_saas */
+      /* 仅定义 CONTRACT §1 令牌全集 + .stage / .bg-stage / .caption-bar 三个皮肤类。
+         不写内容排版，不写动画，不写 .stage-panel（几何归 assembler）。配色取自 registry/visuals.json clean_saas。 */
+      :root {
+        /* 背景 / 表面 */
+        --bg: #f7f9fc;            --bg-2: #eef2f8;
+        --surface: #ffffff;       --surface-2: #ffffff;
+        /* 文字三级 */
+        --ink-1: #0f172a;         --ink-2: #475569;        --ink-3: #94a3b8;
+        /* 强调色 */
+        --accent: #4f46e5;        --accent-2: #0ea5e9;
+        --danger: #ef4444;        --success: #10b981;
+        /* 线条 */
+        --line: rgba(15,23,42,.08);   --line-strong: rgba(15,23,42,.16);
+        /* 字体 */
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body:    "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;    --weight-body: 500;
+        /* 圆角 / 阴影 / 栅格 */
+        --radius-card: 20px;      --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        /* 居中舞台面板（视觉层只给这三个，几何由 assembler 固定） */
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      /* 基础皮肤：字体 / 文字色 / 全屏底色 */
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      /* 外层全屏氛围底：白→极浅蓝径向渐变 + 靛蓝/天蓝局部柔光斑 + 极淡网格（禁全屏线性渐变防 banding） */
+      .bg-stage {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        background-color: var(--bg);
+        background-image:
+          radial-gradient(58% 52% at 16% 20%, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 60%),
+          radial-gradient(55% 50% at 86% 82%, color-mix(in srgb, var(--accent-2) 13%, transparent) 0%, transparent 58%),
+          linear-gradient(var(--grid-color) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+          radial-gradient(130% 120% at 50% 0%, var(--bg) 0%, var(--bg-2) 100%);
+        background-size:
+          100% 100%, 100% 100%,
+          80px 80px, 80px 80px,
+          100% 100%;
+      }
+
+      /* 字幕条皮肤（本镜头未用，留作跨层重组时的统一皮肤） */
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        color: var(--ink-1);
+        text-shadow: 0 1px 8px rgba(15,23,42,.18);
+      }
+      /* ===== Layer 1: structure css (bar_chart) ===== */
+      /* dataviz 内容型结构：占满面板。颜色/字体/圆角/阴影一律 var(--token)；零硬编码数据。
+           占位骨架 = 标题 + 图表区(chart-axis 作基线/网格 + 柱容器，柱由运动层读 series 注入) + 脚注。
+           .bar-col / .bar / .bar-value / .bar-label 是给「运动层动态注入的柱」预设的皮肤（仅排版+令牌取色）。 */
+        .barchart {
+          width: 100%; height: 100%;
+          display: flex; flex-direction: column;
+          padding: 56px 72px 44px; gap: 22px;
+          box-sizing: border-box;
+        }
+        .barchart .title {
+          font-family: var(--font-display); font-weight: var(--weight-display);
+          font-size: 56px; line-height: 1.15; letter-spacing: -.01em;
+          color: var(--ink-1); max-width: 100%;
+        }
+        .barchart .plot { position: relative; flex: 1 1 auto; min-height: 0; }
+        /* chart-axis = 柱容器 + 基线 + 横向网格（运动层把每根 chart-bar 注入这里）。
+           底部用 padding 预留类目标签带(在盒内)，基线用 ::after 画在标签带之上。 */
+        .barchart .chart-axis {
+          position: absolute; left: 0; right: 0; top: 4px; bottom: 0;
+          display: flex; align-items: flex-end; justify-content: space-around;
+          gap: 28px; padding: 0 14px 54px; box-sizing: border-box;
+          background-image: repeating-linear-gradient(to top,
+            transparent 0, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px);
+        }
+        .barchart .chart-axis::after {
+          content: ""; position: absolute; left: 0; right: 0; bottom: 54px; height: 2px;
+          background: var(--line-strong);
+        }
+        .barchart .bar-col {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+          height: 100%; gap: 10px; flex: 1 1 0; max-width: 150px;
+        }
+        .barchart .bar-value {
+          font-family: var(--font-body); font-weight: 700; font-size: 28px;
+          color: var(--ink-1); font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        .barchart .bar {
+          width: 100%; max-width: 92px;
+          border-radius: var(--radius-card) var(--radius-card) 0 0;
+          background: var(--accent); box-shadow: var(--shadow-glow);
+          transform-origin: bottom center;
+        }
+        .barchart .bar.alt { background: var(--accent-2); }
+        .barchart .bar-label {
+          position: absolute; left: 0; right: 0; bottom: -40px; text-align: center;
+          font-family: var(--font-body); font-weight: var(--weight-body); font-size: 24px;
+          color: var(--ink-2); white-space: nowrap;
+        }
+        .barchart .foot { display: flex; align-items: center; gap: 18px; }
+        .barchart .accent-line {
+          width: 120px; height: 3px; border-radius: var(--radius-pill); flex: 0 0 auto;
+          transform-origin: left center;
+          background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        }
+        .barchart .source {
+          font-family: var(--font-body); font-weight: var(--weight-body); font-size: 18px;
+          color: var(--ink-2); letter-spacing: .02em;
+        }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="13.0" data-width="1920" data-height="1080">
+      <div class="bg-footage" style="position:absolute;inset:0;z-index:0;overflow:hidden;background:#000;">
+        <video id="footage-0" data-start="0.0" data-duration="6.533" data-track-index="0" src="footage/scene_demo.mp4" muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+        <video id="footage-1" data-start="6.533" data-duration="6.467" data-track-index="0" src="footage/scene_demo.mp4" muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+        <div class="footage-scrim" style="position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.10) 0%,rgba(0,0,0,.28) 100%);"></div>
+      </div>
+      <div id="scene" class="clip" data-start="2.0" data-duration="8.0" data-track-index="2" style="position:relative;z-index:2;">
+        <div class="stage-panel">
+          <div data-hf="structure-dom" class="barchart">
+            <h2 class="title" data-anim-role="title" data-slot="headline"></h2>
+            <div class="plot">
+              <!-- 柱容器 + 基线 + 网格；每根 chart-bar / chart-value / chart-label 由运动层读 series 注入 -->
+              <div class="chart-axis" data-anim-role="chart-axis"></div>
+            </div>
+            <div class="foot">
+              <span class="accent-line" data-anim-role="accent-line"></span>
+              <span class="source" data-slot="source_note"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="2.35" data-duration="1.0" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.32"></audio>
+      <audio id="sfx-1" data-start="3.1" data-duration="0.6" data-track-index="103" src="sfx/pop.mp3" data-volume="0.28"></audio>
+    </div>
+    <!-- ===== Layer 2: motion (bar_grow) ===== -->
+    <script>
+      /* @hf-motion: bar_grow */
+      /* dataviz 运动：读 series 数据 → 动态生成每根柱(打 chart-bar/chart-value/chart-label 角色) →
+         基线渐现、逐根 scaleY 升起、数值 0→末值 countup、类目随后渐显。
+         只用 [data-anim-role] 选择器；对空集合安全跳过；只入场+保持；确定性(无 random/Date.now/repeat:-1)。
+         「运动读数据」范式：结构零硬编码数据，数据全部来自 window.__hyperframes.getVariables()。 */
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["bar_grow"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var all = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+        var one = function (role) { return root.querySelector('[data-anim-role="' + role + '"]'); };
+
+        function fmt(n) {
+          var r = Math.round(n * 100) / 100;
+          return (Math.abs(r - Math.round(r)) < 1e-9) ? String(Math.round(r)) : String(r);
+        }
+
+        /* ---- 读数据（字符串需 JSON.parse；非法/缺失安全降级为空） ---- */
+        var V = {};
+        try { V = (window.__hyperframes && window.__hyperframes.getVariables()) || {}; } catch (e) { V = {}; }
+        var series = V.series;
+        if (typeof series === "string") { try { series = JSON.parse(series); } catch (e) { series = []; } }
+        if (!Array.isArray(series)) series = [];
+        var unit = (V.unit !== undefined && V.unit !== null) ? String(V.unit) : "";
+
+        /* ---- 据数据生成柱（确定性：同 series 同 DOM；幂等清空旧子节点） ---- */
+        var host = one("chart-axis");
+        if (host && series.length) {
+          while (host.firstChild) host.removeChild(host.firstChild);
+          var values = series.map(function (d) { return Number(d && d.value) || 0; });
+          var max = Math.max.apply(null, values.concat([1]));
+          for (var i = 0; i < series.length; i++) {
+            var d = series[i] || {};
+            var v = Number(d.value) || 0;
+            var col = document.createElement("div"); col.className = "bar-col";
+
+            var val = document.createElement("div");
+            val.className = "bar-value";
+            val.setAttribute("data-anim-role", "chart-value");
+            val.setAttribute("data-target", String(v));
+            val.textContent = fmt(v) + unit;
+
+            var bar = document.createElement("div");
+            bar.className = "bar" + (i % 2 ? " alt" : "");
+            bar.setAttribute("data-anim-role", "chart-bar");
+            bar.style.height = (12 + (v / max) * 72).toFixed(2) + "%";
+
+            var lab = document.createElement("div");
+            lab.className = "bar-label";
+            lab.setAttribute("data-anim-role", "chart-label");
+            lab.textContent = (d.label !== undefined && d.label !== null) ? String(d.label) : "";
+
+            col.appendChild(val); col.appendChild(bar); col.appendChild(lab);
+            host.appendChild(col);
+          }
+        }
+
+        /* ---- 时间线：≥3 种 ease，首动画 0.1s 起，入场+保持不退场 ---- */
+        // 1) 标题
+        if (all("title").length) {
+          tl.from(all("title"), { y: 26, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.1);
+        }
+        // 2) 基线/网格画出（opacity，避免 scaleX 连带缩放注入的柱）
+        if (host) {
+          tl.from(host, { opacity: 0, duration: 0.4, ease: "power2.out" }, 0.2);
+        }
+        // 3) accent-line 横向擦出
+        if (all("accent-line").length) {
+          tl.from(all("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.3);
+        }
+        // 4) 逐根升起
+        var bars = all("chart-bar");
+        var growStart = 0.35, growStagger = 0.08, growDur = 0.5;
+        if (bars.length) {
+          tl.from(bars, { scaleY: 0, opacity: 0, duration: growDur, ease: "back.out(1.2)", stagger: growStagger }, growStart);
+        }
+        // 5) 数值：与对应柱收尾对齐做 0→末值 countup
+        all("chart-value").forEach(function (el, i) {
+          var target = Number(el.getAttribute("data-target")) || 0;
+          var at = growStart + i * growStagger + 0.18;
+          var proxy = { n: 0 };
+          el.style.opacity = 0;
+          tl.set(el, { opacity: 1 }, at);
+          tl.to(proxy, {
+            n: target, duration: 0.5, ease: "power1.out",
+            onUpdate: function () { el.textContent = fmt(proxy.n) + unit; }
+          }, at);
+        });
+        // 6) 类目标签随后渐显
+        if (all("chart-label").length) {
+          tl.from(all("chart-label"), { y: 12, opacity: 0, duration: 0.4, ease: "power2.out", stagger: growStagger }, 0.5);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_motions && window.__hf_motions["bar_grow"]) {
+              const decor = gsap.timeline();
+              window.__hf_motions["bar_grow"](decor, { gsap: gsap, root: root, duration: 8.0, isFinal: false });
+              tl.add(decor, 2.0);
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

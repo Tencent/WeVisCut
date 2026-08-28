@@ -1,0 +1,55 @@
+{
+  "structure_id": "pros_cons_stack",
+  "family": "narrative",
+  "duration_default": 6.0,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "顶部标签",
+      "default": "利弊分析",
+      "max_chars": 10
+    },
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "核能发电",
+      "max_chars": 16
+    },
+    "pro1": {
+      "type": "string",
+      "label": "优势1",
+      "default": "零碳排放运行",
+      "max_chars": 16
+    },
+    "pro2": {
+      "type": "string",
+      "label": "优势2",
+      "default": "能量密度极高",
+      "max_chars": 16
+    },
+    "pro3": {
+      "type": "string",
+      "label": "优势3",
+      "default": "不受天气影响",
+      "max_chars": 16
+    },
+    "con1": {
+      "type": "string",
+      "label": "劣势1",
+      "default": "核废料处理难",
+      "max_chars": 16
+    },
+    "con2": {
+      "type": "string",
+      "label": "劣势2",
+      "default": "建设成本极高",
+      "max_chars": 16
+    },
+    "con3": {
+      "type": "string",
+      "label": "劣势3",
+      "default": "事故风险虽小但后果严重",
+      "max_chars": 16
+    }
+  }
+}

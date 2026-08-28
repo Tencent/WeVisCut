@@ -1,0 +1,49 @@
+# AICut content SFT v2
+#
+# v1 数据训练的是 state -> tool_call 调度能力。
+# v2 数据训练的是 stage-conditioned content generation：
+#   口播稿/状态/记忆 -> 当前阶段的真实内容 JSON
+
+input:
+  # 复用 v1 构建好的 transitions_valid.jsonl 来取得 split/source_file；
+  # 再回读原始 trajectory 和 artifact_path 抽取完整 segments/shots。
+  processed_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed
+  transitions_file: transitions_valid.jsonl
+  include_source_kinds: [base, augmented]
+
+output:
+  output_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed_content_v2
+
+limits:
+  # 单条样本过长时丢弃，避免 16k/32k 训练时被硬截断成坏监督。
+  max_user_chars: 18000
+  max_assistant_chars: 22000
+  max_total_chars: 36000
+  max_shots_per_plan_chunk: 18
+  max_compact_shots_in_memory: 30
+  max_compact_segments_in_memory: 12
+  max_decorate_samples_per_project: 12
+  max_judge_samples_per_project: 12
+  max_repair_samples_per_project: 12
+  input_script_chars: 100000
+  segment_raw_span_chars: 900
+  shot_vocal_chars: 420
+  shot_visual_chars: 220
+  issue_chars: 420
+
+weights:
+  source_kind:
+    base: 1.0
+    augmented: 0.45
+  stage_task:
+    segment_article: 1.3
+    plan_shots: 1.6
+    music_style: 0.7
+    self_reflect_plan: 1.0
+    repair_plan: 1.1
+    decorate_spotlight: 0.8
+    quality_judge: 0.9
+    quality_repair: 0.8
+
+sharegpt:
+  export_train: true

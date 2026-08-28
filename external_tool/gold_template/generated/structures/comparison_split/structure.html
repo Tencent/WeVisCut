@@ -1,0 +1,117 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 72px 100px;
+  gap: 36px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .section-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 72px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .compare-area {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  width: 85%;
+  flex: 1;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .compare-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 36px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .compare-card.left .card-label {
+  color: var(--danger);
+}
+
+[data-hf="structure-dom"] .compare-card.right .card-label {
+  color: var(--success);
+}
+
+[data-hf="structure-dom"] .card-label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 28px;
+  letter-spacing: 0.04em;
+}
+
+[data-hf="structure-dom"] .card-body {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 400px;
+}
+
+[data-hf="structure-dom"] .divider-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  position: relative;
+}
+
+[data-hf="structure-dom"] .divider-line {
+  width: 3px;
+  height: 70%;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+}
+
+[data-hf="structure-dom"] .vs-badge {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 20px;
+  color: var(--ink-3);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  position: absolute;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h1 class="section-title" data-anim-role="title" data-slot="headline">关于胆固醇，90%的人都理解错了</h1>
+  <div class="compare-area">
+    <div class="compare-card left" data-anim-role="card">
+      <span class="card-label" data-slot="left_label">常见误区</span>
+      <p class="card-body" data-slot="left_text">胆固醇越低越好，高胆固醇食物应完全避免摄入</p>
+    </div>
+    <div class="divider-col">
+      <div class="divider-line" data-anim-role="accent-line"></div>
+      <span class="vs-badge" data-layout-ignore>VS</span>
+    </div>
+    <div class="compare-card right" data-anim-role="card">
+      <span class="card-label" data-slot="right_label">科学事实</span>
+      <p class="card-body" data-slot="right_text">人体需要适量胆固醇来维持细胞膜完整性与激素合成</p>
+    </div>
+  </div>
+</div>

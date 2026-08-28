@@ -1,0 +1,13 @@
+{
+  "structure_id": "chapter_transition_center",
+  "family": "narrative",
+  "use_for": ["章节过渡", "段落切换", "内容分段"],
+  "spotlight_level": "mid",
+  "duration_range": [3.5, 6.0],
+  "anim_roles": ["badge", "title", "subtitle", "accent-line"],
+  "slots": ["chapter_no", "chapter_title", "chapter_sub"],
+  "sfx_cues": [
+    {"at": 0.2, "sfx": "whoosh", "comment": "巨号擦入"},
+    {"at": 0.8, "sfx": "chime", "comment": "标题落定"}
+  ]
+}

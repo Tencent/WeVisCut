@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "eyebrow", "type": "string", "label": "眉标", "default": "本期回顾"}, {"id": "headline", "type": "string", "label": "标题", "default": "记住这三点"}, {"id": "items", "type": "string", "label": "清单条目", "default": "[\"熵是混乱度的度量\", \"熵只增不减（热力学第二定律）\", \"这就是时间箭头的方向\"]"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      :root {
+        --bg: #f7f9fc;
+        --bg-2: #eef2f8;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --accent: #4f46e5;
+        --accent-2: #0ea5e9;
+        --danger: #ef4444;
+        --success: #10b981;
+        --line: rgba(15,23,42,.08);
+        --line-strong: rgba(15,23,42,.16);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 50% at 50% 45%, rgba(79,70,229,.06) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 40% at 80% 70%, rgba(14,165,233,.04) 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (recap_checklist_grid) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 64px 80px;
+        gap: 24px;
+        box-sizing: border-box;
+        position: relative;
+      }
+
+      [data-hf="structure-dom"] .rcg-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        align-self: flex-start;
+        padding: 8px 28px;
+        border-radius: var(--radius-pill);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-2);
+        letter-spacing: 0.08em;
+      }
+
+      [data-hf="structure-dom"] .rcg-headline {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 56px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1000px;
+      }
+
+      [data-hf="structure-dom"] .rcg-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+        margin-top: 8px;
+      }
+
+      [data-hf="structure-dom"] .rcg-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 28px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-soft);
+      }
+
+      [data-hf="structure-dom"] .rcg-check {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-pill);
+        border: 2px solid var(--line);
+        background: var(--surface-2);
+        transition: background 0.3s, border-color 0.3s;
+      }
+
+      [data-hf="structure-dom"] .rcg-check.lit {
+        background: var(--success);
+        border-color: var(--success);
+      }
+
+      [data-hf="structure-dom"] .rcg-check svg {
+        width: 20px;
+        height: 20px;
+        opacity: 0;
+      }
+
+      [data-hf="structure-dom"] .rcg-check.lit svg {
+        opacity: 1;
+      }
+
+      [data-hf="structure-dom"] .rcg-text {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 28px;
+        line-height: 1.35;
+        color: var(--ink-1);
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <span class="rcg-eyebrow" data-anim-role="eyebrow" data-slot="eyebrow">本期回顾</span>
+            <h2 class="rcg-headline" data-anim-role="title" data-slot="headline">记住这三点</h2>
+            <div class="rcg-grid">
+              <div class="rcg-item" data-anim-role="list-item">
+                <div class="rcg-check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg></div>
+                <span class="rcg-text">熵是混乱度的度量</span>
+              </div>
+              <div class="rcg-item" data-anim-role="list-item">
+                <div class="rcg-check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg></div>
+                <span class="rcg-text">熵只增不减（热力学第二定律）</span>
+              </div>
+              <div class="rcg-item" data-anim-role="list-item">
+                <div class="rcg-check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg></div>
+                <span class="rcg-text">这就是时间箭头的方向</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+    </div>
+    <!-- ===== Structure self-animation (recap_checklist_grid) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var itemsRaw = V.items || null;
+        var itemsData = null;
+        try { itemsData = typeof itemsRaw === "string" ? JSON.parse(itemsRaw) : itemsRaw; } catch (e) { itemsData = null; }
+
+        if (itemsData && Array.isArray(itemsData) && itemsData.length > 0) {
+          var gridEl = root.querySelector(".rcg-grid");
+          if (gridEl) {
+            gridEl.innerHTML = "";
+            for (var i = 0; i < itemsData.length; i++) {
+              var item = document.createElement("div");
+              item.className = "rcg-item";
+              item.setAttribute("data-anim-role", "list-item");
+
+              var check = document.createElement("div");
+              check.className = "rcg-check";
+              check.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg>';
+              item.appendChild(check);
+
+              var text = document.createElement("span");
+              text.className = "rcg-text";
+              text.textContent = itemsData[i];
+              item.appendChild(text);
+
+              gridEl.appendChild(item);
+            }
+          }
+        }
+
+        var eyebrow = root.querySelector('[data-anim-role="eyebrow"]');
+        var title = root.querySelector('[data-anim-role="title"]');
+
+        if (eyebrow) {
+          tl.from(eyebrow, { opacity: 0, y: -16, duration: 0.4, ease: "power2.out" }, 0.1);
+        }
+        if (title) {
+          tl.from(title, { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, 0.3);
+        }
+
+        var items = root.querySelectorAll(".rcg-item");
+        var checks = root.querySelectorAll(".rcg-check");
+        var interval = 1.2;
+        var baseTime = 1.0;
+
+        for (var n = 0; n < items.length; n++) {
+          var t = baseTime + n * interval;
+
+          tl.from(items[n], { scale: 0.85, opacity: 0, duration: 0.5, ease: "back.out(1.4)" }, t);
+
+          var checkEl = checks[n];
+          if (checkEl) {
+            tl.to(checkEl, {
+              onStart: function () { this.targets()[0].classList.add("lit"); },
+              duration: 0.01
+            }, t + 0.4);
+            tl.from(checkEl, { scale: 0, duration: 0.4, ease: "back.out(2.5)" }, t + 0.4);
+          }
+        }
+
+        if (checks.length > 1) {
+          var pulseTime = baseTime + items.length * interval + 0.2;
+          for (var p = 0; p < checks.length; p++) {
+            tl.to(checks[p], { scale: 1.15, duration: 0.2, ease: "power2.inOut" }, pulseTime);
+            tl.to(checks[p], { scale: 1.0, duration: 0.2, ease: "power2.out" }, pulseTime + 0.2);
+          }
+        }
+
+        root.querySelectorAll("[data-anim-role]").forEach(function (el) {
+          el.removeAttribute("data-anim-role");
+        });
+      };
+    </script>
+    <!-- ===== Layer 2: motion (card_stack_sequence) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["card_stack_sequence"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 18, opacity: 0, duration: 0.45, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)" }, 0.50);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, duration: 0.35, ease: "power2.out" }, 0.75);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.7, ease: "expo.out", transformOrigin: "left center" }, 0.30);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)", stagger: 0.22 }, 0.70);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 1.10);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { y: 30, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.2)" }, 0.55);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 1.20);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -12, opacity: 0, duration: 0.35, ease: "power2.out" }, 1.30);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, scale: 0.96, duration: 0.45, ease: "back.out(1.2)" }, 1.40);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["card_stack_sequence"]) {
+              window.__hf_motions["card_stack_sequence"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

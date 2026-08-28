@@ -1,0 +1,89 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 60px 100px;
+  gap: 0;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .stage-panel {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-hf="structure-dom"] .top-half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+[data-hf="structure-dom"] .bottom-half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  gap: 20px;
+  padding-top: 24px;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 30px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.1em;
+}
+
+[data-hf="structure-dom"] .emoji-hero {
+  font-size: 180px;
+  line-height: 1;
+}
+
+[data-hf="structure-dom"] .fact-text {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 88px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  max-width: 1200px;
+}
+
+[data-hf="structure-dom"] .explain-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 34px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 1000px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="top-half">
+    <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">冷知识</div>
+    <div class="emoji-hero" data-anim-role="decoration" data-slot="emoji_icon">🐙</div>
+  </div>
+  <div class="bottom-half">
+    <h1 class="fact-text" data-anim-role="title" data-slot="fact_text">章鱼有三颗心脏</h1>
+    <p class="explain-text" data-anim-role="subtitle" data-slot="explain_text">两颗负责鳃部供血，一颗负责全身循环</p>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+{
+  "structure_id": "thesis_statement_split",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {"type": "string", "label": "顶部标签", "default": "核心观点", "max_chars": 14},
+    "thesis_text": {"type": "string", "label": "核心观点句", "default": "真正的效率来自减少决策，而非增加工具", "max_chars": 26},
+    "explain_text": {"type": "string", "label": "解释行", "default": "我们用三个月验证了这个反直觉的结论", "max_chars": 30}
+  }
+}

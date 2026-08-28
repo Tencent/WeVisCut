@@ -1,0 +1,38 @@
+# 数据输入 / 输出路径配置
+#
+# 数据源自动发现优先级：
+#   1) input.extra_files 中显式列出的文件
+#   2) input.extra_dirs 中每个目录下的主轨迹 *.jsonl
+#   3) input.batch_output_root 下最新 run 的 trajectory_results/all（聚合完成后）
+#      若聚合未完成，回退扫描 workers/*/{base,augmented}/trajectories/*.jsonl
+#
+# 主轨迹 = *.jsonl 且文件名不以 exclude_suffixes 结尾。
+
+input:
+  # batch_anno_script 的 cluster output_root（与 batch_cluster_config.yaml 对齐）
+  batch_output_root: ${WEDIRECTOR_RESULT_ROOT}/AICutPipeline260630_Final377videos
+  # 额外直接扫描的目录（可选）
+  extra_dirs: []
+  # 额外直接指定的文件（可选）
+  extra_files: []
+  # 主轨迹过滤：排除这些后缀（侧车文件）
+  exclude_suffixes: ["_compact", "_rewards", "_dashboard"]
+  # 单次最多读取的文件数（0 表示不限制，便于 smoke check 时临时限流）
+  max_files: 0
+
+output:
+  processed_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed
+
+split:
+  train: 0.8
+  val: 0.1
+  test: 0.1
+  seed: 42
+
+# current_state_summary 压缩参数
+state_summary:
+  script_chars: 600        # input_script 摘要最大字符
+  vocal_chars: 100         # 每个 shot 的 vocal_script 摘要最大字符
+  visual_query_chars: 100  # 每个 shot 的 visual_query 摘要最大字符
+  max_shots: 40            # state 中保留的 shot 数上限
+  keep_path_basename: true # 路径只保留 basename

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "选对向量数据库的三个关键"}, {"id": "point1_title", "type": "string", "label": "要点1标题", "default": "看召回"}, {"id": "point1_desc", "type": "string", "label": "要点1说明", "default": "高维下能否稳定找回真正相近的结果"}, {"id": "point2_title", "type": "string", "label": "要点2标题", "default": "看延迟"}, {"id": "point2_desc", "type": "string", "label": "要点2说明", "default": "百万级数据仍要毫秒级响应"}, {"id": "point3_title", "type": "string", "label": "要点3标题", "default": "看扩展"}, {"id": "point3_desc", "type": "string", "label": "要点3说明", "default": "数据翻倍时能否平滑横向扩容"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      :root {
+        --bg: #f7f9fc;
+        --bg-2: #eef2f8;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --accent: #4f46e5;
+        --accent-2: #0ea5e9;
+        --danger: #ef4444;
+        --success: #10b981;
+        --line: rgba(15,23,42,.08);
+        --line-strong: rgba(15,23,42,.16);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 50% at 50% 45%, rgba(79,70,229,.06) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 40% at 80% 70%, rgba(14,165,233,.04) 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (three_points_diagonal) ===== */
+      [data-hf="structure-dom"] {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+        padding: 56px 80px;
+      }
+
+      [data-hf="structure-dom"] .tp-head {
+        position: absolute;
+        top: 56px;
+        left: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      [data-hf="structure-dom"] .tp-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 60px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 760px;
+      }
+
+      [data-hf="structure-dom"] .tp-line {
+        width: 96px;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      [data-hf="structure-dom"] .tp-card {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        width: 440px;
+        padding: 30px 32px;
+        border-radius: var(--radius-card);
+        background: var(--stage-bg);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-soft);
+      }
+
+      [data-hf="structure-dom"] .tp-card.c1 { top: 30%; left: 8%; }
+      [data-hf="structure-dom"] .tp-card.c2 { top: 46%; left: 50%; transform: translateX(-50%); }
+      [data-hf="structure-dom"] .tp-card.c3 { bottom: 9%; right: 8%; }
+
+      [data-hf="structure-dom"] .tp-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-pill);
+        background: var(--surface-2);
+        border: 2px solid var(--accent);
+        color: var(--ink-1);
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 28px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      [data-hf="structure-dom"] .tp-card.c2 .tp-badge { border-color: var(--accent-2); }
+      [data-hf="structure-dom"] .tp-card.c3 .tp-badge { border-color: var(--success); }
+
+      [data-hf="structure-dom"] .tp-card-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 32px;
+        line-height: 1.3;
+        color: var(--ink-1);
+      }
+
+      [data-hf="structure-dom"] .tp-card-desc {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 23px;
+        line-height: 1.55;
+        color: var(--ink-2);
+        max-width: 380px;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="6.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="6.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <div class="tp-head">
+              <h2 class="tp-title" data-anim-role="title" data-slot="headline">做对这件事的三个关键</h2>
+              <div class="tp-line" data-anim-role="accent-line"></div>
+            </div>
+            <div class="tp-card c1" data-anim-role="card">
+              <span class="tp-badge">01</span>
+              <div class="tp-card-title" data-slot="point1_title">先定边界</div>
+              <div class="tp-card-desc" data-slot="point1_desc">明确不做什么比做什么更重要</div>
+            </div>
+            <div class="tp-card c2" data-anim-role="card">
+              <span class="tp-badge">02</span>
+              <div class="tp-card-title" data-slot="point2_title">快速验证</div>
+              <div class="tp-card-desc" data-slot="point2_desc">用最小成本拿到真实反馈</div>
+            </div>
+            <div class="tp-card c3" data-anim-role="card">
+              <span class="tp-badge">03</span>
+              <div class="tp-card-title" data-slot="point3_title">持续迭代</div>
+              <div class="tp-card-desc" data-slot="point3_desc">让每一轮都比上一轮更准</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-1" data-start="0.4" data-duration="0.3" data-track-index="103" src="sfx/tick.mp3" data-volume="0.25"></audio>
+      <audio id="sfx-2" data-start="1.0" data-duration="0.6" data-track-index="104" src="sfx/pop.mp3" data-volume="0.3"></audio>
+    </div>
+    <!-- ===== Layer 2: motion (card_stack_sequence) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["card_stack_sequence"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 18, opacity: 0, duration: 0.45, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)" }, 0.50);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, duration: 0.35, ease: "power2.out" }, 0.75);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.7, ease: "expo.out", transformOrigin: "left center" }, 0.30);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)", stagger: 0.22 }, 0.70);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 1.10);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { y: 30, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.2)" }, 0.55);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 1.20);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -12, opacity: 0, duration: 0.35, ease: "power2.out" }, 1.30);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, scale: 0.96, duration: 0.45, ease: "back.out(1.2)" }, 1.40);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 6.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["card_stack_sequence"]) {
+              window.__hf_motions["card_stack_sequence"](tl, { gsap: gsap, root: root, duration: 6.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

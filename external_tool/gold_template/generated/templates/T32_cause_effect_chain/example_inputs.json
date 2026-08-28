@@ -1,0 +1,10 @@
+{
+  "eyebrow": "因果链",
+  "headline": "全球变暖的多米诺效应",
+  "nodes": [
+    { "emoji": "🏭", "label": "温室气体增加" },
+    { "emoji": "🌡️", "label": "全球变暖" },
+    { "emoji": "🧊", "label": "冰川融化" },
+    { "emoji": "🌊", "label": "海平面上升" }
+  ]
+}

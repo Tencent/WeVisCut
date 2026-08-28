@@ -1,0 +1,38 @@
+# ==========================================================================
+#  WeDirector — core Python dependencies
+#
+#      pip install -r requirements.txt
+#
+#  Generation additionally needs a GPU stack; see requirements-gpu.txt.
+#  Serving the UI and APIs without weights (`run_studio.sh --no-model`)
+#  needs nothing beyond this file.
+# ==========================================================================
+
+# ── Agent harness ──
+deepagents==0.7.7
+langchain>=1.3.14,<2.0.0
+langchain-core>=1.5.0,<2.0.0
+langgraph>=1.2.0
+
+# ── Web service ──
+fastapi>=0.115.0
+uvicorn>=0.34.0
+websockets>=14.0
+pydantic>=2.10.0
+
+# ── Pipeline ──
+pyyaml>=6.0
+httpx>=0.28.0
+requests>=2.31.0
+openai>=1.0.0          # OpenAI-compatible calls to the in-process /v1 endpoint
+soundfile>=0.12.1      # audio inspection
+fonttools>=4.59.2      # subtitle metrics
+tqdm>=4.66.0
+
+# ── Optional but recommended ──
+qwen-tts>=0.1.1        # client for the reference TTS service
+edge-tts>=6.1.0        # free TTS fallback, no API key
+yt-dlp>=2024.1.1       # required to download open-web footage
+
+# ── Tests ──
+pytest>=7.0

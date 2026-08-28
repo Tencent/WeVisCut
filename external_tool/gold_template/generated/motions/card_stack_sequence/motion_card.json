@@ -1,0 +1,9 @@
+{
+  "motion_id": "card_stack_sequence",
+  "energy": "mid",
+  "desc": "标题渐显后轴线从左展开，三张步骤卡依次弹入，卡内标题轻微上滑，适合流程/时间轴镜头",
+  "targets": ["card", "list-item", "title", "accent-line"],
+  "sfx_cues": [
+    { "at": 0.30, "sfx": "whoosh", "comment": "轴线展开" }
+  ]
+}

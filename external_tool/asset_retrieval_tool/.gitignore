@@ -1,0 +1,6 @@
+
+# 含 B站 Cookie 等账号凭证，禁止提交
+config.json
+
+# 测试下载的媒体文件
+test_results/downloaded/

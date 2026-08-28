@@ -1,0 +1,23 @@
+{
+  "structure_id": "metric_cards",
+  "family": "dataviz",
+  "duration_default": 6.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "上线后的三个关键变化",
+      "max_chars": 16
+    },
+    "metrics": {
+      "type": "json",
+      "label": "指标组",
+      "default": [
+        { "value": 94, "unit": "%", "label": "准确率" },
+        { "value": 2.3, "unit": "x", "label": "速度提升" },
+        { "value": 60, "unit": "%", "label": "成本下降" }
+      ]
+    }
+  },
+  "data_slots": ["metrics"]
+}

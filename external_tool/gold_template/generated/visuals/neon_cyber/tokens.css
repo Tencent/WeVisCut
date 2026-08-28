@@ -1,0 +1,76 @@
+:root {
+  --bg: #070612;
+  --bg-2: #0d0a20;
+  --surface: rgba(30, 20, 60, 0.55);
+  --surface-2: rgba(30, 20, 60, 0.8);
+  --ink-1: #f5f0ff;
+  --ink-2: #c9bdf0;
+  --ink-3: #8a7fb5;
+  --accent: #ff3df0;
+  --accent-2: #27e1ff;
+  --danger: #ff5470;
+  --success: #5cffb0;
+  --line: rgba(255, 61, 240, 0.18);
+  --line-strong: rgba(39, 225, 255, 0.5);
+  --font-display: "Noto Sans SC", system-ui, sans-serif;
+  --font-body: "Noto Sans SC", system-ui, sans-serif;
+  --font-caption: "Noto Sans SC", system-ui, sans-serif;
+  --weight-display: 800;
+  --weight-body: 500;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 48px rgba(255, 61, 240, 0.45);
+  --grid-color: rgba(39, 225, 255, 0.06);
+  --stage-bg: rgba(13, 10, 32, 0.5);
+  --radius-stage: 36px;
+  --stage-blur: 12px;
+}
+
+.stage {
+  font-family: var(--font-body);
+  color: var(--ink-1);
+  background: var(--bg);
+}
+
+.bg-stage {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(255, 61, 240, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 20%, rgba(39, 225, 255, 0.14) 0%, transparent 70%),
+    repeating-linear-gradient(
+      0deg,
+      var(--grid-color) 0px,
+      var(--grid-color) 1px,
+      transparent 1px,
+      transparent 60px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      var(--grid-color) 0px,
+      var(--grid-color) 1px,
+      transparent 1px,
+      transparent 60px
+    ),
+    var(--bg);
+  box-shadow: inset 0 0 120px rgba(255, 61, 240, 0.08), inset 0 0 80px rgba(39, 225, 255, 0.06);
+  border-radius: var(--radius-stage);
+  backdrop-filter: blur(var(--stage-blur));
+}
+
+.caption-bar {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 12px 20px;
+  box-shadow: var(--shadow-glow);
+}
+
+.caption-bar .caption-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 24px;
+  color: var(--ink-1);
+  text-shadow: 0 0 12px var(--accent), 0 0 4px var(--accent-2);
+}

@@ -1,0 +1,210 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 70px 80px 56px;
+  gap: 40px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .met-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1200px;
+}
+
+[data-hf="structure-dom"] .met-row {
+  flex: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: stretch;
+  gap: 32px;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .met-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 32px 24px;
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .met-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+}
+
+[data-hf="structure-dom"] .met-stat {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 88px;
+  line-height: 1.0;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .met-unit {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 44px;
+  line-height: 1.0;
+  color: var(--accent-2);
+}
+
+[data-hf="structure-dom"] .met-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  color: var(--ink-2);
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+[data-hf="structure-dom"] .met-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .met-divider {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="met-title" data-anim-role="title" data-slot="headline">上线后的三个关键变化</h2>
+
+  <div class="met-row">
+    <div class="met-card" data-anim-role="card">
+      <div class="met-stat-row">
+        <span class="met-stat" data-anim-role="stat">94</span>
+        <span class="met-unit" data-anim-role="unit">%</span>
+      </div>
+      <div class="met-label" data-anim-role="card-label">准确率</div>
+    </div>
+    <div class="met-card" data-anim-role="card">
+      <div class="met-stat-row">
+        <span class="met-stat" data-anim-role="stat">2.3</span>
+        <span class="met-unit" data-anim-role="unit">x</span>
+      </div>
+      <div class="met-label" data-anim-role="card-label">速度提升</div>
+    </div>
+    <div class="met-card" data-anim-role="card">
+      <div class="met-stat-row">
+        <span class="met-stat" data-anim-role="stat">60</span>
+        <span class="met-unit" data-anim-role="unit">%</span>
+      </div>
+      <div class="met-label" data-anim-role="card-label">成本下降</div>
+    </div>
+  </div>
+
+  <div class="met-footer">
+    <div class="met-divider" data-anim-role="accent-line"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  var wrap = root.querySelector(".met-row");
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  function parse(raw) {
+    if (raw == null) return null;
+    if (typeof raw !== "string") return raw;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  var metrics = parse(V.metrics);
+
+  if (wrap && Array.isArray(metrics) && metrics.length >= 1) {
+    wrap.innerHTML = "";
+    for (var i = 0; i < metrics.length; i++) {
+      var card = document.createElement("div");
+      card.className = "met-card";
+      card.setAttribute("data-anim-role", "card");
+      var statRow = document.createElement("div");
+      statRow.className = "met-stat-row";
+      var stat = document.createElement("span");
+      stat.className = "met-stat";
+      stat.setAttribute("data-anim-role", "stat");
+      stat.textContent = String(metrics[i].value != null ? metrics[i].value : 0);
+      statRow.appendChild(stat);
+      if (metrics[i].unit != null && String(metrics[i].unit) !== "") {
+        var unit = document.createElement("span");
+        unit.className = "met-unit";
+        unit.setAttribute("data-anim-role", "unit");
+        unit.textContent = String(metrics[i].unit);
+        statRow.appendChild(unit);
+      }
+      var label = document.createElement("div");
+      label.className = "met-label";
+      label.setAttribute("data-anim-role", "card-label");
+      label.textContent = String(metrics[i].label != null ? metrics[i].label : "");
+      card.appendChild(statRow);
+      card.appendChild(label);
+      wrap.appendChild(card);
+    }
+  }
+
+  var cards = $("card");
+  if (cards.length) {
+    tl.from(cards, { scale: 0.85, opacity: 0, duration: 0.55, ease: "back.out(1.4)", transformOrigin: "center center", stagger: 0.15 }, 0.2);
+  }
+
+  var stats = $("stat");
+  for (var s = 0; s < stats.length; s++) {
+    (function (el, idx) {
+      var raw = String(el.textContent).replace(/,/g, "");
+      var finalVal = parseFloat(raw);
+      if (isNaN(finalVal)) { finalVal = 0; }
+      var decimals = (raw.indexOf(".") !== -1) ? raw.split(".")[1].length : 0;
+      var obj = { v: 0 };
+      var startAt = 0.5 + idx * 0.15;
+      el.textContent = "0" + (decimals ? "." + new Array(decimals + 1).join("0") : "");
+      tl.to(obj, {
+        v: finalVal, duration: 1.1, ease: "power2.out",
+        onUpdate: function () { el.textContent = obj.v.toFixed(decimals); }
+      }, startAt);
+      tl.to(el, { scale: 1.12, duration: 0.16, ease: "power2.out", transformOrigin: "center bottom" }, startAt + 1.1);
+      tl.to(el, { scale: 1.0, duration: 0.26, ease: "back.out(2)" }, startAt + 1.26);
+    })(stats[s], s);
+  }
+
+  var units = $("unit");
+  if (units.length) {
+    tl.from(units, { x: -10, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, 0.7);
+  }
+  var labels = $("card-label");
+  if (labels.length) {
+    tl.from(labels, { y: 12, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, 0.6);
+  }
+  if ($("accent-line").length) {
+    tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.4);
+  }
+
+  var done = ["card", "stat", "unit", "card-label", "accent-line"];
+  for (var d = 0; d < done.length; d++) {
+    var els = $(done[d]);
+    for (var k = 0; k < els.length; k++) els[k].removeAttribute("data-anim-role");
+  }
+};
+</script>

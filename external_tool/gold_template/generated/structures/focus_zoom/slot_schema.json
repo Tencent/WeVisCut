@@ -1,0 +1,11 @@
+{
+  "structure_id": "focus_zoom",
+  "family": "diagram",
+  "duration_default": 6.5,
+  "slots": {
+    "headline": {"type": "string", "label": "标题", "default": "拆开看其中一个模块", "max_chars": 16},
+    "overview_caption": {"type": "string", "label": "总览说明", "default": "系统总览", "max_chars": 16},
+    "zoom_label": {"type": "string", "label": "放大组件名", "default": "检索模块", "max_chars": 10},
+    "zoom_desc": {"type": "string", "label": "放大组件说明", "default": "负责把用户问题映射到最相关的知识片段", "max_chars": 28}
+  }
+}

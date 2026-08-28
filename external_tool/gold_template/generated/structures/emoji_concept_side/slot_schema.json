@@ -1,0 +1,10 @@
+{
+  "structure_id": "emoji_concept_side",
+  "family": "narrative",
+  "duration_default": 4.5,
+  "slots": {
+    "emoji_icon": {"type": "string", "label": "概念Emoji", "default": "🧬", "max_chars": 2},
+    "concept_name": {"type": "string", "label": "概念名称", "default": "基因突变", "max_chars": 12},
+    "explain_text": {"type": "string", "label": "解释文字", "default": "DNA复制时的随机抄写错误", "max_chars": 24}
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "structure_id": "question_pause_corner",
+  "family": "narrative",
+  "use_for": ["互动暂停", "思考题", "角落装饰", "暂停思考"],
+  "spotlight_level": "high",
+  "duration_range": [4.0, 6.5],
+  "anim_roles": ["eyebrow", "decoration", "title", "subtitle"],
+  "slots": ["eyebrow", "question_text", "guide_text"],
+  "sfx": [{"at": 0.3, "sfx": "pop"}, {"at": 1.5, "sfx": "tick"}]
+}

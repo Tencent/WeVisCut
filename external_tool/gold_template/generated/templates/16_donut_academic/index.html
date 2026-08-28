@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "图表标题", "default": "全球疫苗接种覆盖率"}, {"id": "series", "type": "string", "label": "数据系列", "default": "[{\"label\": \"mRNA疫苗\", \"value\": 45}, {\"label\": \"灭活疫苗\", \"value\": 30}, {\"label\": \"腺病毒疫苗\", \"value\": 18}, {\"label\": \"其他\", \"value\": 7}]"}, {"id": "center_value", "type": "string", "label": "环心数值", "default": "45%"}, {"id": "center_label", "type": "string", "label": "环心标签", "default": "mRNA占比"}, {"id": "source_note", "type": "string", "label": "数据来源", "default": "数据来源：WHO 2024"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (minimal_academic) ===== */
+      :root {
+        --bg: #fbfbf9;
+        --bg-2: #f3f3ee;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #1a2238;
+        --ink-2: #454f6b;
+        --ink-3: #8b93a7;
+        --accent: #2f5d8a;
+        --accent-2: #b08328;
+        --danger: #9b2c2c;
+        --success: #2f7a55;
+        --line: rgba(26,34,56,.10);
+        --line-strong: rgba(26,34,56,.24);
+        --font-display: "Noto Serif SC", Georgia, serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 700;
+        --weight-body: 400;
+        --radius-card: 4px;
+        --radius-pill: 999px;
+        --shadow-soft: none;
+        --shadow-glow: none;
+        --grid-color: rgba(26,34,56,.05);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 22px;
+        --stage-blur: 0px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (donut_pie) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 60px 80px 50px;
+        gap: 20px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .chart-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 64px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1000px;
+      }
+
+      [data-hf="structure-dom"] .chart-body {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 80px;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .donut-wrapper {
+        position: relative;
+        width: 440px;
+        height: 440px;
+        flex-shrink: 0;
+      }
+
+      [data-hf="structure-dom"] .donut-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      [data-hf="structure-dom"] .donut-svg .slice-ring {
+        fill: none;
+        stroke-width: 60;
+        stroke-linecap: butt;
+      }
+
+      [data-hf="structure-dom"] .donut-svg .slice-0 { stroke: var(--accent); }
+      [data-hf="structure-dom"] .donut-svg .slice-1 { stroke: var(--accent-2); }
+      [data-hf="structure-dom"] .donut-svg .slice-2 { stroke: var(--ink-3); }
+      [data-hf="structure-dom"] .donut-svg .slice-3 { stroke: var(--success); }
+
+      [data-hf="structure-dom"] .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      [data-hf="structure-dom"] .center-value {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 56px;
+        line-height: 1.1;
+        color: var(--ink-1);
+        font-variant-numeric: tabular-nums;
+      }
+
+      [data-hf="structure-dom"] .center-label {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-2);
+        margin-top: 4px;
+      }
+
+      [data-hf="structure-dom"] .legend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      [data-hf="structure-dom"] .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      [data-hf="structure-dom"] .legend-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+
+      [data-hf="structure-dom"] .legend-item:nth-child(1) .legend-dot { background: var(--accent); }
+      [data-hf="structure-dom"] .legend-item:nth-child(2) .legend-dot { background: var(--accent-2); }
+      [data-hf="structure-dom"] .legend-item:nth-child(3) .legend-dot { background: var(--ink-3); }
+      [data-hf="structure-dom"] .legend-item:nth-child(4) .legend-dot { background: var(--success); }
+
+      [data-hf="structure-dom"] .legend-text {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 26px;
+        color: var(--ink-1);
+      }
+
+      [data-hf="structure-dom"] .legend-pct {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 26px;
+        color: var(--ink-2);
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+      }
+
+      [data-hf="structure-dom"] .chart-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      [data-hf="structure-dom"] .chart-source {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 18px;
+        color: var(--ink-3);
+      }
+
+      [data-hf="structure-dom"] .chart-divider {
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="6.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="6.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="chart-title" data-anim-role="title" data-slot="headline">中国电力结构占比</h2>
+
+            <div class="chart-body">
+              <div class="donut-wrapper">
+                <svg class="donut-svg" viewBox="0 0 440 440">
+                  <!-- r=160, C=2π×160≈1005.31, rotate -90° to start from 12 o'clock -->
+                  <circle class="slice-ring slice-0" data-anim-role="chart-slice"
+                          cx="220" cy="220" r="160"
+                          stroke-dasharray="522.76 1005.31" stroke-dashoffset="0"
+                          transform="rotate(-90 220 220)"/>
+                  <circle class="slice-ring slice-1" data-anim-role="chart-slice"
+                          cx="220" cy="220" r="160"
+                          stroke-dasharray="180.96 1005.31" stroke-dashoffset="-522.76"
+                          transform="rotate(-90 220 220)"/>
+                  <circle class="slice-ring slice-2" data-anim-role="chart-slice"
+                          cx="220" cy="220" r="160"
+                          stroke-dasharray="221.17 1005.31" stroke-dashoffset="-703.72"
+                          transform="rotate(-90 220 220)"/>
+                  <circle class="slice-ring slice-3" data-anim-role="chart-slice"
+                          cx="220" cy="220" r="160"
+                          stroke-dasharray="80.42 1005.31" stroke-dashoffset="-924.89"
+                          transform="rotate(-90 220 220)"/>
+                </svg>
+
+                <div class="donut-center">
+                  <span class="center-value" data-anim-role="chart-value" data-slot="center_value">52%</span>
+                  <span class="center-label" data-anim-role="chart-label" data-slot="center_label">火电占比</span>
+                </div>
+              </div>
+
+              <div class="legend-list" data-anim-role="chart-legend">
+                <div class="legend-item">
+                  <span class="legend-dot"></span>
+                  <span class="legend-text">火电</span>
+                  <span class="legend-pct">52%</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot"></span>
+                  <span class="legend-text">水电</span>
+                  <span class="legend-pct">18%</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot"></span>
+                  <span class="legend-text">风光</span>
+                  <span class="legend-pct">22%</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot"></span>
+                  <span class="legend-text">核电</span>
+                  <span class="legend-pct">8%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-footer">
+              <span class="chart-source" data-slot="source_note">数据来源：国家能源局 2024</span>
+              <div class="chart-divider"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.2" data-duration="1.5" data-track-index="102" src="sfx/sparkle.mp3" data-volume="0.4"></audio>
+    </div>
+    <!-- ===== Structure self-animation (donut_pie) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+        var CIRC = 2 * Math.PI * 160;
+        var COLORS = ["var(--accent)", "var(--accent-2)", "var(--ink-3)", "var(--success)"];
+
+        var svg = root.querySelector(".donut-svg");
+        var legendList = root.querySelector('[data-anim-role="chart-legend"]');
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var seriesRaw = V.series || null;
+        var series = null;
+        if (seriesRaw) {
+          try { series = typeof seriesRaw === "string" ? JSON.parse(seriesRaw) : seriesRaw; } catch (e) { series = null; }
+        }
+
+        if (series && Array.isArray(series) && series.length > 0 && svg) {
+          var oldSlices = svg.querySelectorAll('[data-anim-role="chart-slice"]');
+          for (var r = 0; r < oldSlices.length; r++) oldSlices[r].remove();
+          var total = 0;
+          for (var i = 0; i < series.length; i++) total += series[i].value;
+          if (total === 0) total = 1;
+          var ns = "http://www.w3.org/2000/svg";
+          var offset = 0;
+          for (var j = 0; j < series.length; j++) {
+            var pct = series[j].value / total;
+            var arc = pct * CIRC;
+            var c = document.createElementNS(ns, "circle");
+            c.setAttribute("class", "slice-ring slice-" + j);
+            c.setAttribute("data-anim-role", "chart-slice");
+            c.setAttribute("cx", "220"); c.setAttribute("cy", "220"); c.setAttribute("r", "160");
+            c.setAttribute("stroke-dasharray", arc.toFixed(2) + " " + CIRC.toFixed(2));
+            c.setAttribute("stroke-dashoffset", String(-offset.toFixed(2)));
+            c.setAttribute("transform", "rotate(-90 220 220)");
+            c.style.fill = "none"; c.style.strokeWidth = "60"; c.style.strokeLinecap = "butt";
+            c.style.stroke = COLORS[j % COLORS.length];
+            svg.appendChild(c);
+            offset += arc;
+          }
+          if (legendList) {
+            legendList.innerHTML = "";
+            for (var k = 0; k < series.length; k++) {
+              var item = document.createElement("div"); item.className = "legend-item";
+              var dot = document.createElement("span"); dot.className = "legend-dot"; dot.style.background = COLORS[k % COLORS.length];
+              var txt = document.createElement("span"); txt.className = "legend-text"; txt.textContent = series[k].label;
+              var pctSpan = document.createElement("span"); pctSpan.className = "legend-pct";
+              pctSpan.textContent = Math.round(series[k].value / total * 100) + "%";
+              item.appendChild(dot); item.appendChild(txt); item.appendChild(pctSpan);
+              legendList.appendChild(item);
+            }
+          }
+        }
+
+        var slices = $("chart-slice");
+        if (slices.length) {
+          var hideOffsets = [];
+          for (var s = 0; s < slices.length; s++) {
+            var da = slices[s].getAttribute("stroke-dasharray");
+            var parts = da.split(/[\s,]+/);
+            var arcLen = parseFloat(parts[0]) || 0;
+            var origOffset = parseFloat(slices[s].getAttribute("stroke-dashoffset")) || 0;
+            hideOffsets.push({ arc: arcLen, orig: origOffset });
+            gsap.set(slices[s], { strokeDashoffset: origOffset + arcLen });
+          }
+          for (var t = 0; t < slices.length; t++) {
+            tl.to(slices[t], { strokeDashoffset: hideOffsets[t].orig, duration: 0.5, ease: "power2.out" }, 0.3 + t * 0.12);
+          }
+        }
+
+        var centerVal = root.querySelector('[data-anim-role="chart-value"]');
+        if (centerVal) {
+          var rawText = (V.center_value || centerVal.textContent || "").replace(/[^0-9.]/g, "");
+          var endNum = parseFloat(rawText) || 0;
+          var suffix = (V.center_value || centerVal.textContent || "").replace(/[0-9.]/g, "");
+          var counter = { val: 0 };
+          gsap.set(centerVal, { opacity: 0 });
+          tl.to(centerVal, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.8);
+          tl.to(counter, {
+            val: endNum, duration: 1.0, ease: "power2.out",
+            onUpdate: function () { centerVal.textContent = Math.round(counter.val) + suffix; }
+          }, 0.8);
+        }
+        if ($("chart-label").length) {
+          tl.from($("chart-label"), { opacity: 0, y: 8, duration: 0.4, ease: "power2.out" }, 1.0);
+        }
+        if (legendList) {
+          var items = legendList.querySelectorAll(".legend-item");
+          if (items.length) {
+            tl.from(items, { opacity: 0, x: 20, duration: 0.35, ease: "power2.out", stagger: 0.1 }, 1.0);
+          }
+        }
+      };
+    </script>
+    <!-- ===== Layer 2: motion (mask_reveal) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["mask_reveal"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 20, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power4.out" }, 0.20);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { clipPath: "inset(0 100% 0 0)", duration: 0.55, ease: "power3.out" }, 0.65);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power4.out" }, 0.20);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, x: -10, duration: 0.4, ease: "power2.out" }, 0.70);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power3.out", stagger: 0.18 }, 0.35);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { clipPath: "inset(0 100% 0 0)", duration: 0.5, ease: "power3.out", stagger: 0.12 }, 0.55);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { clipPath: "inset(0 100% 0 0)", duration: 0.5, ease: "power3.out" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.6, ease: "expo.out", transformOrigin: "left center" }, 0.55);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 1.04);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { clipPath: "inset(0 100% 0 0)", duration: 0.5, ease: "power3.out" }, 1.10);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["mask_reveal"]) {
+              window.__hf_motions["mask_reveal"](tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

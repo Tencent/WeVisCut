@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "肝脏代谢的昼夜节律"}, {"id": "nodes", "type": "string", "label": "节点", "default": "[{\"label\": \"清晨激活\"}, {\"label\": \"午间代谢\"}, {\"label\": \"傍晚储备\"}, {\"label\": \"夜间修复\"}]"}, {"id": "loop_note", "type": "string", "label": "说明", "default": "肝脏功能随生物钟周期性波动"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (warm_editorial) ===== */
+      :root {
+        --bg: #f6f1e7;
+        --bg-2: #efe7d6;
+        --surface: rgba(255,255,255,.7);
+        --surface-2: #ffffff;
+        --ink-1: #211b14;
+        --ink-2: #5c5043;
+        --ink-3: #8a7d6b;
+        --accent: #b5532a;
+        --accent-2: #c79a3e;
+        --danger: #a83232;
+        --success: #5c7a3e;
+        --line: rgba(33,27,20,.12);
+        --line-strong: rgba(33,27,20,.28);
+        --font-display: "Noto Serif SC", Georgia, serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 700;
+        --weight-body: 400;
+        --radius-card: 6px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 8px 24px rgba(33,27,20,.10);
+        --shadow-glow: none;
+        --grid-color: rgba(33,27,20,.04);
+        --stage-bg: rgba(255,253,248,.5);
+        --radius-stage: 28px;
+        --stage-blur: 6px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E") repeat,
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .bg-stage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        pointer-events: none;
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (cycle_loop) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 48px 64px 44px;
+        gap: 24px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .cycle-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 56px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        text-align: center;
+        max-width: 900px;
+      }
+
+      [data-hf="structure-dom"] .cycle-diagram {
+        flex: 1;
+        position: relative;
+        width: 480px;
+        max-width: 100%;
+        aspect-ratio: 1;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .cycle-ring {
+        position: absolute;
+        inset: 0;
+      }
+
+      [data-hf="structure-dom"] .cycle-ring svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      [data-hf="structure-dom"] .cycle-node {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2px solid var(--line-strong);
+        transform: translate(-50%, -50%);
+      }
+
+      [data-hf="structure-dom"] .cycle-node:nth-child(1) { top: 2%; left: 50%; }
+      [data-hf="structure-dom"] .cycle-node:nth-child(2) { top: 50%; left: 98%; }
+      [data-hf="structure-dom"] .cycle-node:nth-child(3) { top: 98%; left: 50%; }
+      [data-hf="structure-dom"] .cycle-node:nth-child(4) { top: 50%; left: 2%; }
+
+      [data-hf="structure-dom"] .cycle-node-label {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 24px;
+        color: var(--ink-1);
+        text-align: center;
+        padding: 0 8px;
+      }
+
+      [data-hf="structure-dom"] .cycle-note {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-2);
+        text-align: center;
+        max-width: 600px;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="cycle-title" data-anim-role="title" data-slot="headline">水循环过程</h2>
+
+            <div class="cycle-diagram">
+              <div class="cycle-ring">
+                <svg viewBox="0 0 480 480" fill="none">
+                  <path data-anim-role="edge" d="M240,25 A215,215 0 0,1 455,240" stroke="var(--line-strong)" stroke-width="3" fill="none" stroke-dasharray="338" stroke-dashoffset="0"/>
+                  <polygon data-anim-role="marker" points="455,230 455,250 468,240" fill="var(--accent)"/>
+
+                  <path data-anim-role="edge" d="M455,240 A215,215 0 0,1 240,455" stroke="var(--line-strong)" stroke-width="3" fill="none" stroke-dasharray="338" stroke-dashoffset="0"/>
+                  <polygon data-anim-role="marker" points="250,455 230,455 240,468" fill="var(--accent)"/>
+
+                  <path data-anim-role="edge" d="M240,455 A215,215 0 0,1 25,240" stroke="var(--line-strong)" stroke-width="3" fill="none" stroke-dasharray="338" stroke-dashoffset="0"/>
+                  <polygon data-anim-role="marker" points="25,250 25,230 12,240" fill="var(--accent)"/>
+
+                  <path data-anim-role="edge" d="M25,240 A215,215 0 0,1 240,25" stroke="var(--line-strong)" stroke-width="3" fill="none" stroke-dasharray="338" stroke-dashoffset="0"/>
+                  <polygon data-anim-role="marker" points="230,25 250,25 240,12" fill="var(--accent)"/>
+                </svg>
+              </div>
+
+              <div class="cycle-node" data-anim-role="node">
+                <span class="cycle-node-label" data-anim-role="node-label">蒸发</span>
+              </div>
+              <div class="cycle-node" data-anim-role="node">
+                <span class="cycle-node-label" data-anim-role="node-label">成云</span>
+              </div>
+              <div class="cycle-node" data-anim-role="node">
+                <span class="cycle-node-label" data-anim-role="node-label">降水</span>
+              </div>
+              <div class="cycle-node" data-anim-role="node">
+                <span class="cycle-node-label" data-anim-role="node-label">汇流</span>
+              </div>
+            </div>
+
+            <p class="cycle-note" data-slot="loop_note">自然界最基本的物质循环</p>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.15" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+    </div>
+    <!-- ===== Structure self-animation (cycle_loop) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var nodesRaw = V.nodes || null;
+        var nodes = null;
+        try { nodes = typeof nodesRaw === "string" ? JSON.parse(nodesRaw) : nodesRaw; } catch (e) { nodes = null; }
+
+        if (nodes && Array.isArray(nodes) && nodes.length > 0) {
+          var diagram = root.querySelector(".cycle-diagram");
+          if (diagram) {
+            var existingNodes = diagram.querySelectorAll(".cycle-node");
+            for (var r = existingNodes.length - 1; r >= 0; r--) existingNodes[r].parentNode.removeChild(existingNodes[r]);
+            var count = nodes.length;
+            for (var i = 0; i < count; i++) {
+              var angle = (i / count) * 2 * Math.PI - Math.PI / 2;
+              var cx = 50 + 48 * Math.cos(angle), cy = 50 + 48 * Math.sin(angle);
+              var nodeEl = document.createElement("div"); nodeEl.className = "cycle-node";
+              nodeEl.setAttribute("data-anim-role", "node");
+              nodeEl.style.top = cy + "%"; nodeEl.style.left = cx + "%";
+              var labelEl = document.createElement("span"); labelEl.className = "cycle-node-label";
+              labelEl.setAttribute("data-anim-role", "node-label");
+              labelEl.textContent = nodes[i].label;
+              nodeEl.appendChild(labelEl); diagram.appendChild(nodeEl);
+            }
+            var ring = diagram.querySelector(".cycle-ring");
+            if (ring) {
+              var svgStr = '<svg viewBox="0 0 480 480" fill="none">';
+              var radius = 215, svgCx = 240, svgCy = 240;
+              for (var j = 0; j < count; j++) {
+                var a1 = (j / count) * 2 * Math.PI - Math.PI / 2;
+                var a2 = ((j + 1) / count) * 2 * Math.PI - Math.PI / 2;
+                var x1 = svgCx + radius * Math.cos(a1), y1 = svgCy + radius * Math.sin(a1);
+                var x2 = svgCx + radius * Math.cos(a2), y2 = svgCy + radius * Math.sin(a2);
+                svgStr += '<path data-anim-role="edge" d="M' + x1 + ',' + y1 + ' A' + radius + ',' + radius + ' 0 0,1 ' + x2 + ',' + y2 + '" stroke="var(--line-strong)" stroke-width="3" fill="none"/>';
+                var aw = 8;
+                var px = x2 + aw * Math.cos(a2 + 2.6), py = y2 + aw * Math.sin(a2 + 2.6);
+                var qx = x2 + aw * Math.cos(a2 - 2.6), qy = y2 + aw * Math.sin(a2 - 2.6);
+                svgStr += '<polygon data-anim-role="marker" points="' + x2 + ',' + y2 + ' ' + px + ',' + py + ' ' + qx + ',' + qy + '" fill="var(--accent)"/>';
+              }
+              svgStr += '</svg>';
+              ring.innerHTML = svgStr;
+            }
+          }
+        }
+
+        var allNodes = $("node"), allLabels = $("node-label");
+        if (allNodes.length) {
+          tl.from(allNodes, { scale: 0, opacity: 0, rotation: -8, duration: 0.45, ease: "back.out(1.2)", stagger: 0.2 }, 0.3);
+        }
+        if (allLabels.length) {
+          tl.from(allLabels, { opacity: 0, duration: 0.3, ease: "power2.out", stagger: 0.2 }, 0.45);
+        }
+        var allEdges = $("edge");
+        if (allEdges.length) {
+          for (var e = 0; e < allEdges.length; e++) {
+            var edgeEl = allEdges[e];
+            if (edgeEl.tagName && edgeEl.tagName.toLowerCase() === "path") {
+              var pathLen = edgeEl.getTotalLength ? edgeEl.getTotalLength() : 338;
+              gsap.set(edgeEl, { strokeDasharray: pathLen, strokeDashoffset: pathLen });
+              tl.to(edgeEl, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, 0.5 + e * 0.18);
+            }
+          }
+        }
+        var allMarkers = $("marker");
+        if (allMarkers.length) {
+          tl.from(allMarkers, { scale: 0, opacity: 0, duration: 0.2, ease: "back.out(1.4)", stagger: 0.18 }, 0.85);
+        }
+      };
+    </script>
+    <!-- ===== Layer 2: motion (parallax_pan) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["parallax_pan"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("bg").length) {
+          tl.from($("bg"), { x: -20, duration: 6.8, ease: "sine.inOut" }, 0);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { scale: 1.06, duration: 0.8, ease: "power2.out" }, 0.15);
+        }
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 18, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 20, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { y: 24, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.30);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, duration: 0.35, ease: "power2.out" }, 0.55);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { y: 24, opacity: 0, duration: 0.5, ease: "power2.out", stagger: 0.14 }, 0.40);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { x: -24, opacity: 0, duration: 0.5, ease: "expo.out", stagger: 0.14 }, 0.60);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.70);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -12, opacity: 0, duration: 0.35, ease: "power2.out" }, 0.75);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 16, opacity: 0, duration: 0.4, ease: "back.out(1.2)" }, 0.80);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, duration: 0.5, ease: "expo.out", transformOrigin: "left center" }, 0.40);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["parallax_pan"]) {
+              window.__hf_motions["parallax_pan"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

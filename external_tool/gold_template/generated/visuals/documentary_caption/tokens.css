@@ -1,0 +1,63 @@
+:root {
+  --bg: #101012;
+  --bg-2: #17171a;
+  --surface: rgba(0, 0, 0, 0.55);
+  --surface-2: rgba(0, 0, 0, 0.78);
+  --ink-1: #f7f5f0;
+  --ink-2: #c8c4bb;
+  --ink-3: #8d8980;
+  --accent: #e8b84b;
+  --accent-2: #d9d4c8;
+  --danger: #d9534f;
+  --success: #7fae5a;
+  --line: rgba(247, 245, 240, 0.16);
+  --line-strong: rgba(247, 245, 240, 0.4);
+  --font-display: "Noto Sans SC", system-ui, sans-serif;
+  --font-body: "Noto Sans SC", system-ui, sans-serif;
+  --font-caption: "Noto Sans SC", system-ui, sans-serif;
+  --weight-display: 800;
+  --weight-body: 500;
+  --radius-card: 8px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --shadow-glow: none;
+  --grid-color: rgba(247, 245, 240, 0.04);
+  --stage-bg: rgba(0, 0, 0, 0.5);
+  --radius-stage: 24px;
+  --stage-blur: 4px;
+}
+
+.bg-stage {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.7) 100%),
+    var(--bg);
+  border-radius: var(--radius-stage);
+  backdrop-filter: blur(var(--stage-blur));
+}
+
+.bg-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  border-radius: var(--radius-stage);
+  pointer-events: none;
+}
+
+.caption-bar {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 14px 22px;
+}
+
+.caption-bar .caption-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  color: var(--ink-1);
+}

@@ -1,0 +1,9 @@
+{
+  "structure_id": "quote_card",
+  "family": "narrative",
+  "use_for": ["名人名言", "经典引述", "思想名句"],
+  "spotlight_level": "mid",
+  "duration_range": [4.0, 6.5],
+  "anim_roles": ["title", "accent-line", "eyebrow", "badge"],
+  "slots": ["quote", "speaker", "source"]
+}

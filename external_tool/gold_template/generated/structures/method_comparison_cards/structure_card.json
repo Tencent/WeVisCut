@@ -1,0 +1,22 @@
+{
+  "structure_id": "method_comparison_cards",
+  "family": "dataviz",
+  "variant_of": "method_comparison",
+  "variant_label": "并列卡片",
+  "display_name": "对比表格",
+  "use_for": ["多维度对比", "理论方法对比", "表格比较"],
+  "spotlight_level": "high",
+  "duration_range": [5.5, 8.5],
+  "anim_roles": ["bg", "title", "col-header", "cell", "row-label", "accent-line"],
+  "slots": ["headline", "columns", "rows"],
+  "data_slots": ["columns", "rows"],
+  "data_contract": {
+    "columns": { "shape": "[string]", "min_items": 2, "max_items": 3 },
+    "rows": { "shape": "[{dim: string, values: [string]}]", "min_items": 2, "max_items": 6 }
+  },
+  "bound": true,
+  "sfx_cues": [
+    { "at": 0.3, "sfx": "tick" },
+    { "at": 1.4, "sfx": "pop", "comment": "优胜卡强调" }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "headline": "上线一个季度后的三项核心指标",
+  "icon1_value": "120ms",
+  "icon1_label": "平均响应延迟",
+  "icon2_value": "93.5%",
+  "icon2_label": "首条命中召回率",
+  "icon3_value": "-62%",
+  "icon3_label": "单次推理成本"
+}

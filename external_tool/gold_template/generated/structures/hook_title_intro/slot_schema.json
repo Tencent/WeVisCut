@@ -1,0 +1,25 @@
+{
+  "structure_id": "hook_title_intro",
+  "family": "narrative",
+  "duration_default": 6.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "顶部标签",
+      "default": "Nature · 权威综述 · 2025",
+      "max_chars": 20
+    },
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "你每天摄入的维生素B6，可能正在悄悄伤害你",
+      "max_chars": 24
+    },
+    "subhead": {
+      "type": "string",
+      "label": "副标题",
+      "default": "超量补充的隐患远比你想象的严重",
+      "max_chars": 20
+    }
+  }
+}

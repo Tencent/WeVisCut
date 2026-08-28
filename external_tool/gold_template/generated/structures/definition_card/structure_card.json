@@ -1,0 +1,13 @@
+{
+  "structure_id": "definition_card",
+  "family": "narrative",
+  "use_for": ["术语解释", "概念定义", "名词科普"],
+  "spotlight_level": "mid",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "title", "subtitle", "list-item", "accent-line"],
+  "slots": ["eyebrow", "term", "definition", "keyword1", "keyword2", "keyword3"],
+  "sfx_cues": [
+    {"at": 0.3, "sfx": "pop", "comment": "概念名弹出"},
+    {"at": 1.2, "sfx": "tick", "comment": "关键词逐个"}
+  ]
+}

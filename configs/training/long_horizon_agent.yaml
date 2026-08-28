@@ -1,0 +1,70 @@
+input:
+  raw_root: ${WEDIRECTOR_RESULT_ROOT}/AICutPipeline260630_Final377videos/aicut_batch_20260630_192759/trajectory_results/all
+  include_source_kinds: [base, augmented]
+
+output:
+  output_dir: ${WEDIRECTOR_TRAINING_REPO}/preprocess_ori_data/processed_long_horizon
+
+split:
+  train: 0.82
+  val: 0.09
+  test: 0.09
+  seed: 42
+
+limits:
+  input_script_chars: 100000
+  max_history_events: 14
+  max_memory_segments: 10
+  max_memory_shots: 48
+  max_memory_spotlights: 18
+  max_memory_issues: 12
+  max_plan_chunk_shots: 12
+  max_decoration_chunk: 8
+  max_judge_chunk: 12
+  max_repair_chunk: 12
+  max_user_chars: 52000
+  max_assistant_chars: 52000
+  max_total_chars: 96000
+  max_episode_chars: 120000
+  max_episode_rows_per_project: 1
+
+sampling:
+  export_episode_rows: true
+  export_sharegpt: true
+  warmup_per_tool: 80
+
+thinking:
+  enabled: true
+  format: tagged
+  max_chars: 520
+
+thresholds:
+  json_parse_rate: 0.99
+  think_format_rate: 0.95
+  single_tool_call_rate: 0.99
+  no_markdown_rate: 0.99
+  no_reason_field_rate: 0.99
+  tool_name_valid_rate: 0.99
+  tool_schema_valid_rate: 0.98
+  action_precondition_valid_rate: 0.95
+  state_update_valid_rate: 0.95
+  observation_grounding_rate: 0.90
+  local_edit_valid_rate: 0.85
+  offline_replay_valid_rate: 0.90
+  fake_e2e_dsr: 0.70
+  repair_budget_violation_rate: 0.02
+  stitch_too_early_rate: 0.01
+
+weights:
+  source_kind:
+    base: 1.0
+    augmented: 0.85
+  tool:
+    Tool_SegmentArticle: 1.25
+    Tool_PlanShots: 1.35
+    Tool_SelfReflect: 1.15
+    Tool_SelfReflect_Patch: 1.2
+    Tool_BatchDecorateSpotlights: 1.35
+    Tool_Stage4DimensionJudge: 1.25
+    Tool_Stage4DimensionalRepair: 1.25
+    Tool_StitchVideo: 1.1

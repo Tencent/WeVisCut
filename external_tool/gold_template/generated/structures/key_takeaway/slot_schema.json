@@ -1,0 +1,31 @@
+{
+  "structure_id": "key_takeaway",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "核心结论句",
+      "default": "记住这三件事就够了",
+      "max_chars": 22
+    },
+    "takeaway1": {
+      "type": "string",
+      "label": "要点 1",
+      "default": "先解决真问题，再谈工具",
+      "max_chars": 18
+    },
+    "takeaway2": {
+      "type": "string",
+      "label": "要点 2",
+      "default": "用最小成本快速验证",
+      "max_chars": 18
+    },
+    "takeaway3": {
+      "type": "string",
+      "label": "要点 3",
+      "default": "让每一轮迭代都更准",
+      "max_chars": 18
+    }
+  }
+}

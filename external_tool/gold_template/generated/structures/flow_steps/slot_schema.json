@@ -1,0 +1,33 @@
+{
+  "structure_id": "flow_steps",
+  "family": "diagram",
+  "duration_default": 7.5,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "数据处理流水线",
+      "max_chars": 18
+    },
+    "nodes": {
+      "type": "json",
+      "label": "节点",
+      "default": [
+        { "id": "n1", "label": "采集" },
+        { "id": "n2", "label": "清洗" },
+        { "id": "n3", "label": "训练" },
+        { "id": "n4", "label": "部署" }
+      ]
+    },
+    "edges": {
+      "type": "json",
+      "label": "连接",
+      "default": [
+        { "from": "n1", "to": "n2" },
+        { "from": "n2", "to": "n3" },
+        { "from": "n3", "to": "n4" }
+      ]
+    }
+  },
+  "data_slots": ["nodes", "edges"]
+}

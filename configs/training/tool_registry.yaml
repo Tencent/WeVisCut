@@ -1,0 +1,104 @@
+# 工具注册表
+#
+# 重要：这里的 required / optional 字段对齐的是真实轨迹里 assistant 的 *压缩控制参数*
+# （pipeline/trajectory.py 记录的 tool_input），而不是工具内部完整入参。
+# 例如 Tool_SegmentArticle 记录的是 {"article_text_length": N, "max_segments": M}，
+# 重内容（article_text、shots 列表）由 current_state_summary 承载，不进 target_action。
+#
+# validator 行为：
+#   - required 缺失 -> invalid_reason: missing_required_field
+#   - 若某工具未在此表中 -> invalid_reason: unknown_tool
+#   - auto_derive=true 时，build 阶段会用真实数据出现频率 >= derive_threshold 的字段
+#     回填 required（仅对 required 为空的工具生效），便于适配未来新增工具。
+#
+# trainable=false 的工具不进入第一阶段线上可训练动作集（仍保留在 transitions_all）。
+
+settings:
+  auto_derive: true
+  derive_threshold: 0.95   # 出现频率阈值，用于自动补全 required
+
+tools:
+  DataPipeline_Stage1_Reverse:
+    trainable: false        # 数据生产步骤，script_to_video 线上入口不需要
+    required: [video_path]
+    optional: []
+    note: 视频反向解析（ASR/切镜），仅用于离线数据生产与抽取 input_script
+
+  Tool_SegmentArticle:
+    trainable: true
+    required: [max_segments]
+    optional: [article_text_length]
+
+  Tool_PlanShots:
+    trainable: true
+    required: [num_segments]
+    optional: [num_video_shots, num_shots, mode]
+
+  Tool_SelfReflect:
+    trainable: true
+    required: []
+    optional: [round, num_segments, num_shots, mode, augmentation_strategy, scope]
+
+  Tool_SelfReflect_Patch:
+    trainable: true
+    required: []
+    optional: [issues, augmentation_strategy, fix_changes, requires_downstream_propagation]
+    is_repair: true
+
+  Tool_SelfReflect_RepairShot:
+    trainable: true
+    required: [failed_shot_ids]
+    optional: [round]
+    is_repair: true
+
+  Tool_BatchVisualAudio:
+    trainable: true
+    required: []
+    optional: [shot_ids]
+
+  Tool_BatchDecorateSpotlights:
+    trainable: true
+    required: []
+    optional: [shot_ids]
+
+  Tool_BatchTimelineCompose:
+    trainable: true
+    required: []
+    optional: [shot_ids, timeline]
+
+  Tool_MusicSearch:
+    trainable: true
+    required: []
+    optional: [query, shot_count]
+
+  Tool_SeverityRank:
+    trainable: true
+    required: []
+    optional: [shot_count, top_ratio, min_shots]
+
+  Tool_Stage4DimensionJudge:
+    trainable: true
+    required: []
+    optional: [shot_ids, threshold, judge_round, dimensions, ignored_dimensions, focus_decoration_slots]
+
+  Tool_TextQuickJudge:
+    trainable: true
+    required: []
+    optional: [shot_ids]
+
+  Tool_Stage4DimensionalRepair:
+    trainable: true
+    required: []
+    optional: [shot_ids, repair_round, minimal_repair]
+    is_repair: true
+
+  Tool_FinalRender:
+    trainable: true
+    required: []
+    optional: [shot_ids]
+
+  Tool_StitchVideo:
+    trainable: true
+    required: []
+    optional: [shot_count, approved_count, bgm_volume, duck_under_voice]
+    is_terminal: true

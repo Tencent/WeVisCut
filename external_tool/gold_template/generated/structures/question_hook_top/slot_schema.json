@@ -1,0 +1,10 @@
+{
+  "structure_id": "question_hook_top",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {"type": "string", "label": "顶部标签", "default": "你知道吗", "max_chars": 10},
+    "question_text": {"type": "string", "label": "问题文字", "default": "人一生心跳约 25 亿次", "max_chars": 20},
+    "answer_hint": {"type": "string", "label": "答案提示", "default": "平均每分钟 72 次，日夜不停跳动 80 年", "max_chars": 30}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "structure_id": "line_chart",
+  "family": "dataviz",
+  "use_for": ["折线图", "趋势变化", "时间序列"],
+  "spotlight_level": "high",
+  "duration_range": [5.5, 8.5],
+  "anim_roles": ["title", "chart-axis", "chart-line", "chart-area", "chart-point", "chart-value", "chart-label"],
+  "slots": ["headline", "series", "x_label", "y_label", "source_note"],
+  "data_slots": ["series"],
+  "data_contract": {
+    "series": {
+      "shape": "[{x: string, y: number}]",
+      "min_items": 2,
+      "max_items": 12
+    }
+  }
+}

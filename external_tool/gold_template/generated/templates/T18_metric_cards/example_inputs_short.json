@@ -1,0 +1,7 @@
+{
+  "headline": "两个核心数字",
+  "metrics": [
+    { "value": 1280, "unit": "万", "label": "月活用户" },
+    { "value": 99.9, "unit": "%", "label": "服务可用率" }
+  ]
+}

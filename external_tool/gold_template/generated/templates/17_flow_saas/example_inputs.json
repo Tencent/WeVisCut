@@ -1,0 +1,14 @@
+{
+  "headline": "科学方法的四个步骤",
+  "nodes": [
+    { "id": "n1", "label": "观察" },
+    { "id": "n2", "label": "假设" },
+    { "id": "n3", "label": "实验" },
+    { "id": "n4", "label": "验证" }
+  ],
+  "edges": [
+    { "from": "n1", "to": "n2" },
+    { "from": "n2", "to": "n3" },
+    { "from": "n3", "to": "n4" }
+  ]
+}

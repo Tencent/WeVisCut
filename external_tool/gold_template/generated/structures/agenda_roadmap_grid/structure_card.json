@@ -1,0 +1,13 @@
+{
+  "structure_id": "agenda_roadmap_grid",
+  "family": "narrative",
+  "use_for": ["议程目录", "内容提纲", "本期大纲"],
+  "spotlight_level": "mid",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["title", "list-item", "accent-line"],
+  "slots": ["headline", "item1", "item2", "item3", "item4", "item5"],
+  "sfx_cues": [
+    {"at": 0.5, "sfx": "tick", "comment": "卡片逐张出现"},
+    {"at": 1.2, "sfx": "tick", "comment": "下一卡片出现"}
+  ]
+}

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "RAG 系统的五个模块"}, {"id": "center_label", "type": "string", "label": "中心模块名", "default": "RAG"}, {"id": "modules", "type": "string", "label": "子模块列表", "default": "[{\"label\": \"切分\"}, {\"label\": \"嵌入\"}, {\"label\": \"检索\"}, {\"label\": \"重排\"}, {\"label\": \"生成\"}]"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      :root {
+        --bg: #f7f9fc;
+        --bg-2: #eef2f8;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --accent: #4f46e5;
+        --accent-2: #0ea5e9;
+        --danger: #ef4444;
+        --success: #10b981;
+        --line: rgba(15,23,42,.08);
+        --line-strong: rgba(15,23,42,.16);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 50% at 50% 45%, rgba(79,70,229,.06) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 40% at 80% 70%, rgba(14,165,233,.04) 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (module_breakdown) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 56px 80px 48px;
+        gap: 18px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .mb-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 60px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        text-align: center;
+        max-width: 1100px;
+      }
+
+      [data-hf="structure-dom"] .mb-graph {
+        position: relative;
+        width: 940px;
+        height: 600px;
+        flex-shrink: 0;
+      }
+
+      [data-hf="structure-dom"] .mb-edges {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+
+      [data-hf="structure-dom"] .mb-node {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .mb-node.center {
+        width: 168px;
+        height: 168px;
+        left: 386px;
+        top: 216px;
+        background: var(--surface-2);
+        border: 3px solid var(--accent);
+        box-shadow: var(--shadow-glow);
+        z-index: 2;
+      }
+
+      [data-hf="structure-dom"] .mb-node.child {
+        width: 128px;
+        height: 128px;
+        background: var(--surface-2);
+        border: 2px solid var(--accent-2);
+        z-index: 1;
+      }
+
+      [data-hf="structure-dom"] .mb-node-label {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 26px;
+        color: var(--ink-1);
+        text-align: center;
+        padding: 0 8px;
+        line-height: 1.2;
+      }
+
+      [data-hf="structure-dom"] .mb-node.center .mb-node-label {
+        font-size: 34px;
+        color: var(--ink-1);
+      }
+
+      [data-hf="structure-dom"] .mb-edge {
+        stroke: var(--line-strong);
+        stroke-width: 3;
+        fill: none;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="mb-title" data-anim-role="title" data-slot="headline">一个 Agent 的核心模块</h2>
+            <div class="mb-graph">
+              <svg class="mb-edges" viewBox="0 0 940 600" preserveAspectRatio="none">
+                <line class="mb-edge" data-anim-role="edge" x1="470" y1="300" x2="470" y2="80"></line>
+                <line class="mb-edge" data-anim-role="edge" x1="470" y1="300" x2="679" y2="222"></line>
+                <line class="mb-edge" data-anim-role="edge" x1="470" y1="300" x2="599" y2="478"></line>
+                <line class="mb-edge" data-anim-role="edge" x1="470" y1="300" x2="341" y2="478"></line>
+                <line class="mb-edge" data-anim-role="edge" x1="470" y1="300" x2="261" y2="222"></line>
+              </svg>
+              <div class="mb-node center" data-anim-role="node">
+                <span class="mb-node-label" data-slot="center_label">Agent</span>
+              </div>
+              <div class="mb-node child" style="left: 406px; top: 16px;" data-anim-role="node">
+                <span class="mb-node-label" data-anim-role="node-label">感知</span>
+              </div>
+              <div class="mb-node child" style="left: 615px; top: 158px;" data-anim-role="node">
+                <span class="mb-node-label" data-anim-role="node-label">记忆</span>
+              </div>
+              <div class="mb-node child" style="left: 535px; top: 414px;" data-anim-role="node">
+                <span class="mb-node-label" data-anim-role="node-label">规划</span>
+              </div>
+              <div class="mb-node child" style="left: 277px; top: 414px;" data-anim-role="node">
+                <span class="mb-node-label" data-anim-role="node-label">执行</span>
+              </div>
+              <div class="mb-node child" style="left: 197px; top: 158px;" data-anim-role="node">
+                <span class="mb-node-label" data-anim-role="node-label">反思</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="0.6" data-track-index="102" src="sfx/pop.mp3" data-volume="0.3"></audio>
+      <audio id="sfx-1" data-start="0.4" data-duration="1.2" data-track-index="103" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-2" data-start="1.2" data-duration="0.6" data-track-index="104" src="sfx/pop.mp3" data-volume="0.3"></audio>
+    </div>
+    <!-- ===== Structure self-animation (module_breakdown) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+        var SVGNS = "http://www.w3.org/2000/svg";
+
+        var graph = root.querySelector(".mb-graph");
+        var svg = root.querySelector(".mb-edges");
+        var cx = 470, cy = 300, R = 218, childR = 64, centerR = 84;
+
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var raw = V.modules || null;
+        var modules = null;
+        try { modules = typeof raw === "string" ? JSON.parse(raw) : raw; } catch (e) { modules = null; }
+
+        if (modules && Array.isArray(modules) && modules.length > 0 && graph && svg) {
+          var oldChildren = graph.querySelectorAll(".mb-node.child");
+          for (var c = 0; c < oldChildren.length; c++) { oldChildren[c].parentNode.removeChild(oldChildren[c]); }
+          while (svg.firstChild) { svg.removeChild(svg.firstChild); }
+
+          var n = modules.length;
+          for (var i = 0; i < n; i++) {
+            var ang = (-90 + i * (360 / n)) * Math.PI / 180;
+            var x = cx + R * Math.cos(ang);
+            var y = cy + R * Math.sin(ang);
+
+            var line = document.createElementNS(SVGNS, "line");
+            line.setAttribute("class", "mb-edge");
+            line.setAttribute("data-anim-role", "edge");
+            line.setAttribute("x1", cx); line.setAttribute("y1", cy);
+            line.setAttribute("x2", x); line.setAttribute("y2", y);
+            svg.appendChild(line);
+
+            var node = document.createElement("div");
+            node.className = "mb-node child";
+            node.setAttribute("data-anim-role", "node");
+            node.style.left = (x - childR) + "px";
+            node.style.top = (y - childR) + "px";
+            var label = document.createElement("span");
+            label.className = "mb-node-label";
+            label.setAttribute("data-anim-role", "node-label");
+            label.textContent = modules[i].label || "";
+            node.appendChild(label);
+            graph.appendChild(node);
+          }
+        }
+
+        var centerNode = root.querySelector(".mb-node.center");
+        if (centerNode) {
+          tl.from(centerNode, { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(1.5)", transformOrigin: "center center" }, 0.1);
+        }
+
+        var edges = $("edge");
+        for (var e = 0; e < edges.length; e++) {
+          var ln = edges[e];
+          var dx = ln.x2.baseVal.value - ln.x1.baseVal.value;
+          var dy = ln.y2.baseVal.value - ln.y1.baseVal.value;
+          var len = Math.sqrt(dx * dx + dy * dy);
+          ln.style.strokeDasharray = len;
+          ln.style.strokeDashoffset = 0;
+          tl.from(ln, { strokeDashoffset: len, duration: 0.4, ease: "power2.out" }, 0.35 + e * 0.08);
+        }
+
+        var children = root.querySelectorAll(".mb-node.child");
+        for (var k = 0; k < children.length; k++) {
+          tl.from(children[k], { scale: 0.4, opacity: 0, duration: 0.4, ease: "back.out(1.4)", transformOrigin: "center center" }, 0.5 + k * 0.08);
+        }
+
+        var labels = $("node-label");
+        if (labels.length) {
+          tl.from(labels, { opacity: 0, y: 8, duration: 0.3, ease: "power2.out", stagger: 0.06 }, 0.7);
+        }
+
+        ["node", "edge", "node-label", "marker"].forEach(function (r) {
+          var els = root.querySelectorAll('[data-anim-role="' + r + '"]');
+          for (var m = 0; m < els.length; m++) { els[m].removeAttribute("data-anim-role"); }
+        });
+      };
+    </script>
+    <!-- ===== Layer 2: motion (scale_pop_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["scale_pop_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.15);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { scale: 0.82, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 24, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.62);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { scale: 0.75, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { scale: 0.7, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.65);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { scale: 0.92, opacity: 0, duration: 0.55, ease: "back.out(1.3)", stagger: 0.15 }, 0.40);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.10 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { scale: 0.94, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.35);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.80);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.85);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.90);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { scale: 0.9, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 1.0);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["scale_pop_hold"]) {
+              window.__hf_motions["scale_pop_hold"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

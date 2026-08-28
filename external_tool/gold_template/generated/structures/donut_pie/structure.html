@@ -1,0 +1,298 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 60px 80px 50px;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .chart-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .chart-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .donut-wrapper {
+  position: relative;
+  width: 440px;
+  height: 440px;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .donut-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+[data-hf="structure-dom"] .donut-svg .slice-ring {
+  fill: none;
+  stroke-width: 60;
+  stroke-linecap: butt;
+}
+
+[data-hf="structure-dom"] .donut-svg .slice-0 { stroke: var(--accent); }
+[data-hf="structure-dom"] .donut-svg .slice-1 { stroke: var(--accent-2); }
+[data-hf="structure-dom"] .donut-svg .slice-2 { stroke: var(--ink-3); }
+[data-hf="structure-dom"] .donut-svg .slice-3 { stroke: var(--success); }
+
+[data-hf="structure-dom"] .donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+[data-hf="structure-dom"] .center-value {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 56px;
+  line-height: 1.1;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .center-label {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+
+[data-hf="structure-dom"] .legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+[data-hf="structure-dom"] .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+[data-hf="structure-dom"] .legend-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .legend-item:nth-child(1) .legend-dot { background: var(--accent); }
+[data-hf="structure-dom"] .legend-item:nth-child(2) .legend-dot { background: var(--accent-2); }
+[data-hf="structure-dom"] .legend-item:nth-child(3) .legend-dot { background: var(--ink-3); }
+[data-hf="structure-dom"] .legend-item:nth-child(4) .legend-dot { background: var(--success); }
+
+[data-hf="structure-dom"] .legend-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  color: var(--ink-1);
+}
+
+[data-hf="structure-dom"] .legend-pct {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  color: var(--ink-2);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .chart-source {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 18px;
+  color: var(--ink-3);
+}
+
+[data-hf="structure-dom"] .chart-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="chart-title" data-anim-role="title" data-slot="headline">中国电力结构占比</h2>
+
+  <div class="chart-body">
+    <div class="donut-wrapper">
+      <svg class="donut-svg" viewBox="0 0 440 440">
+        <!-- r=160, C=2π×160≈1005.31, rotate -90° to start from 12 o'clock -->
+        <circle class="slice-ring slice-0" data-anim-role="chart-slice"
+                cx="220" cy="220" r="160"
+                stroke-dasharray="522.76 1005.31" stroke-dashoffset="0"
+                transform="rotate(-90 220 220)"/>
+        <circle class="slice-ring slice-1" data-anim-role="chart-slice"
+                cx="220" cy="220" r="160"
+                stroke-dasharray="180.96 1005.31" stroke-dashoffset="-522.76"
+                transform="rotate(-90 220 220)"/>
+        <circle class="slice-ring slice-2" data-anim-role="chart-slice"
+                cx="220" cy="220" r="160"
+                stroke-dasharray="221.17 1005.31" stroke-dashoffset="-703.72"
+                transform="rotate(-90 220 220)"/>
+        <circle class="slice-ring slice-3" data-anim-role="chart-slice"
+                cx="220" cy="220" r="160"
+                stroke-dasharray="80.42 1005.31" stroke-dashoffset="-924.89"
+                transform="rotate(-90 220 220)"/>
+      </svg>
+
+      <div class="donut-center">
+        <span class="center-value" data-anim-role="chart-value" data-slot="center_value">52%</span>
+        <span class="center-label" data-anim-role="chart-label" data-slot="center_label">火电占比</span>
+      </div>
+    </div>
+
+    <div class="legend-list" data-anim-role="chart-legend">
+      <div class="legend-item">
+        <span class="legend-dot"></span>
+        <span class="legend-text">火电</span>
+        <span class="legend-pct">52%</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot"></span>
+        <span class="legend-text">水电</span>
+        <span class="legend-pct">18%</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot"></span>
+        <span class="legend-text">风光</span>
+        <span class="legend-pct">22%</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot"></span>
+        <span class="legend-text">核电</span>
+        <span class="legend-pct">8%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-footer">
+    <span class="chart-source" data-slot="source_note">数据来源：国家能源局 2024</span>
+    <div class="chart-divider"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+  if ($("title").length) {
+    tl.from($("title"), { y: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+  }
+  var CIRC = 2 * Math.PI * 160;
+  var COLORS = ["var(--accent)", "var(--accent-2)", "var(--ink-3)", "var(--success)"];
+
+  var svg = root.querySelector(".donut-svg");
+  var legendList = root.querySelector('[data-anim-role="chart-legend"]');
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var seriesRaw = V.series || null;
+  var series = null;
+  if (seriesRaw) {
+    try { series = typeof seriesRaw === "string" ? JSON.parse(seriesRaw) : seriesRaw; } catch (e) { series = null; }
+  }
+
+  if (series && Array.isArray(series) && series.length > 0 && svg) {
+    var oldSlices = svg.querySelectorAll('[data-anim-role="chart-slice"]');
+    for (var r = 0; r < oldSlices.length; r++) oldSlices[r].remove();
+    var total = 0;
+    for (var i = 0; i < series.length; i++) total += series[i].value;
+    if (total === 0) total = 1;
+    var ns = "http://www.w3.org/2000/svg";
+    var offset = 0;
+    for (var j = 0; j < series.length; j++) {
+      var pct = series[j].value / total;
+      var arc = pct * CIRC;
+      var c = document.createElementNS(ns, "circle");
+      c.setAttribute("class", "slice-ring slice-" + j);
+      c.setAttribute("data-anim-role", "chart-slice");
+      c.setAttribute("cx", "220"); c.setAttribute("cy", "220"); c.setAttribute("r", "160");
+      c.setAttribute("stroke-dasharray", arc.toFixed(2) + " " + CIRC.toFixed(2));
+      c.setAttribute("stroke-dashoffset", String(-offset.toFixed(2)));
+      c.setAttribute("transform", "rotate(-90 220 220)");
+      c.style.fill = "none"; c.style.strokeWidth = "60"; c.style.strokeLinecap = "butt";
+      c.style.stroke = COLORS[j % COLORS.length];
+      svg.appendChild(c);
+      offset += arc;
+    }
+    if (legendList) {
+      legendList.innerHTML = "";
+      for (var k = 0; k < series.length; k++) {
+        var item = document.createElement("div"); item.className = "legend-item";
+        var dot = document.createElement("span"); dot.className = "legend-dot"; dot.style.background = COLORS[k % COLORS.length];
+        var txt = document.createElement("span"); txt.className = "legend-text"; txt.textContent = series[k].label;
+        var pctSpan = document.createElement("span"); pctSpan.className = "legend-pct";
+        pctSpan.textContent = Math.round(series[k].value / total * 100) + "%";
+        item.appendChild(dot); item.appendChild(txt); item.appendChild(pctSpan);
+        legendList.appendChild(item);
+      }
+    }
+  }
+
+  var slices = $("chart-slice");
+  if (slices.length) {
+    var hideOffsets = [];
+    for (var s = 0; s < slices.length; s++) {
+      var da = slices[s].getAttribute("stroke-dasharray");
+      var parts = da.split(/[\s,]+/);
+      var arcLen = parseFloat(parts[0]) || 0;
+      var origOffset = parseFloat(slices[s].getAttribute("stroke-dashoffset")) || 0;
+      hideOffsets.push({ arc: arcLen, orig: origOffset });
+      gsap.set(slices[s], { strokeDashoffset: origOffset + arcLen });
+    }
+    for (var t = 0; t < slices.length; t++) {
+      tl.to(slices[t], { strokeDashoffset: hideOffsets[t].orig, duration: 0.5, ease: "power2.out" }, 0.3 + t * 0.12);
+    }
+  }
+
+  var centerVal = root.querySelector('[data-anim-role="chart-value"]');
+  if (centerVal) {
+    var rawText = (V.center_value || centerVal.textContent || "").replace(/[^0-9.]/g, "");
+    var endNum = parseFloat(rawText) || 0;
+    var suffix = (V.center_value || centerVal.textContent || "").replace(/[0-9.]/g, "");
+    var counter = { val: 0 };
+    gsap.set(centerVal, { opacity: 0 });
+    tl.to(centerVal, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.8);
+    tl.to(counter, {
+      val: endNum, duration: 1.0, ease: "power2.out",
+      onUpdate: function () { centerVal.textContent = Math.round(counter.val) + suffix; }
+    }, 0.8);
+  }
+  if ($("chart-label").length) {
+    tl.from($("chart-label"), { opacity: 0, y: 8, duration: 0.4, ease: "power2.out" }, 1.0);
+  }
+  if (legendList) {
+    var items = legendList.querySelectorAll(".legend-item");
+    if (items.length) {
+      tl.from(items, { opacity: 0, x: 20, duration: 0.35, ease: "power2.out", stagger: 0.1 }, 1.0);
+    }
+  }
+};
+</script>

@@ -1,0 +1,285 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 60px 80px 50px;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .chart-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .chart-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .chart-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+[data-hf="structure-dom"] .chart-svg .grid-line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+[data-hf="structure-dom"] .chart-svg .baseline {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+[data-hf="structure-dom"] .chart-svg .line-path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-hf="structure-dom"] .chart-svg .area-path {
+  fill: var(--accent);
+  opacity: 0.15;
+  stroke: none;
+}
+
+[data-hf="structure-dom"] .chart-svg .data-point {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 3;
+}
+
+[data-hf="structure-dom"] .chart-svg .end-value {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 28px;
+  fill: var(--accent);
+  text-anchor: end;
+}
+
+[data-hf="structure-dom"] .chart-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px;
+}
+
+[data-hf="structure-dom"] .chart-x-item {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .chart-axis-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-hf="structure-dom"] .axis-label {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 20px;
+  color: var(--ink-3);
+}
+
+[data-hf="structure-dom"] .chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .chart-source {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 18px;
+  color: var(--ink-3);
+}
+
+[data-hf="structure-dom"] .chart-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="chart-title" data-anim-role="title" data-slot="headline">年度用户增长趋势</h2>
+
+  <div class="chart-body">
+    <svg class="chart-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMid meet">
+      <!-- grid lines -->
+      <g data-anim-role="chart-axis">
+        <line class="grid-line" x1="100" y1="40" x2="1540" y2="40"/>
+        <line class="grid-line" x1="100" y1="190" x2="1540" y2="190"/>
+        <line class="grid-line" x1="100" y1="340" x2="1540" y2="340"/>
+        <line class="grid-line" x1="100" y1="490" x2="1540" y2="490"/>
+        <line class="baseline" x1="100" y1="640" x2="1540" y2="640"/>
+      </g>
+
+      <!-- area fill under the line -->
+      <path class="area-path" data-anim-role="chart-area"
+            d="M 100 540 L 388 407 L 676 265 L 964 323 L 1252 173 L 1540 40 L 1540 640 L 100 640 Z"/>
+
+      <!-- the line itself -->
+      <polyline class="line-path" data-anim-role="chart-line"
+                points="100,540 388,407 676,265 964,323 1252,173 1540,40"/>
+
+      <!-- data points -->
+      <circle class="data-point" data-anim-role="chart-point" cx="100"  cy="540" r="7"/>
+      <circle class="data-point" data-anim-role="chart-point" cx="388"  cy="407" r="7"/>
+      <circle class="data-point" data-anim-role="chart-point" cx="676"  cy="265" r="7"/>
+      <circle class="data-point" data-anim-role="chart-point" cx="964"  cy="323" r="7"/>
+      <circle class="data-point" data-anim-role="chart-point" cx="1252" cy="173" r="7"/>
+      <circle class="data-point" data-anim-role="chart-point" cx="1540" cy="40"  r="7"/>
+
+      <!-- end-point value -->
+      <text class="end-value" data-anim-role="chart-value" x="1520" y="28">72</text>
+    </svg>
+  </div>
+
+  <div class="chart-labels" data-anim-role="chart-label">
+    <span class="chart-x-item">1月</span>
+    <span class="chart-x-item">3月</span>
+    <span class="chart-x-item">5月</span>
+    <span class="chart-x-item">7月</span>
+    <span class="chart-x-item">9月</span>
+    <span class="chart-x-item">12月</span>
+  </div>
+
+  <div class="chart-axis-labels">
+    <span class="axis-label" data-slot="x_label">月份</span>
+    <span class="axis-label" data-slot="y_label">万人</span>
+  </div>
+
+  <div class="chart-footer">
+    <span class="chart-source" data-slot="source_note">数据来源：内部统计 2024</span>
+    <div class="chart-divider"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  if ($("title").length) {
+    tl.from($("title"), { y: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+  }
+  if ($("chart-axis").length) {
+    tl.from($("chart-axis"), { opacity: 0, duration: 0.2, ease: "power1.out" }, 0.2);
+  }
+
+  var svg = root.querySelector(".chart-svg");
+  var labelsContainer = root.querySelector('[data-anim-role="chart-label"]');
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var seriesRaw = V.series || null;
+  var series = null;
+  if (seriesRaw) {
+    try { series = typeof seriesRaw === "string" ? JSON.parse(seriesRaw) : seriesRaw; } catch (e) { series = null; }
+  }
+
+  if (series && Array.isArray(series) && series.length > 1 && svg) {
+    var oldLine = svg.querySelector('[data-anim-role="chart-line"]');
+    var oldArea = svg.querySelector('[data-anim-role="chart-area"]');
+    var oldPoints = svg.querySelectorAll('[data-anim-role="chart-point"]');
+    var oldValue = svg.querySelector('[data-anim-role="chart-value"]');
+    if (oldLine) oldLine.remove();
+    if (oldArea) oldArea.remove();
+    for (var r = 0; r < oldPoints.length; r++) oldPoints[r].remove();
+    if (oldValue) oldValue.remove();
+
+    var padL = 100, padR = 60, padT = 40, padB = 60;
+    var cW = 1600 - padL - padR, cH = 700 - padT - padB;
+    var n = series.length;
+    var maxY = 0;
+    for (var i = 0; i < n; i++) { if (series[i].y > maxY) maxY = series[i].y; }
+    if (maxY === 0) maxY = 1;
+    var pts = [];
+    for (var j = 0; j < n; j++) {
+      var px = padL + (j / (n - 1)) * cW;
+      var py = padT + cH - (series[j].y / maxY) * cH;
+      pts.push({ x: Math.round(px), y: Math.round(py) });
+    }
+    var ns = "http://www.w3.org/2000/svg";
+    var lineStr = pts.map(function (p) { return p.x + "," + p.y; }).join(" ");
+    var areaD = "M " + pts.map(function (p) { return p.x + " " + p.y; }).join(" L ") +
+                " L " + pts[n - 1].x + " 640 L " + pts[0].x + " 640 Z";
+    var areaEl = document.createElementNS(ns, "path");
+    areaEl.setAttribute("class", "area-path");
+    areaEl.setAttribute("data-anim-role", "chart-area");
+    areaEl.setAttribute("d", areaD);
+    svg.appendChild(areaEl);
+    var lineEl = document.createElementNS(ns, "polyline");
+    lineEl.setAttribute("class", "line-path");
+    lineEl.setAttribute("data-anim-role", "chart-line");
+    lineEl.setAttribute("points", lineStr);
+    svg.appendChild(lineEl);
+    for (var k = 0; k < n; k++) {
+      var c = document.createElementNS(ns, "circle");
+      c.setAttribute("class", "data-point");
+      c.setAttribute("data-anim-role", "chart-point");
+      c.setAttribute("cx", String(pts[k].x));
+      c.setAttribute("cy", String(pts[k].y));
+      c.setAttribute("r", "7");
+      svg.appendChild(c);
+    }
+    var valEl = document.createElementNS(ns, "text");
+    valEl.setAttribute("class", "end-value");
+    valEl.setAttribute("data-anim-role", "chart-value");
+    valEl.setAttribute("x", String(pts[n - 1].x - 20));
+    valEl.setAttribute("y", String(pts[n - 1].y - 16));
+    valEl.textContent = String(series[n - 1].y);
+    svg.appendChild(valEl);
+    if (labelsContainer) {
+      labelsContainer.innerHTML = "";
+      for (var m = 0; m < n; m++) {
+        var span = document.createElement("span");
+        span.className = "chart-x-item";
+        span.textContent = series[m].x;
+        labelsContainer.appendChild(span);
+      }
+    }
+  }
+
+  var linePath = root.querySelector('[data-anim-role="chart-line"]');
+  if (linePath) {
+    var totalLen;
+    try { totalLen = linePath.getTotalLength(); } catch (e) { totalLen = 2000; }
+    gsap.set(linePath, { strokeDasharray: totalLen, strokeDashoffset: totalLen });
+    tl.to(linePath, { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, 0.4);
+  }
+  if ($("chart-area").length) {
+    gsap.set($("chart-area"), { opacity: 0 });
+    tl.to($("chart-area"), { opacity: 0.15, duration: 0.6, ease: "expo.out" }, 1.8);
+  }
+  var points = $("chart-point");
+  if (points.length) {
+    gsap.set(points, { scale: 0, transformOrigin: "center center" });
+    tl.to(points, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.1 }, 0.7);
+  }
+  if ($("chart-value").length) {
+    tl.from($("chart-value"), { opacity: 0, y: 8, duration: 0.4, ease: "power2.out" }, 1.8);
+  }
+  if ($("chart-label").length) {
+    tl.from($("chart-label"), { opacity: 0, duration: 0.3, ease: "power1.out" }, 0.6);
+  }
+};
+</script>

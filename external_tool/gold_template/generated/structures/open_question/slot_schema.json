@@ -1,0 +1,25 @@
+{
+  "structure_id": "open_question",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "眉标",
+      "default": "思想实验",
+      "max_chars": 10
+    },
+    "question_text": {
+      "type": "string",
+      "label": "问题文本",
+      "default": "如果人类能活一千年，社会结构会如何变化？",
+      "max_chars": 30
+    },
+    "guide_text": {
+      "type": "string",
+      "label": "引导文案",
+      "default": "评论区说说你的看法",
+      "max_chars": 20
+    }
+  }
+}

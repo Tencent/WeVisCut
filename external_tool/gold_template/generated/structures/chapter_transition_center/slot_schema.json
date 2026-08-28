@@ -1,0 +1,10 @@
+{
+  "structure_id": "chapter_transition_center",
+  "family": "narrative",
+  "duration_default": 4.5,
+  "slots": {
+    "chapter_no": {"type": "string", "label": "章节编号", "default": "02", "max_chars": 3},
+    "chapter_title": {"type": "string", "label": "章节标题", "default": "方法拆解", "max_chars": 14},
+    "chapter_sub": {"type": "string", "label": "章节副标题", "default": "从原理到可复用的三步流程", "max_chars": 22}
+  }
+}

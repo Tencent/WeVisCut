@@ -1,0 +1,41 @@
+{
+  "_comment": "装饰家族语义目录。三个家族 dataviz/diagram/icon 全部用现有三层落地，structure × motion × visual 可自由组合。本文件只作：①下游 Planner 选用映射 ②打标分类 ③防过度装饰治理。详见 CONTRACT §9/§11。",
+  "families": [
+    {
+      "family": "dataviz",
+      "zh": "数据图表 / 数字 / 曲线",
+      "placement": "block",
+      "structures": ["bar_chart", "line_chart", "donut_pie"],
+      "motions": ["bar_grow", "line_draw", "pie_sweep"],
+      "data_contract": "series 数据通过 slot 传入（type:json），如 [{label,value}]；结构内嵌静态占位图形 + 运动读数据驱动",
+      "eligibility": "shot 文本含 ≥2 个可比数值，或明确的占比/增长/下降/百分比等数据语义",
+      "sfx_default": [{"sfx": "whoosh"}, {"sfx": "pop"}]
+    },
+    {
+      "family": "diagram",
+      "zh": "关系图 / 流程图 / 循环 / 维恩",
+      "placement": "block",
+      "structures": ["flow_steps", "cycle_loop", "venn_compare"],
+      "motions": ["flow_advance", "cycle_rotate"],
+      "data_contract": "nodes/edges 通过 slot 传入（type:json）；结构内嵌静态占位图形 + 运动读数据驱动",
+      "eligibility": "shot 文本含步骤/流程/分为/导致/循环/对比等关系或过程标记",
+      "sfx_default": [{"sfx": "whoosh"}, {"sfx": "pop"}]
+    },
+    {
+      "family": "icon",
+      "zh": "图标 / 圈选 / 下划线 / 高亮 / 印章",
+      "placement": "overlay",
+      "structures": [],
+      "motions": ["icon_pop_emphasis"],
+      "data_contract": "图标语义通过结构内嵌 inline SVG + icon anim-role；overlay 绝对定位浮于内容上",
+      "eligibility": "shot 有明确可强调实体关键词，且 spotlight_level 偏高",
+      "sfx_default": [{"sfx": "pop"}, {"sfx": "sparkle"}]
+    }
+  ],
+  "density_budget": {
+    "default_is_none": true,
+    "heavy_per_seconds": 25,
+    "decorated_shot_ratio_max": 0.30,
+    "per_shot_max": {"heavy": 1, "icon_emphasis": 1, "sfx": 2}
+  }
+}

@@ -1,0 +1,106 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 80px 100px;
+  gap: 24px;
+  box-sizing: border-box;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+[data-hf="structure-dom"] .mb-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 100px 100px;
+}
+
+[data-hf="structure-dom"] .mb-right {
+  transform: translateY(100%);
+}
+
+[data-hf="structure-dom"] .mb-icon {
+  font-size: 96px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .mb-icon-wrong {
+  color: var(--danger);
+}
+
+[data-hf="structure-dom"] .mb-icon-right {
+  color: var(--success);
+}
+
+[data-hf="structure-dom"] .mb-text {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 52px;
+  line-height: 1.3;
+  color: var(--ink-1);
+  max-width: 900px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">误区纠正</div>
+  <div class="mb-panel mb-wrong">
+    <span class="mb-icon mb-icon-wrong" data-anim-role="decoration">✗</span>
+    <p class="mb-text" data-anim-role="title" data-slot="wrong_text">人类只使用了大脑的10%</p>
+  </div>
+  <div class="mb-panel mb-right">
+    <span class="mb-icon mb-icon-right" data-anim-role="decoration">✓</span>
+    <p class="mb-text" data-anim-role="body" data-slot="right_text">大脑各区域全天候都在活动</p>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var wrongPanel = root.querySelector('.mb-wrong');
+  var rightPanel = root.querySelector('.mb-right');
+  var wrongIcon = wrongPanel.querySelector('.mb-icon');
+  var wrongText = wrongPanel.querySelector('.mb-text');
+  var rightIcon = rightPanel.querySelector('.mb-icon');
+  var rightText = rightPanel.querySelector('.mb-text');
+
+  tl.from(wrongIcon, { scale: 0, duration: 0.5, ease: "back.out(1.7)" }, 0);
+  tl.from(wrongText, { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 0.2);
+
+  tl.to(wrongPanel, { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power2.inOut" }, 3);
+  tl.to(rightPanel, { y: 0, duration: 0.6, ease: "power2.out" }, 3.2);
+
+  tl.from(rightIcon, { scale: 0, duration: 0.5, ease: "back.out(1.7)" }, 3.8);
+  tl.from(rightText, { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 4.0);
+
+  var allEls = root.querySelectorAll('[data-anim-role]');
+  for (var i = 0; i < allEls.length; i++) allEls[i].removeAttribute('data-anim-role');
+};
+</script>

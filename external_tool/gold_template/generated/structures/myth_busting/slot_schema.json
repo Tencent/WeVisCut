@@ -1,0 +1,25 @@
+{
+  "structure_id": "myth_busting",
+  "family": "narrative",
+  "duration_default": 6.0,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "顶部标签",
+      "default": "误区纠正",
+      "max_chars": 12
+    },
+    "wrong_text": {
+      "type": "string",
+      "label": "错误说法",
+      "default": "人类只使用了大脑的10%",
+      "max_chars": 24
+    },
+    "right_text": {
+      "type": "string",
+      "label": "正确事实",
+      "default": "大脑各区域全天候都在活动",
+      "max_chars": 24
+    }
+  }
+}

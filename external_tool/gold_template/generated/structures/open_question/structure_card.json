@@ -1,0 +1,10 @@
+{
+  "structure_id": "open_question",
+  "family": "narrative",
+  "use_for": ["开放问题", "思想实验", "结尾互动", "引导评论"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "decoration", "title", "subtitle"],
+  "slots": ["eyebrow", "question_text", "guide_text"],
+  "sfx": [{"at": 0.3, "sfx": "whoosh"}, {"at": 1.2, "sfx": "sparkle"}]
+}

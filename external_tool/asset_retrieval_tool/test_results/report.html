@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>asset_retrieval_tool 测试报告</title>
+<style>
+:root {
+  --paper:      #fbfaf7;
+  --surface:    #ffffff;
+  --ink:        #16181d;
+  --ink-2:      #565c66;
+  --ink-3:      #949aa3;
+  --rule:       #e8e5df;
+  --rule-firm:  #d2cec6;
+  --accent:     #1f3f9e;
+  --ok:         #0f7549;
+  --ok-soft:    #eef6f1;
+  --warn:       #a3540b;
+  --warn-soft:  #fdf4e7;
+
+  --text-xs:    0.72rem;
+  --text-sm:    0.82rem;
+  --text-base:  0.94rem;
+  --text-lg:    1.15rem;
+  --text-kpi:   clamp(1.6rem, 1.2rem + 1.4vw, 2.35rem);
+  --text-title: clamp(1.35rem, 1.1rem + 1vw, 1.9rem);
+
+  --space-sec:  clamp(2.5rem, 2rem + 2vw, 4rem);
+  --radius:     8px;
+  --dur:        160ms;
+  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0 }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+               'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: clamp(2rem, 4vw, 3.5rem) 1.5rem 4rem }
+
+/* ── 页头 ─────────────────────────────────────────────────────────── */
+.masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.1rem }
+.eyebrow {
+  font-size: var(--text-xs); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 0.5rem;
+}
+h1 { font-size: var(--text-title); font-weight: 600; letter-spacing: -0.02em }
+.stamp { font-size: var(--text-sm); color: var(--ink-3); margin-top: 0.35rem }
+
+/* ── 顶部 KPI 带 ──────────────────────────────────────────────────── */
+.kpis {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  border-bottom: 1px solid var(--rule-firm); margin-bottom: var(--space-sec);
+}
+.kpi { padding: 1.4rem 1.5rem 1.5rem; border-right: 1px solid var(--rule) }
+.kpi:first-child { padding-left: 0 }
+.kpi:last-child { border-right: 0 }
+.kpi-num {
+  font-size: var(--text-kpi); font-weight: 300; letter-spacing: -0.03em;
+  line-height: 1.05; font-variant-numeric: tabular-nums;
+}
+.kpi-num .unit { font-size: 0.44em; font-weight: 400; color: var(--ink-3); margin-left: 0.15em }
+.kpi-num.is-ok { color: var(--ok) }
+.kpi-label {
+  font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3); margin-top: 0.55rem;
+}
+
+/* ── 区块 ─────────────────────────────────────────────────────────── */
+section { margin-bottom: var(--space-sec) }
+.sec-head {
+  display: flex; align-items: baseline; gap: 0.8rem;
+  border-bottom: 1px solid var(--ink); padding-bottom: 0.55rem; margin-bottom: 0.3rem;
+}
+.sec-head h2 { font-size: var(--text-lg); font-weight: 600; letter-spacing: -0.01em }
+.sec-note { font-size: var(--text-xs); color: var(--ink-3); margin-left: auto }
+
+/* 区块内的耗时小指标条 */
+.metrics { display: flex; flex-wrap: wrap; gap: 0 2.2rem; padding: 0.9rem 0 1.6rem }
+.metric { font-size: var(--text-sm) }
+.metric b {
+  display: block; font-size: var(--text-base); font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.metric span { color: var(--ink-3); font-size: var(--text-xs) }
+
+/* ── query 分组 ───────────────────────────────────────────────────── */
+.group { padding: 1.1rem 0 1.5rem; border-top: 1px solid var(--rule) }
+.group-head { display: flex; align-items: baseline; gap: 0.7rem; margin-bottom: 0.9rem }
+.q { font-weight: 600; font-size: var(--text-base) }
+.q::before, .q::after { content: '"'; color: var(--ink-3); font-weight: 400 }
+.group-meta {
+  margin-left: auto; display: flex; gap: 1rem; font-size: var(--text-sm);
+  color: var(--ink-2); font-variant-numeric: tabular-nums;
+}
+
+.pill {
+  font-size: var(--text-xs); padding: 0.1rem 0.45rem; border-radius: 3px;
+  border: 1px solid var(--rule-firm); color: var(--ink-2); background: var(--surface);
+}
+.pill.ok { color: var(--ok); background: var(--ok-soft); border-color: #c8e2d5 }
+.pill.warn { color: var(--warn); background: var(--warn-soft); border-color: #eddcc0 }
+
+/* ── 视频卡片 ─────────────────────────────────────────────────────── */
+.vgrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 1rem;
+}
+.vcard {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);
+  overflow: hidden; transition: border-color var(--dur) var(--ease),
+                                transform var(--dur) var(--ease);
+}
+.vcard:hover { border-color: var(--rule-firm); transform: translateY(-2px) }
+.vcard video, .vcard img, .vthumb-none {
+  width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover;
+  background: #f0eee9; border-bottom: 1px solid var(--rule);
+}
+.vthumb-none { display: grid; place-items: center; color: var(--ink-3); font-size: var(--text-sm) }
+.vbody { padding: 0.6rem 0.7rem 0.7rem }
+/* 截断到 2 行，避免个别超长标题把同一行卡片撑高、破坏栅格节奏 */
+.vtitle {
+  font-size: var(--text-sm); font-weight: 500; line-height: 1.35;
+  margin-bottom: 0.3rem; min-height: 2.7em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.vtitle a { color: inherit; text-decoration: none }
+.vtitle a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 2px }
+.vsub {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  font-size: var(--text-xs); color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.vsub .score { color: var(--ink-2); font-weight: 500 }
+
+/* ── BGM 列表 ─────────────────────────────────────────────────────── */
+.tracks { display: flex; flex-direction: column }
+.track {
+  display: grid; grid-template-columns: 1.8rem minmax(0, 1fr) auto 3.2rem 230px;
+  gap: 0.9rem; align-items: center; padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule); font-size: var(--text-sm);
+}
+.track:last-child { border-bottom: 0 }
+.track .r { color: var(--ink-3); font-variant-numeric: tabular-nums; font-size: var(--text-xs) }
+.track .t {
+  font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.track .t a { color: inherit; text-decoration: none }
+.track .t a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 2px }
+.track .a { color: var(--ink-2); font-size: var(--text-xs) }
+.track .d { color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums;
+            font-size: var(--text-xs) }
+audio { width: 100%; height: 30px }
+.nofile { color: var(--ink-3); font-size: var(--text-xs); font-style: italic }
+
+footer {
+  border-top: 1px solid var(--rule-firm); padding-top: 1rem;
+  font-size: var(--text-xs); color: var(--ink-3); line-height: 1.7;
+}
+
+@media (max-width: 760px) {
+  .track { grid-template-columns: 1.6rem minmax(0, 1fr) 3rem; row-gap: 0.35rem }
+  .track .a { grid-column: 2 / 4 }
+  .track audio, .track .nofile { grid-column: 1 / 4 }
+  .kpi:first-child { padding-left: 1.5rem }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">AICutPipeline · 素材检索</div>
+    <h1>asset_retrieval_tool 集成测试报告</h1>
+    <div class="stamp">生成于 2026-08-03 18:22 · 高并发实测</div>
+  </header>
+  <div class="kpis"><div class="kpi"><div class="kpi-num is-ok">13/13</div><div class="kpi-label">视频落盘</div></div><div class="kpi"><div class="kpi-num">13.21<span class="unit">s</span></div><div class="kpi-label">视频端到端均耗时</div></div><div class="kpi"><div class="kpi-num">25.0<span class="unit">MB</span></div><div class="kpi-label">视频体积</div></div><div class="kpi"><div class="kpi-num is-ok">16/16</div><div class="kpi-label">BGM 落盘</div></div><div class="kpi"><div class="kpi-num is-ok">0</div><div class="kpi-label">纯音乐误报</div></div></div>
+  <main>
+    
+    <section>
+      <div class="sec-head">
+        <h2>视频检索</h2>
+        <span class="sec-note">耗时含搜索 + yt-dlp 抽流 + FFmpeg 合并落盘全程</span>
+      </div>
+      <div class="metrics"><div class="metric"><b>15.84s</b><span>并发总耗时</span></div><div class="metric"><b>13.21s</b><span>平均</span></div><div class="metric"><b>15.84s</b><span>最慢</span></div><div class="metric"><b>10.9s</b><span>最快</span></div></div>
+      
+          <div class="group">
+            <div class="group-head">
+              <span class="q">晨光校园学生</span>
+              <span class="pill">bilibili</span>
+              <div class="group-meta">
+                <span>3 条</span>
+                <span>12.92s</span>
+              </div>
+            </div>
+            <div class="vgrid">
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i0.hdslb.com/bfs/archive/e570f23ab6a083ee1c9b2477206d14351361cf48.jpg" src="downloaded/video/bilibili_BV1XiZMYYE9g.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1XiZMYYE9g" target="_blank" rel="noopener">何晨光的笔#校园生活</a></div>
+                  <div class="vsub">
+                    <span class="score">0.708</span>
+                    <span>小侯老师侯妈</span>
+                    <span>33s</span>
+                    <span class="pill ok">1.7 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i2.hdslb.com/bfs/archive/a51be57fe26e114e2dae6dc4e752356eb841a741.jpg" src="downloaded/video/bilibili_BV1skGg6BESw_00.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1skGg6BESw" target="_blank" rel="noopener">00后高中班主任重回校园，当学生的一天</a></div>
+                  <div class="vsub">
+                    <span class="score">0.520</span>
+                    <span>是朱小兴鸭</span>
+                    <span>232s</span>
+                    <span class="pill ok">3.0 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i2.hdslb.com/bfs/archive/f27b5fa8cf274fb08c0aa9494e0a82379ae3e0c8.jpg" src="downloaded/video/bilibili_BV1o7MQ6cE46_________________MV.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1o7MQ6cE46" target="_blank" rel="noopener">由郑航实验高级中学师生联合演绎的MV《阳光路上》，展现了新时代高中学子昂扬向上的精神风貌。这群少年迎着晨光奋勇向前，奋力书写独属于自己的青春答卷。</a></div>
+                  <div class="vsub">
+                    <span class="score">0.482</span>
+                    <span>凤闻天下</span>
+                    <span>231s</span>
+                    <span class="pill ok">1.4 MB</span>
+                  </div>
+                </div>
+              </article></div>
+          </div>
+          <div class="group">
+            <div class="group-head">
+              <span class="q">自然风光山水</span>
+              <span class="pill">bilibili</span>
+              <div class="group-meta">
+                <span>5 条</span>
+                <span>15.84s</span>
+              </div>
+            </div>
+            <div class="vgrid">
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i1.hdslb.com/bfs/archive/23ce1d15e5537d4328d20639b2d549ab0296b8c7.jpg" src="downloaded/video/bilibili_BV1CF411v7Qk.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1CF411v7Qk" target="_blank" rel="noopener">治愈系风景 马尾君山“夏岐水库”绝美的山水风光 感受大自然的气息</a></div>
+                  <div class="vsub">
+                    <span class="score">0.752</span>
+                    <span>简单fzfzfz</span>
+                    <span>402s</span>
+                    <span class="pill ok">4.4 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i2.hdslb.com/bfs/archive/810d9406f53e458896857881589be55c7bfe86ce.jpg" src="downloaded/video/bilibili_BV1eW4y1s7rH_____________________________-.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1eW4y1s7rH" target="_blank" rel="noopener">这里有不输于桂林山水的自然风光，保存了比较完整的自然风貌-航拍布泉秘境</a></div>
+                  <div class="vsub">
+                    <span class="score">0.709</span>
+                    <span>爱玩的宾哥</span>
+                    <span>166s</span>
+                    <span class="pill ok">2.5 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i2.hdslb.com/bfs/archive/afbf3480cb8c44318d700a2351a234427c0987f3.jpg" src="downloaded/video/bilibili_BV1Y64y1T7oB.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1Y64y1T7oB" target="_blank" rel="noopener">优美的自然山水风景欣赏</a></div>
+                  <div class="vsub">
+                    <span class="score">0.655</span>
+                    <span>li像风一样</span>
+                    <span>67s</span>
+                    <span class="pill ok">1.6 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i1.hdslb.com/bfs/archive/329d5c9bd40592d39307908cac9e8a9b23a71715.jpg" src="downloaded/video/bilibili_BV1YDLn6XE8g.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1YDLn6XE8g" target="_blank" rel="noopener">清风漫拂辽阔大地，静听原野温柔的呼吸，草木轻摇藏尽山野诗意，流云漫渡揽尽人间清欢，于自然深处邂逅岁月安然，沉醉满目悠然山野风光</a></div>
+                  <div class="vsub">
+                    <span class="score">0.589</span>
+                    <span>森林小蘑菇666</span>
+                    <span>187s</span>
+                    <span class="pill ok">1.3 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i0.hdslb.com/bfs/archive/4a66c59c6d79e97c48d903f7b1383b36bc87ddec.jpg" src="downloaded/video/bilibili_BV1M73U6LENq.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1M73U6LENq" target="_blank" rel="noopener">俯瞰黄龙潭水库，邂逅鹤庆静谧山水风光</a></div>
+                  <div class="vsub">
+                    <span class="score">0.517</span>
+                    <span>重庆森林CQ</span>
+                    <span>65s</span>
+                    <span class="pill ok">2.7 MB</span>
+                  </div>
+                </div>
+              </article></div>
+          </div>
+          <div class="group">
+            <div class="group-head">
+              <span class="q">城市夜景</span>
+              <span class="pill">bilibili</span>
+              <div class="group-meta">
+                <span>2 条</span>
+                <span>13.19s</span>
+              </div>
+            </div>
+            <div class="vgrid">
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i2.hdslb.com/bfs/archive/fa0ef5aa3421792ceeee95275c207cbb8d73d55f.jpg" src="downloaded/video/bilibili_BV1H93Q67EzX.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1H93Q67EzX" target="_blank" rel="noopener">城市夜景随拍</a></div>
+                  <div class="vsub">
+                    <span class="score">1.183</span>
+                    <span>星河海滩</span>
+                    <span>100s</span>
+                    <span class="pill ok">2.9 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i0.hdslb.com/bfs/archive/b8fe6567738c3a1b3b5a7796397e001d0460c143.jpg" src="downloaded/video/bilibili_BV1JU411S79D_ps.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1JU411S79D" target="_blank" rel="noopener">ps堆栈在城市夜景照片中的应用【实战】</a></div>
+                  <div class="vsub">
+                    <span class="score">1.111</span>
+                    <span>绳探长</span>
+                    <span>391s</span>
+                    <span class="pill ok">0.4 MB</span>
+                  </div>
+                </div>
+              </article></div>
+          </div>
+          <div class="group">
+            <div class="group-head">
+              <span class="q">学生学习专注</span>
+              <span class="pill">bilibili</span>
+              <div class="group-meta">
+                <span>3 条</span>
+                <span>10.9s</span>
+              </div>
+            </div>
+            <div class="vgrid">
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i0.hdslb.com/bfs/archive/0f6d85a7a1c0e910ba53e10a560da6975432e5f6.jpg" src="downloaded/video/bilibili_BV1bqga6eE5f.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1bqga6eE5f" target="_blank" rel="noopener">高中生专注学习控制手机的秘诀来了！专注学习减少手机干扰</a></div>
+                  <div class="vsub">
+                    <span class="score">0.759</span>
+                    <span>指南针爱上985</span>
+                    <span>171s</span>
+                    <span class="pill ok">0.8 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i1.hdslb.com/bfs/archive/cf56a4499662fa252413abf21730d703fd8c795a.jpg" src="downloaded/video/bilibili_BV1uL41187eX.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1uL41187eX" target="_blank" rel="noopener">五个宿舍专注学习方法|专治学习没动力|高中生大学生宿舍学习|高效学习方法</a></div>
+                  <div class="vsub">
+                    <span class="score">0.730</span>
+                    <span>格尔尼酱</span>
+                    <span>601s</span>
+                    <span class="pill ok">1.4 MB</span>
+                  </div>
+                </div>
+              </article>
+              <article class="vcard">
+                <video controls preload="metadata" poster="https://i1.hdslb.com/bfs/archive/2103be7679d50d6f0f133fe6d47b38e0d809febe.jpg" src="downloaded/video/bilibili_BV1je4y1k7ey______app.mp4"></video>
+                <div class="vbody">
+                  <div class="vtitle"><a href="https://www.bilibili.com/video/BV1je4y1k7ey" target="_blank" rel="noopener">学生党必备app｜课表制作🌈专注学习！学霸❗️</a></div>
+                  <div class="vsub">
+                    <span class="score">0.721</span>
+                    <span>闲人大愚-LI</span>
+                    <span>51s</span>
+                    <span class="pill ok">0.7 MB</span>
+                  </div>
+                </div>
+              </article></div>
+          </div>
+    </section>
+    
+    <section>
+      <div class="sec-head">
+        <h2>BGM 检索</h2>
+        <span class="sec-note">Internet Archive netlabels · CC 授权 · 双层纯音乐过滤</span>
+      </div>
+      <div class="metrics"><div class="metric"><b>44.59s</b><span>并发总耗时</span></div><div class="metric"><b>23.81s</b><span>平均</span></div><div class="metric"><b>44.59s</b><span>最慢</span></div><div class="metric"><b>2.76s</b><span>最快</span></div></div>
+      
+          <div class="group">
+            <div class="group-head">
+              <span class="q">upbeat background music</span>
+              <span class="pill ok">纯音乐 ✓</span>
+              <div class="group-meta">
+                <span>5 条</span>
+                <span>21.52s</span>
+              </div>
+            </div>
+            <div class="tracks">
+              <div class="track">
+                <span class="r">1</span>
+                <span class="t"><a href="https://archive.org/details/DWK123" target="_blank"
+                   rel="noopener">ProleteR   01   April Showers</a></span>
+                <span class="a">ProleteR</span>
+                <span class="d">269s</span>
+                <audio controls preload="none" src="downloaded/bgm/ProleteR_ProleteR___01___April_Showers.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">2</span>
+                <span class="t"><a href="https://archive.org/details/DWK123" target="_blank"
+                   rel="noopener">ProleteR   02   Downtown Irony</a></span>
+                <span class="a">ProleteR</span>
+                <span class="d">261s</span>
+                <audio controls preload="none" src="downloaded/bgm/ProleteR_ProleteR___02___Downtown_Irony.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">3</span>
+                <span class="t"><a href="https://archive.org/details/DWK123" target="_blank"
+                   rel="noopener">ProleteR   03   Soul Key</a></span>
+                <span class="a">ProleteR</span>
+                <span class="d">303s</span>
+                <audio controls preload="none" src="downloaded/bgm/ProleteR_ProleteR___03___Soul_Key.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">4</span>
+                <span class="t"><a href="https://archive.org/details/DWK123" target="_blank"
+                   rel="noopener">ProleteR   04   A Million Dollar</a></span>
+                <span class="a">ProleteR</span>
+                <span class="d">248s</span>
+                <audio controls preload="none" src="downloaded/bgm/ProleteR_ProleteR___04___A_Million_Dollar.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">5</span>
+                <span class="t"><a href="https://archive.org/details/DWK123" target="_blank"
+                   rel="noopener">ProleteR   05   U Can Get It</a></span>
+                <span class="a">ProleteR</span>
+                <span class="d">259s</span>
+                <audio controls preload="none" src="downloaded/bgm/ProleteR_ProleteR___05___U_Can_Get_It.mp3"></audio>
+              </div></div>
+          </div>
+          <div class="group">
+            <div class="group-head">
+              <span class="q">ambient chill electronic</span>
+              <span class="pill ok">纯音乐 ✓</span>
+              <div class="group-meta">
+                <span>3 条</span>
+                <span>26.37s</span>
+              </div>
+            </div>
+            <div class="tracks">
+              <div class="track">
+                <span class="r">1</span>
+                <span class="t"><a href="https://archive.org/details/puMpL006_-_postunder_records_-_minimags_compilation_vol_1" target="_blank"
+                   rel="noopener">afshar   birds dont fly they just jump really high</a></span>
+                <span class="a">Afshar</span>
+                <span class="d">258s</span>
+                <audio controls preload="none" src="downloaded/bgm/Afshar_afshar___birds_dont_fly_they_just_jump_really_high.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">2</span>
+                <span class="t"><a href="https://archive.org/details/puMpL006_-_postunder_records_-_minimags_compilation_vol_1" target="_blank"
+                   rel="noopener">black mizi pro duck sun   ennio morricone   once upon a time</a></span>
+                <span class="a">Black Mizi Pro Duck Sun</span>
+                <span class="d">356s</span>
+                <audio controls preload="none" src="downloaded/bgm/Black_Mizi_Pro_Duck_Sun_black_mizi_pro_duck_sun___ennio_morricone___once_upon_a_time.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">3</span>
+                <span class="t"><a href="https://archive.org/details/sute014" target="_blank"
+                   rel="noopener">01 SubtractiveLAD And Bitcrush   Denouement</a></span>
+                <span class="a">SubtractiveLAD &amp; Bitcrus</span>
+                <span class="d">256s</span>
+                <audio controls preload="none" src="downloaded/bgm/SubtractiveLAD___Bitcrush_01_SubtractiveLAD_And_Bitcrush___Denouement.MP3"></audio>
+              </div></div>
+          </div>
+          <div class="group">
+            <div class="group-head">
+              <span class="q">cinematic orchestral dramatic</span>
+              <span class="pill ok">纯音乐 ✓</span>
+              <div class="group-meta">
+                <span>5 条</span>
+                <span>2.76s</span>
+              </div>
+            </div>
+            <div class="tracks">
+              <div class="track">
+                <span class="r">1</span>
+                <span class="t"><a href="https://archive.org/details/apl030" target="_blank"
+                   rel="noopener">apl030 01 tlon   may we be us</a></span>
+                <span class="a">tlon</span>
+                <span class="d">337s</span>
+                <audio controls preload="none" src="downloaded/bgm/tlon_apl030_01_tlon___may_we_be_us.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">2</span>
+                <span class="t"><a href="https://archive.org/details/apl030" target="_blank"
+                   rel="noopener">apl030 02 tlon   escaping the land</a></span>
+                <span class="a">tlon</span>
+                <span class="d">292s</span>
+                <audio controls preload="none" src="downloaded/bgm/tlon_apl030_02_tlon___escaping_the_land.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">3</span>
+                <span class="t"><a href="https://archive.org/details/apl030" target="_blank"
+                   rel="noopener">apl030 03 tlon   in the shadow of unexpectation</a></span>
+                <span class="a">tlon</span>
+                <span class="d">422s</span>
+                <audio controls preload="none" src="downloaded/bgm/tlon_apl030_03_tlon___in_the_shadow_of_unexpectation.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">4</span>
+                <span class="t"><a href="https://archive.org/details/apl030" target="_blank"
+                   rel="noopener">apl030 04 tlon   about us</a></span>
+                <span class="a">tlon</span>
+                <span class="d">464s</span>
+                <audio controls preload="none" src="downloaded/bgm/tlon_apl030_04_tlon___about_us.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">5</span>
+                <span class="t"><a href="https://archive.org/details/apl030" target="_blank"
+                   rel="noopener">apl030 05 tlon   do we belong here</a></span>
+                <span class="a">tlon</span>
+                <span class="d">279s</span>
+                <audio controls preload="none" src="downloaded/bgm/tlon_apl030_05_tlon___do_we_belong_here.mp3"></audio>
+              </div></div>
+          </div>
+          <div class="group">
+            <div class="group-head">
+              <span class="q">jazz lofi beats</span>
+              <span class="pill ok">纯音乐 ✓</span>
+              <div class="group-meta">
+                <span>3 条</span>
+                <span>44.59s</span>
+              </div>
+            </div>
+            <div class="tracks">
+              <div class="track">
+                <span class="r">1</span>
+                <span class="t"><a href="https://archive.org/details/phoke035" target="_blank"
+                   rel="noopener">phoke35   01   kryptic universe   jazzyllusions</a></span>
+                <span class="a">kryptic universe</span>
+                <span class="d">321s</span>
+                <audio controls preload="none" src="downloaded/bgm/kryptic_universe_phoke35___01___kryptic_universe___jazzyllusions.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">2</span>
+                <span class="t"><a href="https://archive.org/details/phoke035" target="_blank"
+                   rel="noopener">phoke35   02   kryptic universe   fufanu 79</a></span>
+                <span class="a">kryptic universe</span>
+                <span class="d">367s</span>
+                <audio controls preload="none" src="downloaded/bgm/kryptic_universe_phoke35___02___kryptic_universe___fufanu_79.mp3"></audio>
+              </div>
+              <div class="track">
+                <span class="r">3</span>
+                <span class="t"><a href="https://archive.org/details/DWK232" target="_blank"
+                   rel="noopener">BaaskaT   01   Flow</a></span>
+                <span class="a">BaaskaT</span>
+                <span class="d">168s</span>
+                <audio controls preload="none" src="downloaded/bgm/BaaskaT_BaaskaT___01___Flow.mp3"></audio>
+              </div></div>
+          </div>
+    </section>
+  </main>
+  <footer>
+    视频经 yt-dlp 抽取 DASH 流、FFmpeg 合并为 mp4，已限制画质与截取时长（短素材场景）。<br>
+    媒体文件位于 <code>downloaded/</code>，本页直接内嵌播放。
+  </footer>
+</div>
+</body>
+</html>

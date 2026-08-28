@@ -1,0 +1,13 @@
+{
+  "structure_id": "layer_stack_exploded",
+  "family": "diagram",
+  "use_for": ["层次结构", "分层模型", "堆叠概念"],
+  "spotlight_level": "mid",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["title", "card", "accent-line"],
+  "slots": ["headline", "layer1", "layer2", "layer3"],
+  "sfx_cues": [
+    {"at": 0.4, "sfx": "whoosh", "comment": "分层展开"},
+    {"at": 1.1, "sfx": "tick", "comment": "逐层落位"}
+  ]
+}

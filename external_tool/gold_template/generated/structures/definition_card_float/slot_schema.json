@@ -1,0 +1,13 @@
+{
+  "structure_id": "definition_card_float",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {"type": "string", "label": "小标签", "default": "概念", "max_chars": 10},
+    "term": {"type": "string", "label": "概念名", "default": "向量数据库", "max_chars": 14},
+    "definition": {"type": "string", "label": "定义正文", "default": "一种以高维向量为索引单元、按相似度而非精确匹配检索数据的存储系统", "max_chars": 44},
+    "keyword1": {"type": "string", "label": "关键词1", "default": "相似检索", "max_chars": 8},
+    "keyword2": {"type": "string", "label": "关键词2", "default": "嵌入", "max_chars": 8},
+    "keyword3": {"type": "string", "label": "关键词3", "default": "近邻搜索", "max_chars": 8}
+  }
+}

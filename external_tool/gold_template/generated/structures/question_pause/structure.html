@@ -1,0 +1,64 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 60px 100px;
+  gap: 28px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .stage-panel {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-hf="structure-dom"] .qp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 30px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.1em;
+}
+
+[data-hf="structure-dom"] .qp-emoji {
+  font-size: 160px;
+  line-height: 1;
+}
+
+[data-hf="structure-dom"] .qp-question {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.25;
+  color: var(--ink-1);
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .qp-guide {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <span class="qp-eyebrow" data-anim-role="eyebrow" data-slot="eyebrow">想一想</span>
+  <div class="qp-emoji" data-anim-role="decoration">❓</div>
+  <h1 class="qp-question" data-anim-role="title" data-slot="question_text">如果没有月球，地球会怎样？</h1>
+  <p class="qp-guide" data-anim-role="subtitle" data-slot="guide_text">暂停三秒，想想你的答案</p>
+</div>

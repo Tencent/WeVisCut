@@ -1,0 +1,17 @@
+{
+  "structure_id": "donut_pie",
+  "family": "dataviz",
+  "use_for": ["饼图/环形图", "占比分布", "成分构成"],
+  "spotlight_level": "high",
+  "duration_range": [5.0, 7.5],
+  "anim_roles": ["title", "chart-slice", "chart-value", "chart-label", "chart-legend"],
+  "slots": ["headline", "series", "center_value", "center_label", "source_note"],
+  "data_slots": ["series"],
+  "data_contract": {
+    "series": {
+      "shape": "[{label: string, value: number}]",
+      "min_items": 2,
+      "max_items": 8
+    }
+  }
+}

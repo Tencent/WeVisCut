@@ -1,0 +1,20 @@
+{
+  "structure_id": "chart_callout_split",
+  "family": "dataviz",
+  "variant_of": "chart_callout",
+  "variant_label": "左图右注",
+  "use_for": ["数据趋势", "图表标注", "关键拐点"],
+  "spotlight_level": "high",
+  "duration_range": [5.5, 8.5],
+  "anim_roles": ["bg", "title", "chart-axis", "chart-line", "chart-area", "chart-point", "chart-value", "callout", "accent-line"],
+  "slots": ["headline", "series", "callout_text", "source_note"],
+  "data_slots": ["series"],
+  "data_contract": {
+    "series": { "shape": "[{label: string, value: number}]", "min_items": 3, "max_items": 8 }
+  },
+  "bound": true,
+  "sfx_cues": [
+    { "at": 0.4, "sfx": "rise", "comment": "彗星顺折线上升" },
+    { "at": 1.9, "sfx": "pop", "comment": "右侧结论栏滑入" }
+  ]
+}

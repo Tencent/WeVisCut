@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "放大看检索这一步"}, {"id": "overview_caption", "type": "string", "label": "总览说明", "default": "RAG 全流程"}, {"id": "zoom_label", "type": "string", "label": "放大组件名", "default": "向量检索"}, {"id": "zoom_desc", "type": "string", "label": "放大组件说明", "default": "把问题编码为向量并召回最相近的知识片段"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      :root {
+        --bg: #f7f9fc;
+        --bg-2: #eef2f8;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --accent: #4f46e5;
+        --accent-2: #0ea5e9;
+        --danger: #ef4444;
+        --success: #10b981;
+        --line: rgba(15,23,42,.08);
+        --line-strong: rgba(15,23,42,.16);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 50% at 50% 45%, rgba(79,70,229,.06) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 40% at 80% 70%, rgba(14,165,233,.04) 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (focus_zoom) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 56px 80px 44px;
+        gap: 16px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .fz-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 60px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        text-align: center;
+        max-width: 1100px;
+      }
+
+      [data-hf="structure-dom"] .fz-area {
+        position: relative;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      [data-hf="structure-dom"] .fz-wrap {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 760px;
+        height: 420px;
+        margin-left: -380px;
+        margin-top: -210px;
+        transform-origin: 50% 21.4%;
+      }
+
+      [data-hf="structure-dom"] .fz-overview {
+        position: relative;
+        width: 760px;
+        height: 420px;
+      }
+
+      [data-hf="structure-dom"] .fz-block {
+        position: absolute;
+        width: 220px;
+        height: 180px;
+        border-radius: var(--radius-card);
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+      }
+
+      [data-hf="structure-dom"] .fz-block.target {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      [data-hf="structure-dom"] .fz-zoom-frame {
+        position: absolute;
+        left: 256px;
+        top: -14px;
+        width: 248px;
+        height: 208px;
+        border: 4px solid var(--accent-2);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-glow);
+        pointer-events: none;
+      }
+
+      [data-hf="structure-dom"] .fz-caption {
+        position: absolute;
+        left: 0;
+        bottom: 14px;
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-3);
+      }
+
+      [data-hf="structure-dom"] .fz-callout {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 360px;
+        padding: 28px 30px;
+        border-radius: var(--radius-card);
+        background: var(--surface-2);
+        border: 1px solid var(--line-strong);
+        box-shadow: var(--shadow-soft);
+      }
+
+      [data-hf="structure-dom"] .fz-callout-label {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 30px;
+        color: var(--accent);
+      }
+
+      [data-hf="structure-dom"] .fz-callout-desc {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 23px;
+        line-height: 1.55;
+        color: var(--ink-2);
+      }
+
+      [data-hf="structure-dom"] .fz-line {
+        width: 96px;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="6.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="6.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="fz-title" data-anim-role="title" data-slot="headline">拆开看其中一个模块</h2>
+            <div class="fz-area">
+              <div class="fz-wrap" data-anim-role="overview">
+                <div class="fz-overview">
+                  <div class="fz-block" style="left: 0; top: 0;"></div>
+                  <div class="fz-block target" style="left: 270px; top: 0;"></div>
+                  <div class="fz-block" style="left: 540px; top: 0;"></div>
+                  <div class="fz-block" style="left: 0; top: 240px;"></div>
+                  <div class="fz-block" style="left: 270px; top: 240px;"></div>
+                  <div class="fz-block" style="left: 540px; top: 240px;"></div>
+                </div>
+                <div class="fz-zoom-frame" data-anim-role="zoom-frame"></div>
+              </div>
+              <div class="fz-caption" data-slot="overview_caption">系统总览</div>
+              <div class="fz-callout" data-anim-role="callout">
+                <div class="fz-callout-label" data-slot="zoom_label">检索模块</div>
+                <div class="fz-callout-desc" data-slot="zoom_desc">负责把用户问题映射到最相关的知识片段</div>
+              </div>
+            </div>
+            <div class="fz-line" data-anim-role="accent-line"></div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.35" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-1" data-start="1.6" data-duration="1.2" data-track-index="103" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-2" data-start="2.3" data-duration="0.2" data-track-index="104" src="sfx/click.mp3" data-volume="0.22"></audio>
+    </div>
+    <!-- ===== Structure self-animation (focus_zoom) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        var wrap = root.querySelector(".fz-wrap");
+        var blocks = root.querySelectorAll(".fz-block");
+        var frame = root.querySelector(".fz-zoom-frame");
+        var caption = root.querySelector(".fz-caption");
+        var callout = root.querySelector(".fz-callout");
+
+        if (blocks.length) {
+          tl.from(blocks, { scale: 0.85, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.06, transformOrigin: "center center" }, 0.2);
+        }
+        if (caption) {
+          tl.from(caption, { opacity: 0, y: 10, duration: 0.4, ease: "power2.out" }, 0.5);
+        }
+        if (wrap) {
+          tl.to(wrap, { scale: 1.45, duration: 0.7, ease: "power2.inOut" }, 1.6);
+        }
+        if (frame) {
+          frame.style.opacity = 0;
+          tl.to(frame, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.7);
+        }
+        if (callout) {
+          tl.from(callout, { x: 80, opacity: 0, duration: 0.55, ease: "back.out(1.2)" }, 2.3);
+        }
+
+        ["overview", "zoom-frame", "callout"].forEach(function (r) {
+          var els = root.querySelectorAll('[data-anim-role="' + r + '"]');
+          for (var m = 0; m < els.length; m++) { els[m].removeAttribute("data-anim-role"); }
+        });
+      };
+    </script>
+    <!-- ===== Layer 2: motion (slide_in_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["slide_in_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 24, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 20, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { x: -40, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.40);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.60);
+        }
+        if ($("card").length) {
+          var cards = $("card");
+          for (var i = 0; i < cards.length; i++) {
+            var xOff = (i % 2 === 0) ? -60 : 60;
+            tl.from(cards[i], { x: xOff, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.35 + i * 0.12);
+          }
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 14, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.75);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.80);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.55);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["slide_in_hold"]) {
+              window.__hf_motions["slide_in_hold"](tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

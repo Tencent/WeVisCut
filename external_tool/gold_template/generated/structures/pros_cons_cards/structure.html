@@ -1,0 +1,142 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 64px 100px;
+  gap: 28px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-hf="structure-dom"] .pc-headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 56px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .pc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 70%;
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+}
+
+[data-hf="structure-dom"] .pc-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: var(--radius-card);
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 24px;
+  color: var(--ink-1);
+  border: 1px solid var(--line);
+}
+
+[data-hf="structure-dom"] .pc-card.pro-card {
+  background: color-mix(in srgb, var(--success) 6%, transparent);
+  border-left: 4px solid var(--success);
+}
+
+[data-hf="structure-dom"] .pc-card.con-card {
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+  border-left: 4px solid var(--danger);
+}
+
+[data-hf="structure-dom"] .pc-card-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .pc-card.pro-card .pc-card-icon {
+  color: var(--success);
+}
+
+[data-hf="structure-dom"] .pc-card.con-card .pc-card-icon {
+  color: var(--danger);
+}
+
+[data-hf="structure-dom"] .pc-card-tag {
+  font-family: var(--font-caption);
+  font-size: 12px;
+  font-weight: var(--weight-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .pc-card.pro-card .pc-card-tag {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+}
+
+[data-hf="structure-dom"] .pc-card.con-card .pc-card-tag {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">利弊分析</div>
+  <h1 class="pc-headline" data-anim-role="title" data-slot="headline">核能发电</h1>
+  <div class="pc-cards">
+    <div class="pc-card pro-card" data-anim-role="list-item" data-slot="pro1">
+      <span class="pc-card-icon">✓</span>
+      <span>零碳排放运行</span>
+      <span class="pc-card-tag">优势</span>
+    </div>
+    <div class="pc-card con-card" data-anim-role="list-item" data-slot="con1">
+      <span class="pc-card-icon">✗</span>
+      <span>核废料处理难</span>
+      <span class="pc-card-tag">劣势</span>
+    </div>
+    <div class="pc-card pro-card" data-anim-role="list-item" data-slot="pro2">
+      <span class="pc-card-icon">✓</span>
+      <span>能量密度极高</span>
+      <span class="pc-card-tag">优势</span>
+    </div>
+    <div class="pc-card con-card" data-anim-role="list-item" data-slot="con2">
+      <span class="pc-card-icon">✗</span>
+      <span>建设成本极高</span>
+      <span class="pc-card-tag">劣势</span>
+    </div>
+    <div class="pc-card pro-card" data-anim-role="list-item" data-slot="pro3">
+      <span class="pc-card-icon">✓</span>
+      <span>不受天气影响</span>
+      <span class="pc-card-tag">优势</span>
+    </div>
+    <div class="pc-card con-card" data-anim-role="list-item" data-slot="con3">
+      <span class="pc-card-icon">✗</span>
+      <span>事故风险虽小但后果严重</span>
+      <span class="pc-card-tag">劣势</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+{
+  "structure_id": "ranking_list_podium",
+  "family": "data",
+  "duration_default": 7.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "顶部标签",
+      "default": "Top 5",
+      "max_chars": 10
+    },
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "全球最深的五个海沟",
+      "max_chars": 20
+    },
+    "items": {
+      "type": "json",
+      "label": "排名数据",
+      "default": [
+        {"emoji": "🌊", "label": "马里亚纳海沟", "value": 10994, "unit": "m"},
+        {"emoji": "🌊", "label": "汤加海沟", "value": 10882, "unit": "m"},
+        {"emoji": "🌊", "label": "千岛海沟", "value": 10542, "unit": "m"},
+        {"emoji": "🌊", "label": "菲律宾海沟", "value": 10540, "unit": "m"},
+        {"emoji": "🌊", "label": "克马德克海沟", "value": 10047, "unit": "m"}
+      ],
+      "item_schema": {
+        "emoji": "string",
+        "label": "string",
+        "value": "number",
+        "unit": "string"
+      },
+      "max_items": 7
+    }
+  }
+}

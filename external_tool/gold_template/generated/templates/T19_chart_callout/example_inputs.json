@@ -1,0 +1,12 @@
+{
+  "headline": "过去五十年全球平均气温变化",
+  "series": [
+    { "label": "1980", "value": 14.2 },
+    { "label": "1990", "value": 14.4 },
+    { "label": "2000", "value": 14.5 },
+    { "label": "2010", "value": 14.7 },
+    { "label": "2020", "value": 15.0 }
+  ],
+  "callout_text": "1998年后升温速率明显加快",
+  "source_note": "数据来源：NASA GISS 2024"
+}

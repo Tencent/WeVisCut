@@ -1,0 +1,10 @@
+{
+  "structure_id": "pros_cons_cards",
+  "family": "narrative",
+  "use_for": ["利弊交替", "卡片式对比", "正反论证"],
+  "spotlight_level": "medium",
+  "duration_range": [5.5, 8.5],
+  "anim_roles": ["eyebrow", "title", "list-item"],
+  "slots": ["eyebrow", "headline", "pro1", "pro2", "pro3", "con1", "con2", "con3"],
+  "sfx": [{"at": 0.5, "sfx": "tick"}, {"at": 1.5, "sfx": "tick"}]
+}

@@ -1,0 +1,50 @@
+# 样本类型、采样目标比例、增强权重
+#
+# 每条 transition 都是 state->tool_call，但打 sample_type 便于采样加权。
+# 不要平均采样：主流程多、repair 少；平均采样会让模型“顺流程行、出错不会救”。
+#
+# 两套表述的对齐：
+#   需求里“state_to_action 主流程 40%”≈ 这里的 executor（执行主链路）。
+#   “planner/segment 25%” -> planner。
+#   “judge_repair 20%” -> judge_repair。
+#   “tool_format 10%” -> tool_format（由有效样本派生的纯格式变体）。
+#   “rollback/edge 5%” -> 折入 judge_repair，并用 is_rollback 标记。
+#   script_entry 是线上入口的关键子类，从 executor/planner 入口处单独抽出。
+
+# 目标比例（导出时据此计算 sampling_weight，向目标靠拢；report 同时给出观测分布）
+sample_type_target_ratio:
+  executor: 0.35
+  planner: 0.22
+  judge_repair: 0.25
+  script_entry: 0.08
+  tool_format: 0.10
+
+# 来源权重：增强是语言层扰动，不等于独立环境，不能与 base 等权
+source_weight:
+  base: 1.0
+  augmented: 0.3
+
+# tool_format 派生：从有效 trainable 样本里抽一部分，剥离 state 只留 stage+allowed_tools+schema，
+# 专门训练“合法 tool_call 格式”
+tool_format:
+  enabled: true
+  fraction: 0.10          # 占有效样本比例
+  seed: 7
+
+# sample_type 推断：tool -> 类型（script_entry 在 build 阶段按“项目首个可训练动作”动态覆盖）
+type_by_tool:
+  Tool_SegmentArticle: planner
+  Tool_PlanShots: planner
+  Tool_SelfReflect: planner
+  Tool_SelfReflect_Patch: judge_repair
+  Tool_SelfReflect_RepairShot: judge_repair
+  Tool_BatchVisualAudio: executor
+  Tool_BatchDecorateSpotlights: executor
+  Tool_BatchTimelineCompose: executor
+  Tool_MusicSearch: executor
+  Tool_FinalRender: executor
+  Tool_StitchVideo: executor
+  Tool_SeverityRank: judge_repair
+  Tool_Stage4DimensionJudge: judge_repair
+  Tool_TextQuickJudge: judge_repair
+  Tool_Stage4DimensionalRepair: judge_repair

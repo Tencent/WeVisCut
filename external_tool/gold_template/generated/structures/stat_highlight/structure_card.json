@@ -1,0 +1,9 @@
+{
+  "structure_id": "stat_highlight",
+  "family": "narrative",
+  "use_for": ["惊人数字", "单数据高亮", "科普数据"],
+  "spotlight_level": "high",
+  "duration_range": [4.0, 6.5],
+  "anim_roles": ["eyebrow", "stat", "unit", "subtitle", "accent-line"],
+  "slots": ["eyebrow", "stat_value", "unit", "caption_text"]
+}

@@ -1,0 +1,12 @@
+{
+  "headline": "地球大气成分构成",
+  "series": [
+    { "label": "氮气", "value": 78 },
+    { "label": "氧气", "value": 21 },
+    { "label": "氩气", "value": 0.93 },
+    { "label": "二氧化碳等", "value": 0.07 }
+  ],
+  "center_value": "78%",
+  "center_label": "氮气占比",
+  "source_note": "数据来源：NOAA 2024"
+}

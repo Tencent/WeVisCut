@@ -1,0 +1,9 @@
+{
+  "motion_id": "mask_reveal",
+  "energy": "mid",
+  "desc": "clip-path/遮罩擦出标题与分隔线，文字像被擦写出来",
+  "targets": ["title", "subtitle", "accent-line", "eyebrow", "badge"],
+  "sfx_cues": [
+    { "at": 0.20, "sfx": "sparkle", "comment": "擦出标题" }
+  ]
+}

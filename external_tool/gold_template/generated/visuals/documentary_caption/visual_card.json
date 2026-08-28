@@ -1,0 +1,9 @@
+{
+  "visual_id": "documentary_caption",
+  "label": "纪录片字幕",
+  "mood": "documentary, cinematic, warm-neutral",
+  "skins": ["bg-stage", "caption-bar", "caption-text"],
+  "palette_dominants": ["#e8b84b", "#f7f5f0", "#101012"],
+  "contrast_ratio": "AAA",
+  "best_with": ["typewriter_caption", "parallax_pan"]
+}

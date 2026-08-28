@@ -1,0 +1,13 @@
+{
+  "structure_id": "three_points_diagonal",
+  "family": "narrative",
+  "use_for": ["多要点解释", "概念分解", "三个关键点"],
+  "spotlight_level": "mid",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["title", "card", "accent-line"],
+  "slots": ["headline", "point1_title", "point1_desc", "point2_title", "point2_desc", "point3_title", "point3_desc"],
+  "sfx_cues": [
+    {"at": 0.4, "sfx": "tick", "comment": "卡片逐张"},
+    {"at": 1.0, "sfx": "pop", "comment": "第三张落定"}
+  ]
+}

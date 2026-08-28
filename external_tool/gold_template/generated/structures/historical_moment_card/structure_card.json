@@ -1,0 +1,10 @@
+{
+  "structure_id": "historical_moment_card",
+  "family": "narrative",
+  "use_for": ["历史时刻", "年份卡片", "人物事件", "卡片布局"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "title", "subtitle", "body"],
+  "slots": ["era_tag", "year", "person_name", "event_desc"],
+  "sfx": [{"at": 0.3, "sfx": "whoosh"}, {"at": 1.0, "sfx": "tick"}]
+}

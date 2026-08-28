@@ -1,0 +1,24 @@
+{
+  "structure_id": "case_gallery",
+  "family": "dataviz",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "同一个模型，四种落地",
+      "max_chars": 16
+    },
+    "cases": {
+      "type": "json",
+      "label": "案例宫格",
+      "default": [
+        { "caption": "电商详情页" },
+        { "caption": "教育课件" },
+        { "caption": "医疗报告" },
+        { "caption": "金融风控" }
+      ]
+    }
+  },
+  "data_slots": ["cases"]
+}

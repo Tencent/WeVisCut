@@ -1,0 +1,234 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 60px 80px 50px;
+  gap: 30px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .mcc-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1200px;
+}
+
+[data-hf="structure-dom"] .mcc-cards {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 32px;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .mcc-card {
+  flex: 1;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 12px 12px 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .mcc-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 34px;
+  color: var(--ink-1);
+  background: var(--surface-2);
+  border-radius: var(--radius-card);
+  padding: 18px 12px;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .mcc-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+[data-hf="structure-dom"] .mcc-entry:last-child {
+  border-bottom: none;
+}
+
+[data-hf="structure-dom"] .mcc-dim {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 24px;
+  color: var(--ink-3);
+}
+
+[data-hf="structure-dom"] .mcc-val {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 32px;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  max-width: 60%;
+  line-height: 1.3;
+}
+
+[data-hf="structure-dom"] .mcc-card.is-winner {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+[data-hf="structure-dom"] .mcc-card.is-winner .mcc-head {
+  color: var(--bg);
+  background: var(--accent);
+}
+
+[data-hf="structure-dom"] .mcc-card.is-winner .mcc-val {
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .mcc-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .mcc-divider {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="mcc-title" data-anim-role="title" data-slot="headline">两种方案的硬指标对比</h2>
+
+  <div class="mcc-cards">
+    <div class="mcc-card">
+      <div class="mcc-head" data-anim-role="col-header">Baseline</div>
+      <div class="mcc-entry">
+        <span class="mcc-dim" data-anim-role="row-label">准确率</span>
+        <span class="mcc-val" data-anim-role="cell">82%</span>
+      </div>
+      <div class="mcc-entry">
+        <span class="mcc-dim" data-anim-role="row-label">延迟</span>
+        <span class="mcc-val" data-anim-role="cell">120ms</span>
+      </div>
+      <div class="mcc-entry">
+        <span class="mcc-dim" data-anim-role="row-label">成本</span>
+        <span class="mcc-val" data-anim-role="cell">高</span>
+      </div>
+    </div>
+    <div class="mcc-card is-winner">
+      <div class="mcc-head" data-anim-role="col-header">Ours</div>
+      <div class="mcc-entry">
+        <span class="mcc-dim" data-anim-role="row-label">准确率</span>
+        <span class="mcc-val" data-anim-role="cell">94%</span>
+      </div>
+      <div class="mcc-entry">
+        <span class="mcc-dim" data-anim-role="row-label">延迟</span>
+        <span class="mcc-val" data-anim-role="cell">45ms</span>
+      </div>
+      <div class="mcc-entry">
+        <span class="mcc-dim" data-anim-role="row-label">成本</span>
+        <span class="mcc-val" data-anim-role="cell">低</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mcc-footer">
+    <div class="mcc-divider" data-anim-role="accent-line"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  var wrap = root.querySelector(".mcc-cards");
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  function parse(raw) {
+    if (raw == null) return null;
+    if (typeof raw !== "string") return raw;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  var columns = parse(V.columns);
+  var rows = parse(V.rows);
+
+  if (wrap && Array.isArray(columns) && columns.length >= 1 && Array.isArray(rows) && rows.length >= 1) {
+    var m = columns.length;
+    var winnerIdx = m - 1;
+    wrap.innerHTML = "";
+    for (var c = 0; c < m; c++) {
+      var card = document.createElement("div");
+      card.className = "mcc-card" + (c === winnerIdx ? " is-winner" : "");
+      var head = document.createElement("div");
+      head.className = "mcc-head";
+      head.setAttribute("data-anim-role", "col-header");
+      head.textContent = String(columns[c]);
+      card.appendChild(head);
+      for (var r = 0; r < rows.length; r++) {
+        var entry = document.createElement("div");
+        entry.className = "mcc-entry";
+        var dim = document.createElement("span");
+        dim.className = "mcc-dim";
+        dim.setAttribute("data-anim-role", "row-label");
+        dim.textContent = String(rows[r].dim != null ? rows[r].dim : "");
+        var val = document.createElement("span");
+        val.className = "mcc-val";
+        val.setAttribute("data-anim-role", "cell");
+        var vals = Array.isArray(rows[r].values) ? rows[r].values : [];
+        val.textContent = (vals[c] != null) ? String(vals[c]) : "—";
+        entry.appendChild(dim);
+        entry.appendChild(val);
+        card.appendChild(entry);
+      }
+      wrap.appendChild(card);
+    }
+  }
+
+  var cards = root.querySelectorAll(".mcc-card");
+  if (cards.length) {
+    tl.from(cards, { y: 40, scale: 0.92, opacity: 0, duration: 0.55, ease: "back.out(1.3)", transformOrigin: "center bottom", stagger: 0.15 }, 0.2);
+  }
+  var headers = $("col-header");
+  if (headers.length) {
+    tl.from(headers, { y: -14, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, 0.35);
+  }
+  var dims = $("row-label");
+  if (dims.length) {
+    tl.from(dims, { x: -12, opacity: 0, duration: 0.35, ease: "power2.out", stagger: 0.06 }, 0.6);
+  }
+  var cells = $("cell");
+  if (cells.length) {
+    tl.from(cells, { x: 12, opacity: 0, duration: 0.35, ease: "power2.out", stagger: 0.06 }, 0.66);
+  }
+  var winnerCard = root.querySelector(".mcc-card.is-winner");
+  if (winnerCard) {
+    tl.to(winnerCard, { scale: 1.04, duration: 0.24, ease: "power2.out", transformOrigin: "center center" }, 1.4);
+    tl.to(winnerCard, { scale: 1.0, duration: 0.34, ease: "power2.inOut" }, 1.66);
+  }
+  if ($("accent-line").length) {
+    tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.4);
+  }
+
+  var done = ["col-header", "row-label", "cell", "accent-line"];
+  for (var d = 0; d < done.length; d++) {
+    var els = $(done[d]);
+    for (var i = 0; i < els.length; i++) els[i].removeAttribute("data-anim-role");
+  }
+};
+</script>

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asset-retrieval-tool"
+version = "0.2.0"
+description = "Open-web video footage and CC-licensed BGM retrieval for WeDirector"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+keywords = ["video", "retrieval", "bgm", "youtube", "bilibili", "internet-archive"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Video",
+]
+# Search and BGM download use only the standard library, on purpose: this
+# package is imported inside a pipeline that already carries heavy deps.
+dependencies = []
+
+[project.optional-dependencies]
+# Platform page URLs are not media direct links, so materialising a video to
+# disk needs yt-dlp (which in turn needs ffmpeg on PATH for DASH muxing).
+download = ["yt-dlp>=2024.1.1"]
+test = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[tool.setuptools]
+packages = ["asset_retrieval_tool"]

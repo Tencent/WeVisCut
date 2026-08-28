@@ -1,0 +1,11 @@
+{
+  "eyebrow": "Top 5",
+  "headline": "全球最深的五个海沟",
+  "items": [
+    {"emoji": "🌊", "label": "马里亚纳海沟", "value": 10994, "unit": "m"},
+    {"emoji": "🌊", "label": "汤加海沟", "value": 10882, "unit": "m"},
+    {"emoji": "🌊", "label": "千岛海沟", "value": 10542, "unit": "m"},
+    {"emoji": "🌊", "label": "菲律宾海沟", "value": 10540, "unit": "m"},
+    {"emoji": "🌊", "label": "克马德克海沟", "value": 10047, "unit": "m"}
+  ]
+}

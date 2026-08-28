@@ -1,0 +1,11 @@
+{
+  "structure_id": "layer_stack_exploded",
+  "family": "diagram",
+  "duration_default": 6.0,
+  "slots": {
+    "headline": {"type": "string", "label": "标题", "default": "系统的三层结构", "max_chars": 16},
+    "layer1": {"type": "string", "label": "第一层", "default": "应用层 · 面向用户的交互", "max_chars": 16},
+    "layer2": {"type": "string", "label": "第二层", "default": "模型层 · 推理与决策", "max_chars": 16},
+    "layer3": {"type": "string", "label": "第三层", "default": "数据层 · 存储与检索", "max_chars": 16}
+  }
+}

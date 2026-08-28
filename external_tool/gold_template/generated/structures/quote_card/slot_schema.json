@@ -1,0 +1,25 @@
+{
+  "structure_id": "quote_card",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "quote": {
+      "type": "string",
+      "label": "引言内容",
+      "default": "科学的本质不在于发现绝对真理，而在于不断提出更好的问题",
+      "max_chars": 40
+    },
+    "speaker": {
+      "type": "string",
+      "label": "发言人",
+      "default": "理查德·费曼 · 诺贝尔物理学奖得主",
+      "max_chars": 20
+    },
+    "source": {
+      "type": "string",
+      "label": "出处",
+      "default": "《费曼物理学讲义》第三卷 · 1965",
+      "max_chars": 20
+    }
+  }
+}

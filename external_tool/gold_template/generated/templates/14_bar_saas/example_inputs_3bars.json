@@ -1,0 +1,10 @@
+{
+  "headline": "三大经济体GDP对比",
+  "series": [
+    { "label": "美国", "value": 28.78 },
+    { "label": "中国", "value": 18.53 },
+    { "label": "日本", "value": 4.23 }
+  ],
+  "unit": "万亿美元",
+  "source_note": "数据来源：IMF 2024"
+}

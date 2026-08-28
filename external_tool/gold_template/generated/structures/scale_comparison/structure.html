@@ -1,0 +1,124 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 72px 100px;
+  gap: 32px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-hf="structure-dom"] .sc-headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 56px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  max-width: 900px;
+}
+
+[data-hf="structure-dom"] .sc-compare-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+[data-hf="structure-dom"] .sc-object {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+[data-hf="structure-dom"] .sc-big-emoji {
+  font-size: 180px;
+  line-height: 1;
+}
+
+[data-hf="structure-dom"] .sc-small-emoji {
+  font-size: 30px;
+  line-height: 1;
+}
+
+[data-hf="structure-dom"] .sc-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  color: var(--ink-2);
+}
+
+[data-hf="structure-dom"] .sc-ratio {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 36px;
+  color: var(--accent);
+  padding: 12px 32px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">尺度感知</div>
+  <h1 class="sc-headline" data-anim-role="title" data-slot="headline">太阳与地球的大小差距</h1>
+  <div class="sc-compare-row">
+    <div class="sc-object">
+      <span class="sc-big-emoji" data-anim-role="decoration" data-slot="big_emoji">☀️</span>
+      <span class="sc-label" data-anim-role="list-item" data-slot="big_label">太阳（篮球）</span>
+    </div>
+    <div class="sc-object">
+      <span class="sc-small-emoji" data-anim-role="decoration" data-slot="small_emoji">🌍</span>
+      <span class="sc-label" data-anim-role="list-item" data-slot="small_label">地球（玻璃珠）</span>
+    </div>
+  </div>
+  <div class="sc-ratio" data-anim-role="body" data-slot="ratio_text">体积是地球的 130 万倍</div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (sel) { return root.querySelector(sel); };
+
+  var bigEmoji = $('.sc-big-emoji');
+  var smallEmoji = $('.sc-small-emoji');
+  var bigLabel = root.querySelectorAll('.sc-object')[0].querySelector('.sc-label');
+  var smallLabel = root.querySelectorAll('.sc-object')[1].querySelector('.sc-label');
+  var ratio = $('.sc-ratio');
+
+  tl.from(bigEmoji, { scale: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" }, 0.3);
+  tl.from(bigLabel, { opacity: 0, y: 12, duration: 0.4, ease: "power2.out" }, 0.8);
+
+  tl.from(smallEmoji, { scale: 0, duration: 0.5, ease: "back.out(1.7)" }, 1.5);
+  tl.from(smallLabel, { opacity: 0, y: 12, duration: 0.4, ease: "power2.out" }, 1.8);
+
+  tl.from(ratio, { scale: 0.8, opacity: 0, duration: 0.5, ease: "power2.out" }, 2.5);
+
+  var allEls = root.querySelectorAll('[data-anim-role]');
+  for (var i = 0; i < allEls.length; i++) allEls[i].removeAttribute('data-anim-role');
+};
+</script>

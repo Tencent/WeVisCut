@@ -1,0 +1,132 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 60px 80px;
+  gap: 28px;
+  box-sizing: border-box;
+  text-align: center;
+  position: relative;
+}
+
+[data-hf="structure-dom"] .vc-headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 48px;
+  line-height: 1.2;
+  color: var(--ink-1);
+}
+
+[data-hf="structure-dom"] .vc-diagram {
+  position: relative;
+  width: 700px;
+  height: 400px;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .vc-circle {
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-hf="structure-dom"] .vc-circle-left {
+  left: 40px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border: 2px solid var(--accent);
+}
+
+[data-hf="structure-dom"] .vc-circle-right {
+  right: 40px;
+  background: color-mix(in srgb, var(--accent-2) 20%, transparent);
+  border: 2px solid var(--accent-2);
+}
+
+[data-hf="structure-dom"] .vc-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  color: var(--ink-1);
+  max-width: 140px;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .vc-circle-left .vc-label {
+  margin-right: 80px;
+}
+
+[data-hf="structure-dom"] .vc-circle-right .vc-label {
+  margin-left: 80px;
+}
+
+[data-hf="structure-dom"] .vc-overlap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 180px;
+}
+
+[data-hf="structure-dom"] .vc-overlap-label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 22px;
+  color: var(--ink-1);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  padding: 12px 20px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--accent);
+  text-align: center;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h1 class="vc-headline" data-anim-role="title" data-slot="headline">人工智能 vs 人类智能</h1>
+  <div class="vc-diagram">
+    <div class="vc-circle vc-circle-left" data-anim-role="cluster">
+      <span class="vc-label" data-anim-role="node-label" data-slot="left_label">海量计算 / 不知疲倦</span>
+    </div>
+    <div class="vc-circle vc-circle-right" data-anim-role="cluster">
+      <span class="vc-label" data-anim-role="node-label" data-slot="right_label">情感共鸣 / 创造力</span>
+    </div>
+    <div class="vc-overlap">
+      <span class="vc-overlap-label" data-anim-role="accent-line" data-slot="overlap_label">模式识别 / 学习</span>
+    </div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var leftCircle = root.querySelector('.vc-circle-left');
+  var rightCircle = root.querySelector('.vc-circle-right');
+  var overlap = root.querySelector('.vc-overlap');
+  var headline = root.querySelector('.vc-headline');
+
+  tl.from(headline, { opacity: 0, y: -20, duration: 0.5, ease: "power2.out" }, 0);
+
+  tl.from(leftCircle, { scale: 0, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.4);
+  tl.from(rightCircle, { scale: 0, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.8);
+
+  tl.from(overlap, { scale: 0, opacity: 0, duration: 0.5, ease: "back.out(1.7)" }, 1.5);
+  tl.to(overlap, { scale: 1.1, duration: 0.3, ease: "power2.inOut", yoyo: true, repeat: 1 }, 2.2);
+
+  var allEls = root.querySelectorAll('[data-anim-role]');
+  for (var i = 0; i < allEls.length; i++) allEls[i].removeAttribute('data-anim-role');
+};
+</script>

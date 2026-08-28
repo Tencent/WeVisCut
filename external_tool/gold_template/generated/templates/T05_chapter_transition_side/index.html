@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "chapter_no", "type": "string", "label": "章节编号", "default": "03"}, {"id": "chapter_title", "type": "string", "label": "章节标题", "default": "真实案例"}, {"id": "chapter_sub", "type": "string", "label": "章节副标题", "default": "三个一线项目的复盘"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (dark_tech) ===== */
+      :root {
+        --bg: #060d1a;
+        --bg-2: #0a1525;
+        --surface: rgba(20,38,60,.55);
+        --surface-2: rgba(20,38,60,.82);
+        --ink-1: #eef6fb;
+        --ink-2: #b9d3e6;
+        --ink-3: #7d96ad;
+        --accent: #7fc7d9;
+        --accent-2: #f5b14a;
+        --danger: #ff7a7a;
+        --success: #6ee7b7;
+        --line: rgba(127,199,217,.18);
+        --line-strong: rgba(127,199,217,.42);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 22px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+        --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+        --grid-color: rgba(127,199,217,.05);
+        --stage-bg: rgba(10,21,37,.5);
+        --radius-stage: 48px;
+        --stage-blur: 10px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          var(--bg);
+        mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (chapter_transition_side) ===== */
+      [data-hf="structure-dom"] {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        align-items: stretch;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .num-bar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        background: var(--surface);
+        border-right: 3px solid var(--line-strong);
+      }
+
+      [data-hf="structure-dom"] .bar-tag {
+        writing-mode: vertical-rl;
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 24px;
+        letter-spacing: 0.4em;
+        color: var(--ink-3);
+      }
+
+      [data-hf="structure-dom"] .chapter-no {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 200px;
+        line-height: 0.9;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        text-shadow: var(--shadow-glow);
+      }
+
+      [data-hf="structure-dom"] .main-col {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 28px;
+        padding: 90px 100px;
+        text-align: left;
+      }
+
+      [data-hf="structure-dom"] .chapter-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 84px;
+        line-height: 1.14;
+        color: var(--ink-1);
+        max-width: 900px;
+      }
+
+      [data-hf="structure-dom"] .divider-line {
+        width: 150px;
+        height: 4px;
+        border-radius: var(--radius-pill);
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      [data-hf="structure-dom"] .chapter-sub {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 34px;
+        line-height: 1.5;
+        color: var(--ink-2);
+        max-width: 820px;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="4.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="4.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <div class="num-bar">
+              <span class="bar-tag">CHAPTER</span>
+              <div class="chapter-no" data-anim-role="badge" data-slot="chapter_no">02</div>
+            </div>
+            <div class="main-col">
+              <h1 class="chapter-title" data-anim-role="title" data-slot="chapter_title">方法拆解</h1>
+              <div class="divider-line" data-anim-role="accent-line"></div>
+              <p class="chapter-sub" data-anim-role="subtitle" data-slot="chapter_sub">从原理到可复用的三步流程</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.2" data-duration="1.5" data-track-index="102" src="sfx/sparkle.mp3" data-volume="0.4"></audio>
+      <audio id="sfx-1" data-start="0.2" data-duration="1.2" data-track-index="103" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-2" data-start="0.8" data-duration="1.2" data-track-index="104" src="sfx/chime.mp3" data-volume="0.3"></audio>
+    </div>
+    <!-- ===== Layer 2: motion (mask_reveal) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["mask_reveal"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 20, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power4.out" }, 0.20);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { clipPath: "inset(0 100% 0 0)", duration: 0.55, ease: "power3.out" }, 0.65);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "power4.out" }, 0.20);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, x: -10, duration: 0.4, ease: "power2.out" }, 0.70);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power3.out", stagger: 0.18 }, 0.35);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { clipPath: "inset(0 100% 0 0)", duration: 0.5, ease: "power3.out", stagger: 0.12 }, 0.55);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { clipPath: "inset(0 100% 0 0)", duration: 0.7, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { clipPath: "inset(0 100% 0 0)", duration: 0.5, ease: "power3.out" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.6, ease: "expo.out", transformOrigin: "left center" }, 0.55);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 1.04);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { clipPath: "inset(0 100% 0 0)", duration: 0.5, ease: "power3.out" }, 1.10);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 4.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["mask_reveal"]) {
+              window.__hf_motions["mask_reveal"](tl, { gsap: gsap, root: root, duration: 4.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

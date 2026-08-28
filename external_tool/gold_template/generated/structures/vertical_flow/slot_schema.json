@@ -1,0 +1,23 @@
+{
+  "structure_id": "vertical_flow",
+  "family": "diagram",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "数据到模型的四个阶段",
+      "max_chars": 16
+    },
+    "nodes": {
+      "type": "json",
+      "label": "纵向阶段节点",
+      "default": [
+        { "label": "采集原始数据" },
+        { "label": "清洗与标注" },
+        { "label": "模型训练" },
+        { "label": "评估上线" }
+      ]
+    }
+  }
+}

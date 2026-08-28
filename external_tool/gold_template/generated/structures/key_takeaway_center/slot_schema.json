@@ -1,0 +1,31 @@
+{
+  "structure_id": "key_takeaway_center",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "核心结论巨句",
+      "default": "先把真问题找对",
+      "max_chars": 22
+    },
+    "takeaway1": {
+      "type": "string",
+      "label": "支撑点 1",
+      "default": "先解决真问题",
+      "max_chars": 18
+    },
+    "takeaway2": {
+      "type": "string",
+      "label": "支撑点 2",
+      "default": "最小成本验证",
+      "max_chars": 18
+    },
+    "takeaway3": {
+      "type": "string",
+      "label": "支撑点 3",
+      "default": "每轮迭代更准",
+      "max_chars": 18
+    }
+  }
+}

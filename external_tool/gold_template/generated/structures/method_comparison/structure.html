@@ -1,0 +1,215 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 60px 80px 50px;
+  gap: 28px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .cmp-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1200px;
+}
+
+[data-hf="structure-dom"] .cmp-table {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.3fr) 1fr 1fr;
+  align-content: stretch;
+  gap: 14px;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .cmp-corner {
+  border-radius: var(--radius-card);
+}
+
+[data-hf="structure-dom"] .cmp-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 30px;
+  color: var(--ink-1);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px 12px;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .cmp-row-label {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  color: var(--ink-2);
+  padding: 14px 22px;
+}
+
+[data-hf="structure-dom"] .cmp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 30px;
+  color: var(--ink-1);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 14px 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+[data-hf="structure-dom"] .cmp-col-header.is-winner {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+[data-hf="structure-dom"] .cmp-cell.is-winner {
+  color: var(--ink-1);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: var(--weight-display);
+}
+
+[data-hf="structure-dom"] .cmp-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .cmp-divider {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="cmp-title" data-anim-role="title" data-slot="headline">两种方案的硬指标对比</h2>
+
+  <div class="cmp-table" style="grid-template-columns: minmax(180px, 1.3fr) 1fr 1fr;">
+    <div class="cmp-corner"></div>
+    <div class="cmp-col-header" data-anim-role="col-header">Baseline</div>
+    <div class="cmp-col-header is-winner" data-anim-role="col-header">Ours</div>
+
+    <div class="cmp-row-label" data-anim-role="row-label">准确率</div>
+    <div class="cmp-cell" data-anim-role="cell">82%</div>
+    <div class="cmp-cell is-winner" data-anim-role="cell">94%</div>
+
+    <div class="cmp-row-label" data-anim-role="row-label">延迟</div>
+    <div class="cmp-cell" data-anim-role="cell">120ms</div>
+    <div class="cmp-cell is-winner" data-anim-role="cell">45ms</div>
+
+    <div class="cmp-row-label" data-anim-role="row-label">成本</div>
+    <div class="cmp-cell" data-anim-role="cell">高</div>
+    <div class="cmp-cell is-winner" data-anim-role="cell">低</div>
+  </div>
+
+  <div class="cmp-footer">
+    <div class="cmp-divider" data-anim-role="accent-line"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  var table = root.querySelector(".cmp-table");
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  function parse(raw) {
+    if (raw == null) return null;
+    if (typeof raw !== "string") return raw;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  var columns = parse(V.columns);
+  var rows = parse(V.rows);
+
+  if (table && Array.isArray(columns) && columns.length >= 1 && Array.isArray(rows) && rows.length >= 1) {
+    var m = columns.length;
+    var winnerIdx = m - 1;
+    table.innerHTML = "";
+    table.style.gridTemplateColumns = "minmax(180px, 1.3fr) repeat(" + m + ", 1fr)";
+
+    var corner = document.createElement("div");
+    corner.className = "cmp-corner";
+    table.appendChild(corner);
+    for (var c = 0; c < m; c++) {
+      var h = document.createElement("div");
+      h.className = "cmp-col-header" + (c === winnerIdx ? " is-winner" : "");
+      h.setAttribute("data-anim-role", "col-header");
+      h.textContent = String(columns[c]);
+      table.appendChild(h);
+    }
+    for (var r = 0; r < rows.length; r++) {
+      var rl = document.createElement("div");
+      rl.className = "cmp-row-label";
+      rl.setAttribute("data-anim-role", "row-label");
+      rl.textContent = String(rows[r].dim != null ? rows[r].dim : "");
+      table.appendChild(rl);
+      var vals = Array.isArray(rows[r].values) ? rows[r].values : [];
+      for (var k = 0; k < m; k++) {
+        var cell = document.createElement("div");
+        cell.className = "cmp-cell" + (k === winnerIdx ? " is-winner" : "");
+        cell.setAttribute("data-anim-role", "cell");
+        cell.textContent = (vals[k] != null) ? String(vals[k]) : "—";
+        table.appendChild(cell);
+      }
+    }
+  }
+
+  var headers = $("col-header");
+  if (headers.length) {
+    tl.from(headers, { y: -24, opacity: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, 0.2);
+  }
+
+  var allRowLabels = $("row-label");
+  var allCells = $("cell");
+  if (allRowLabels.length) {
+    var winners = [];
+    for (var ri = 0; ri < allRowLabels.length; ri++) {
+      var at = 0.55 + ri * 0.18;
+      tl.from(allRowLabels[ri], { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, at);
+    }
+    for (var ci = 0; ci < allCells.length; ci++) {
+      var rowOf = Math.floor(ci / (allCells.length / allRowLabels.length || 1));
+      tl.from(allCells[ci], { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.6 + rowOf * 0.18 + (ci % Math.max(1, (allCells.length / allRowLabels.length))) * 0.06);
+      if (allCells[ci].classList.contains("is-winner")) winners.push(allCells[ci]);
+    }
+    if (winners.length) {
+      tl.to(winners, { scale: 1.05, duration: 0.22, ease: "power2.out", transformOrigin: "center center", stagger: 0.05 }, 0.6 + allRowLabels.length * 0.18 + 0.2);
+      tl.to(winners, { scale: 1.0, duration: 0.3, ease: "power2.inOut", stagger: 0.05 }, 0.6 + allRowLabels.length * 0.18 + 0.42);
+    }
+  } else if (allCells.length) {
+    tl.from(allCells, { y: 12, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.06 }, 0.55);
+  }
+
+  if ($("accent-line").length) {
+    tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.4);
+  }
+
+  var done = ["col-header", "row-label", "cell", "accent-line"];
+  for (var d = 0; d < done.length; d++) {
+    var els = $(done[d]);
+    for (var i = 0; i < els.length; i++) els[i].removeAttribute("data-anim-role");
+  }
+};
+</script>

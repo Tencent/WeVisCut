@@ -1,0 +1,10 @@
+{
+  "headline": "一个平台四类应用",
+  "root_label": "智能中台",
+  "branches": [
+    { "label": "智能客服" },
+    { "label": "内容生成" },
+    { "label": "数据分析" },
+    { "label": "流程自动化" }
+  ]
+}

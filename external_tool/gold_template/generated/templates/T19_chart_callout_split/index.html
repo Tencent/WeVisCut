@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "图表标题", "default": "续费率连续五月走高"}, {"id": "series", "type": "string", "label": "折线数据点", "default": "[{\"label\": \"1月\", \"value\": 61}, {\"label\": \"2月\", \"value\": 64}, {\"label\": \"3月\", \"value\": 70}, {\"label\": \"4月\", \"value\": 79}, {\"label\": \"5月\", \"value\": 88}]"}, {"id": "callout_text", "type": "string", "label": "关键点标注", "default": "引入提醒功能后续费率明显抬升"}, {"id": "source_note", "type": "string", "label": "数据来源", "default": "数据来源：订阅系统 2024"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (dark_tech) ===== */
+      :root {
+        --bg: #060d1a;
+        --bg-2: #0a1525;
+        --surface: rgba(20,38,60,.55);
+        --surface-2: rgba(20,38,60,.82);
+        --ink-1: #eef6fb;
+        --ink-2: #b9d3e6;
+        --ink-3: #7d96ad;
+        --accent: #7fc7d9;
+        --accent-2: #f5b14a;
+        --danger: #ff7a7a;
+        --success: #6ee7b7;
+        --line: rgba(127,199,217,.18);
+        --line-strong: rgba(127,199,217,.42);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 22px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+        --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+        --grid-color: rgba(127,199,217,.05);
+        --stage-bg: rgba(10,21,37,.5);
+        --radius-stage: 48px;
+        --stage-blur: 10px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          var(--bg);
+        mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (chart_callout_split) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 56px 80px 48px;
+        gap: 20px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .ccs-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 60px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1200px;
+      }
+
+      [data-hf="structure-dom"] .ccs-body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 40px;
+        align-items: stretch;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .ccs-chart {
+        position: relative;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .ccs-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      [data-hf="structure-dom"] .ccs-svg .grid-line { stroke: var(--line); stroke-width: 1; }
+      [data-hf="structure-dom"] .ccs-svg .baseline { stroke: var(--line-strong); stroke-width: 2; }
+      [data-hf="structure-dom"] .ccs-svg .line-path {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      [data-hf="structure-dom"] .ccs-svg .area-path { fill: var(--accent); opacity: 0.14; stroke: none; }
+      [data-hf="structure-dom"] .ccs-svg .data-point { fill: var(--accent); stroke: var(--bg); stroke-width: 3; }
+      [data-hf="structure-dom"] .ccs-svg .data-point.is-key { fill: var(--accent-2); }
+      [data-hf="structure-dom"] .ccs-svg .end-value {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 28px;
+        fill: var(--accent);
+        text-anchor: middle;
+      }
+      [data-hf="structure-dom"] .ccs-svg .x-tick {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 20px;
+        fill: var(--ink-3);
+        text-anchor: middle;
+      }
+      [data-hf="structure-dom"] .ccs-svg .cc-comet { fill: var(--accent-2); }
+
+      [data-hf="structure-dom"] .ccs-aside {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 22px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--accent-2);
+        border-radius: var(--radius-card);
+        padding: 36px 34px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      [data-hf="structure-dom"] .ccs-aside-eyebrow {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        letter-spacing: 0.08em;
+        color: var(--accent-2);
+        text-transform: uppercase;
+      }
+
+      [data-hf="structure-dom"] .ccs-callout-text {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 40px;
+        line-height: 1.35;
+        color: var(--ink-1);
+        max-width: 460px;
+      }
+
+      [data-hf="structure-dom"] .ccs-source {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 18px;
+        color: var(--ink-3);
+      }
+
+      [data-hf="structure-dom"] .ccs-divider {
+        width: 100%;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="ccs-title" data-anim-role="title" data-slot="headline">五个月用户量翻了近 4 倍</h2>
+
+            <div class="ccs-body">
+              <div class="ccs-chart">
+                <svg class="ccs-svg" viewBox="0 0 1100 720" preserveAspectRatio="xMidYMid meet">
+                  <g data-anim-role="chart-axis">
+                    <line class="grid-line" x1="90" y1="40"  x2="1060" y2="40"/>
+                    <line class="grid-line" x1="90" y1="190" x2="1060" y2="190"/>
+                    <line class="grid-line" x1="90" y1="340" x2="1060" y2="340"/>
+                    <line class="grid-line" x1="90" y1="490" x2="1060" y2="490"/>
+                    <line class="baseline"  x1="90" y1="640" x2="1060" y2="640"/>
+                  </g>
+
+                  <path class="area-path" data-anim-role="chart-area"
+                        d="M 90 502 L 332 461 L 575 410 L 817 324 L 1060 196 L 1060 640 L 90 640 Z"/>
+
+                  <polyline class="line-path" data-anim-role="chart-line"
+                            points="90,502 332,461 575,410 817,324 1060,196"/>
+
+                  <circle class="data-point" data-anim-role="chart-point" cx="90"   cy="502" r="7"/>
+                  <circle class="data-point" data-anim-role="chart-point" cx="332"  cy="461" r="7"/>
+                  <circle class="data-point" data-anim-role="chart-point" cx="575"  cy="410" r="7"/>
+                  <circle class="data-point" data-anim-role="chart-point" cx="817"  cy="324" r="7"/>
+                  <circle class="data-point is-key" data-anim-role="chart-point" cx="1060" cy="196" r="10"/>
+
+                  <text class="end-value" data-anim-role="chart-value" x="1060" y="172">78</text>
+
+                  <text class="x-tick" x="90"   y="682">1月</text>
+                  <text class="x-tick" x="332"  y="682">2月</text>
+                  <text class="x-tick" x="575"  y="682">3月</text>
+                  <text class="x-tick" x="817"  y="682">4月</text>
+                  <text class="x-tick" x="1060" y="682">5月</text>
+
+                  <circle class="cc-comet" cx="90" cy="502" r="8" opacity="0"/>
+                </svg>
+              </div>
+
+              <div class="ccs-aside" data-anim-role="callout">
+                <div class="ccs-aside-eyebrow">关键发现</div>
+                <div class="ccs-callout-text" data-slot="callout_text">4 月起增速明显加快</div>
+                <span class="ccs-source" data-slot="source_note">数据来源：内部后台 2024</span>
+              </div>
+            </div>
+
+            <div class="ccs-divider" data-anim-role="accent-line"></div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.35" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-1" data-start="0.4" data-duration="1.4" data-track-index="103" src="sfx/rise.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-2" data-start="1.9" data-duration="0.6" data-track-index="104" src="sfx/pop.mp3" data-volume="0.3"></audio>
+    </div>
+    <!-- ===== Structure self-animation (chart_callout_split) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+        var ns = "http://www.w3.org/2000/svg";
+
+        var svg = root.querySelector(".ccs-svg");
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        function parse(raw) {
+          if (raw == null) return null;
+          if (typeof raw !== "string") return raw;
+          try { return JSON.parse(raw); } catch (e) { return null; }
+        }
+        var series = parse(V.series);
+        var pts2 = null;
+
+        if (svg && Array.isArray(series) && series.length > 1) {
+          var oldLine = svg.querySelector('[data-anim-role="chart-line"]');
+          var oldArea = svg.querySelector('[data-anim-role="chart-area"]');
+          var oldPts = svg.querySelectorAll('[data-anim-role="chart-point"]');
+          var oldVal = svg.querySelector('[data-anim-role="chart-value"]');
+          var oldTicks = svg.querySelectorAll(".x-tick");
+          if (oldLine) oldLine.remove();
+          if (oldArea) oldArea.remove();
+          for (var r = 0; r < oldPts.length; r++) oldPts[r].remove();
+          if (oldVal) oldVal.remove();
+          for (var t = 0; t < oldTicks.length; t++) oldTicks[t].remove();
+
+          var padL = 90, padR = 40, padT = 40, padB = 80;
+          var cW = 1100 - padL - padR, cH = 720 - padT - padB, baseY = padT + cH;
+          var n = series.length, maxY = 0;
+          for (var i = 0; i < n; i++) { if (series[i].value > maxY) maxY = series[i].value; }
+          if (maxY === 0) maxY = 1;
+          var pts = [];
+          for (var j = 0; j < n; j++) {
+            var px = padL + (n === 1 ? cW / 2 : (j / (n - 1)) * cW);
+            var py = padT + cH - (series[j].value / maxY) * cH;
+            pts.push({ x: Math.round(px), y: Math.round(py) });
+          }
+          pts2 = pts;
+          var comet = svg.querySelector(".cc-comet");
+
+          var areaD = "M " + pts.map(function (p) { return p.x + " " + p.y; }).join(" L ") +
+                      " L " + pts[n - 1].x + " " + baseY + " L " + pts[0].x + " " + baseY + " Z";
+          var areaEl = document.createElementNS(ns, "path");
+          areaEl.setAttribute("class", "area-path");
+          areaEl.setAttribute("data-anim-role", "chart-area");
+          areaEl.setAttribute("d", areaD);
+          svg.insertBefore(areaEl, comet);
+
+          var lineEl = document.createElementNS(ns, "polyline");
+          lineEl.setAttribute("class", "line-path");
+          lineEl.setAttribute("data-anim-role", "chart-line");
+          lineEl.setAttribute("points", pts.map(function (p) { return p.x + "," + p.y; }).join(" "));
+          svg.insertBefore(lineEl, comet);
+
+          for (var k = 0; k < n; k++) {
+            var c = document.createElementNS(ns, "circle");
+            c.setAttribute("class", "data-point" + (k === n - 1 ? " is-key" : ""));
+            c.setAttribute("data-anim-role", "chart-point");
+            c.setAttribute("cx", String(pts[k].x));
+            c.setAttribute("cy", String(pts[k].y));
+            c.setAttribute("r", k === n - 1 ? "10" : "7");
+            svg.insertBefore(c, comet);
+          }
+          var valEl = document.createElementNS(ns, "text");
+          valEl.setAttribute("class", "end-value");
+          valEl.setAttribute("data-anim-role", "chart-value");
+          valEl.setAttribute("x", String(pts[n - 1].x));
+          valEl.setAttribute("y", String(Math.max(30, pts[n - 1].y - 24)));
+          valEl.textContent = String(series[n - 1].value);
+          svg.insertBefore(valEl, comet);
+
+          for (var m = 0; m < n; m++) {
+            var tick = document.createElementNS(ns, "text");
+            tick.setAttribute("class", "x-tick");
+            tick.setAttribute("x", String(pts[m].x));
+            tick.setAttribute("y", "682");
+            tick.textContent = String(series[m].label != null ? series[m].label : "");
+            svg.insertBefore(tick, comet);
+          }
+        }
+
+        if ($("chart-axis").length) {
+          tl.from($("chart-axis"), { scaleX: 0, opacity: 0, duration: 0.45, ease: "power2.out", transformOrigin: "left center" }, 0.2);
+        }
+
+        var linePath = root.querySelector('[data-anim-role="chart-line"]');
+        var lineDur = 1.4;
+        if (linePath) {
+          var totalLen;
+          try { totalLen = linePath.getTotalLength(); } catch (e) { totalLen = 2000; }
+          gsap.set(linePath, { strokeDasharray: totalLen, strokeDashoffset: totalLen });
+          tl.to(linePath, { strokeDashoffset: 0, duration: lineDur, ease: "power1.inOut" }, 0.4);
+        }
+
+        var comet2 = root.querySelector(".cc-comet");
+        if (comet2 && pts2 && pts2.length > 1) {
+          comet2.setAttribute("cx", String(pts2[0].x));
+          comet2.setAttribute("cy", String(pts2[0].y));
+          gsap.set(comet2, { opacity: 0 });
+          tl.to(comet2, { opacity: 1, duration: 0.2 }, 0.4);
+          var segDur = lineDur / (pts2.length - 1);
+          for (var sIdx = 1; sIdx < pts2.length; sIdx++) {
+            tl.to(comet2, { attr: { cx: pts2[sIdx].x, cy: pts2[sIdx].y }, duration: segDur, ease: "none" }, 0.4 + (sIdx - 1) * segDur);
+          }
+          tl.to(comet2, { opacity: 0, duration: 0.3, ease: "power1.out" }, 0.4 + lineDur);
+        }
+
+        if ($("chart-area").length) {
+          gsap.set($("chart-area"), { opacity: 0 });
+          tl.to($("chart-area"), { opacity: 0.14, duration: 0.6, ease: "expo.out" }, 0.4 + lineDur * 0.5);
+        }
+        var points = $("chart-point");
+        if (points.length) {
+          gsap.set(points, { scale: 0, transformOrigin: "center center" });
+          tl.to(points, { scale: 1, duration: 0.32, ease: "back.out(2)", stagger: lineDur / Math.max(1, points.length) }, 0.5);
+        }
+        if ($("chart-value").length) {
+          tl.from($("chart-value"), { opacity: 0, y: 10, duration: 0.4, ease: "power2.out" }, 0.4 + lineDur);
+        }
+        if ($("callout").length) {
+          tl.from($("callout"), { x: 40, opacity: 0, duration: 0.55, ease: "back.out(1.2)" }, 0.4 + lineDur + 0.1);
+          tl.to($("callout"), { scale: 1.03, duration: 0.18, ease: "power2.out", transformOrigin: "center center" }, 0.4 + lineDur + 0.65);
+          tl.to($("callout"), { scale: 1.0, duration: 0.26, ease: "power2.inOut" }, 0.4 + lineDur + 0.83);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.45, ease: "power2.out", transformOrigin: "left center" }, 0.3);
+        }
+
+        var done = ["chart-axis", "chart-line", "chart-area", "chart-point", "chart-value", "callout", "accent-line"];
+        for (var d = 0; d < done.length; d++) {
+          var els = $(done[d]);
+          for (var e2 = 0; e2 < els.length; e2++) els[e2].removeAttribute("data-anim-role");
+        }
+      };
+    </script>
+    <!-- ===== Layer 2: motion (slide_in_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["slide_in_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 24, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 20, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { x: -40, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.40);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.60);
+        }
+        if ($("card").length) {
+          var cards = $("card");
+          for (var i = 0; i < cards.length; i++) {
+            var xOff = (i % 2 === 0) ? -60 : 60;
+            tl.from(cards[i], { x: xOff, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.35 + i * 0.12);
+          }
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 14, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.75);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.80);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.55);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["slide_in_hold"]) {
+              window.__hf_motions["slide_in_hold"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

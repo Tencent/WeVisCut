@@ -1,0 +1,179 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 56px 80px 44px;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .fz-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 60px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  text-align: center;
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .fz-area {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .fz-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 760px;
+  height: 420px;
+  margin-left: -380px;
+  margin-top: -210px;
+  transform-origin: 50% 21.4%;
+}
+
+[data-hf="structure-dom"] .fz-overview {
+  position: relative;
+  width: 760px;
+  height: 420px;
+}
+
+[data-hf="structure-dom"] .fz-block {
+  position: absolute;
+  width: 220px;
+  height: 180px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+
+[data-hf="structure-dom"] .fz-block.target {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+[data-hf="structure-dom"] .fz-zoom-frame {
+  position: absolute;
+  left: 256px;
+  top: -14px;
+  width: 248px;
+  height: 208px;
+  border: 4px solid var(--accent-2);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-glow);
+  pointer-events: none;
+}
+
+[data-hf="structure-dom"] .fz-caption {
+  position: absolute;
+  left: 0;
+  bottom: 14px;
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-3);
+}
+
+[data-hf="structure-dom"] .fz-callout {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 360px;
+  padding: 28px 30px;
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .fz-callout-label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 30px;
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .fz-callout-desc {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 23px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+[data-hf="structure-dom"] .fz-line {
+  width: 96px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="fz-title" data-anim-role="title" data-slot="headline">拆开看其中一个模块</h2>
+  <div class="fz-area">
+    <div class="fz-wrap" data-anim-role="overview">
+      <div class="fz-overview">
+        <div class="fz-block" style="left: 0; top: 0;"></div>
+        <div class="fz-block target" style="left: 270px; top: 0;"></div>
+        <div class="fz-block" style="left: 540px; top: 0;"></div>
+        <div class="fz-block" style="left: 0; top: 240px;"></div>
+        <div class="fz-block" style="left: 270px; top: 240px;"></div>
+        <div class="fz-block" style="left: 540px; top: 240px;"></div>
+      </div>
+      <div class="fz-zoom-frame" data-anim-role="zoom-frame"></div>
+    </div>
+    <div class="fz-caption" data-slot="overview_caption">系统总览</div>
+    <div class="fz-callout" data-anim-role="callout">
+      <div class="fz-callout-label" data-slot="zoom_label">检索模块</div>
+      <div class="fz-callout-desc" data-slot="zoom_desc">负责把用户问题映射到最相关的知识片段</div>
+    </div>
+  </div>
+  <div class="fz-line" data-anim-role="accent-line"></div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  var wrap = root.querySelector(".fz-wrap");
+  var blocks = root.querySelectorAll(".fz-block");
+  var frame = root.querySelector(".fz-zoom-frame");
+  var caption = root.querySelector(".fz-caption");
+  var callout = root.querySelector(".fz-callout");
+
+  if (blocks.length) {
+    tl.from(blocks, { scale: 0.85, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.06, transformOrigin: "center center" }, 0.2);
+  }
+  if (caption) {
+    tl.from(caption, { opacity: 0, y: 10, duration: 0.4, ease: "power2.out" }, 0.5);
+  }
+  if (wrap) {
+    tl.to(wrap, { scale: 1.45, duration: 0.7, ease: "power2.inOut" }, 1.6);
+  }
+  if (frame) {
+    frame.style.opacity = 0;
+    tl.to(frame, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.7);
+  }
+  if (callout) {
+    tl.from(callout, { x: 80, opacity: 0, duration: 0.55, ease: "back.out(1.2)" }, 2.3);
+  }
+
+  ["overview", "zoom-frame", "callout"].forEach(function (r) {
+    var els = root.querySelectorAll('[data-anim-role="' + r + '"]');
+    for (var m = 0; m < els.length; m++) { els[m].removeAttribute("data-anim-role"); }
+  });
+};
+</script>

@@ -1,0 +1,31 @@
+{
+  "structure_id": "stat_highlight",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "顶部标签",
+      "default": "Lancet · 临床三期试验 · 2024",
+      "max_chars": 20
+    },
+    "stat_value": {
+      "type": "string",
+      "label": "核心数字",
+      "default": "73.6",
+      "max_chars": 6
+    },
+    "unit": {
+      "type": "string",
+      "label": "单位",
+      "default": "%",
+      "max_chars": 4
+    },
+    "caption_text": {
+      "type": "string",
+      "label": "说明文字",
+      "default": "受试者在12周疗程后症状出现显著改善",
+      "max_chars": 24
+    }
+  }
+}

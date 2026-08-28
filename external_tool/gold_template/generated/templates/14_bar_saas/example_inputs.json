@@ -1,0 +1,12 @@
+{
+  "headline": "地壳中元素丰度排名",
+  "series": [
+    { "label": "氧", "value": 46.1 },
+    { "label": "硅", "value": 28.2 },
+    { "label": "铝", "value": 8.2 },
+    { "label": "铁", "value": 5.6 },
+    { "label": "钙", "value": 4.2 }
+  ],
+  "unit": "%",
+  "source_note": "数据来源：CRC化学手册"
+}

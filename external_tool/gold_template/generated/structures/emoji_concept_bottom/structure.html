@@ -1,0 +1,69 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: 80px 100px;
+  gap: 0;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .stage-panel {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  background: transparent;
+}
+
+[data-hf="structure-dom"] .top-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+[data-hf="structure-dom"] .bottom-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+[data-hf="structure-dom"] .emoji-hero {
+  font-size: 200px;
+  line-height: 1;
+}
+
+[data-hf="structure-dom"] .concept-name {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 72px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .explain-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 32px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 900px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="top-area">
+    <div class="emoji-hero" data-anim-role="decoration" data-slot="emoji_icon">🧬</div>
+  </div>
+  <div class="bottom-area">
+    <h1 class="concept-name" data-anim-role="title" data-slot="concept_name">基因突变</h1>
+    <p class="explain-text" data-anim-role="subtitle" data-slot="explain_text">DNA复制时的随机抄写错误</p>
+  </div>
+</div>

@@ -1,0 +1,4 @@
+{
+  "_comment": "可选。用于 viewer 兼容性提示（不阻断选择）。记录已验证的 structure×motion 组合。",
+  "templates": []
+}

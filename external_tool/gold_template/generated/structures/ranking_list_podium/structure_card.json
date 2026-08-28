@@ -1,0 +1,10 @@
+{
+  "structure_id": "ranking_list_podium",
+  "family": "data",
+  "use_for": ["Top-3领奖台", "排名展示", "竞赛结果"],
+  "spotlight_level": "high",
+  "duration_range": [6.0, 10.0],
+  "anim_roles": ["eyebrow", "title", "list-item"],
+  "slots": ["eyebrow", "headline", "items"],
+  "sfx": [{"at": 1.0, "sfx": "tick"}, {"at": 2.2, "sfx": "tick"}, {"at": 3.4, "sfx": "tick"}, {"at": 4.6, "sfx": "tick"}, {"at": 5.8, "sfx": "sparkle"}]
+}

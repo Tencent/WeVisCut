@@ -1,0 +1,11 @@
+{
+  "headline": "六个行业的生成样张",
+  "cases": [
+    { "caption": "公众号配图" },
+    { "caption": "电商主图" },
+    { "caption": "PPT 插图" },
+    { "caption": "表情包" },
+    { "caption": "壁纸生成" },
+    { "caption": "品牌 Logo" }
+  ]
+}

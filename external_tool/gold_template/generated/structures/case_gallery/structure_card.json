@@ -1,0 +1,19 @@
+{
+  "structure_id": "case_gallery",
+  "family": "dataviz",
+  "display_name": "案例宫格",
+  "use_for": ["多案例展示", "现象分类", "证据宫格"],
+  "spotlight_level": "mid",
+  "duration_range": [5.5, 8.5],
+  "anim_roles": ["bg", "title", "cell", "cell-label", "accent-line"],
+  "slots": ["headline", "cases"],
+  "data_slots": ["cases"],
+  "data_contract": {
+    "cases": { "shape": "[{caption: string}]", "min_items": 4, "max_items": 6 }
+  },
+  "bound": true,
+  "sfx_cues": [
+    { "at": 0.2, "sfx": "pop" },
+    { "at": 1.2, "sfx": "tick" }
+  ]
+}

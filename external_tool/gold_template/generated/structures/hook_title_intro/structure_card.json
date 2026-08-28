@@ -1,0 +1,9 @@
+{
+  "structure_id": "hook_title_intro",
+  "family": "narrative",
+  "use_for": ["开头钩子", "科普开场", "知识引入"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "title", "subtitle", "accent-line"],
+  "slots": ["eyebrow", "headline", "subhead"]
+}

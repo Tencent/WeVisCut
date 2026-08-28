@@ -1,0 +1,14 @@
+{
+  "structure_id": "three_points_stack",
+  "family": "narrative",
+  "duration_default": 6.0,
+  "slots": {
+    "headline": {"type": "string", "label": "标题", "default": "做对这件事的三个关键", "max_chars": 16},
+    "point1_title": {"type": "string", "label": "要点1标题", "default": "先定边界", "max_chars": 8},
+    "point1_desc": {"type": "string", "label": "要点1说明", "default": "明确不做什么比做什么更重要", "max_chars": 22},
+    "point2_title": {"type": "string", "label": "要点2标题", "default": "快速验证", "max_chars": 8},
+    "point2_desc": {"type": "string", "label": "要点2说明", "default": "用最小成本拿到真实反馈", "max_chars": 22},
+    "point3_title": {"type": "string", "label": "要点3标题", "default": "持续迭代", "max_chars": 8},
+    "point3_desc": {"type": "string", "label": "要点3说明", "default": "让每一轮都比上一轮更准", "max_chars": 22}
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "_comment": "音效登记表。每个 id 对应 sfx/<file>。运动层/结构层/装饰层的 *_card.json 用 sfx_cues 引用这些 id；assembler 据此注入 <audio data-start data-duration data-track-index data-volume src>。cue.at 是镜头内相对起点（秒）。SFX 是可选的——没有 sfx_cues 就不注入任何音轨，产物与今天完全一致。选音原则：①绑在动画发生的同一时刻 ②与画面语义匹配（见 scene_map）③有趣但不吵，单镜头 ≤2 个。若需要某个语义但库里没有合适音效，运行 prompt 时用 hyperframes-media/音频技能生成一个短音效落到 sfx/ 并在此登记一条。",
+  "track_index_base": 102,
+  "sfx": [
+    {
+      "id": "whoosh",
+      "file": "whoosh.mp3",
+      "default_volume": 0.35,
+      "default_dur": 1.2,
+      "energy": "mid",
+      "desc": "嗖的一下，横向/纵向快速位移、滑入、转场入场用；最通用",
+      "pairs_with": ["slide_in_hold", "parallax_pan", "card_stack_sequence", "bar_grow", "line_draw"]
+    },
+    {
+      "id": "pop",
+      "file": "pop.mp3",
+      "default_volume": 0.30,
+      "default_dur": 0.6,
+      "energy": "mid",
+      "desc": "啵的一下，元素弹出/数字蹦出/图标弹现用，短促",
+      "pairs_with": ["scale_pop_hold", "number_countup", "icon_pop_emphasis", "node_link_pop"]
+    },
+    {
+      "id": "sparkle",
+      "file": "sparkle.mp3",
+      "default_volume": 0.40,
+      "default_dur": 1.5,
+      "energy": "high",
+      "desc": "闪一下，强调高亮/结论亮点/收尾用，带余韵",
+      "pairs_with": ["mask_reveal", "flash_transition", "pie_sweep"]
+    },
+    {
+      "id": "tick",
+      "file": "tick.mp3",
+      "default_volume": 0.25,
+      "default_dur": 0.3,
+      "energy": "low",
+      "desc": "嗒一声，步进/逐项/逐行/逐阶段推进用，可在 stagger 每拍点一下（节制）",
+      "pairs_with": ["flow_advance", "card_stack_sequence", "vertical_flow", "method_comparison", "agenda_roadmap"]
+    },
+    {
+      "id": "rise",
+      "file": "rise.mp3",
+      "default_volume": 0.35,
+      "default_dur": 1.4,
+      "energy": "high",
+      "desc": "上扬音，增长/发射/上升用（趣味 motif 首选：小火箭顺折线上升、柱子拔高、数字飙升）",
+      "pairs_with": ["line_draw", "bar_grow", "number_countup", "chart_callout", "metric_cards"]
+    },
+    {
+      "id": "chime",
+      "file": "chime.mp3",
+      "default_volume": 0.30,
+      "default_dur": 1.2,
+      "energy": "mid",
+      "desc": "清脆叮，柔和确认/结论落定/收束用，比 sparkle 更安静",
+      "pairs_with": ["ending_cta", "key_takeaway", "thesis_statement", "mask_reveal"]
+    },
+    {
+      "id": "click",
+      "file": "click.mp3",
+      "default_volume": 0.22,
+      "default_dur": 0.2,
+      "energy": "low",
+      "desc": "轻点击，选中/切换/UI 交互/聚焦框落位用，最克制",
+      "pairs_with": ["focus_zoom", "scene_montage", "case_gallery"]
+    }
+  ],
+  "scene_map": {
+    "_comment": "画面语义 → 推荐音效。选 1~2 个绑在对应动画拍点上，趣味且不吵。",
+    "数字蹦出/计数": ["pop", "rise"],
+    "上升趋势/发射/增长": ["rise", "whoosh"],
+    "下降趋势/收缩": ["whoosh"],
+    "逐项逐阶段推进": ["tick"],
+    "图表画出/柱升/折线生长": ["whoosh", "rise"],
+    "高亮/重点/结论亮点": ["sparkle", "chime"],
+    "收尾/落定/确认": ["chime", "sparkle"],
+    "聚焦/放大/切换镜头": ["click", "whoosh"],
+    "转场/擦出/遮罩": ["whoosh", "sparkle"]
+  },
+  "rules": [
+    "cue.at 为镜头内相对秒（0 = 镜头开始），assembler 注入时 data-start=cue.at",
+    "cue.at 必须 0 ≤ at ≤ duration，超界由 assembler 裁剪",
+    "音效绑定在动画发生的同一时刻（如元素 0.30s 弹出 → pop 在 0.30s）",
+    "单镜头 sfx 数量遵循 CONTRACT §11 预算：≤2 个，避免吵闹",
+    "track_index 从 102 起逐个递增，避免与 narration(100)/bgm(101) 冲突"
+  ]
+}

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "目录标题", "default": "三步搞懂增长飞轮"}, {"id": "item1", "type": "string", "label": "章节一", "default": "用户为何留下"}, {"id": "item2", "type": "string", "label": "章节二", "default": "增长从何而来"}, {"id": "item3", "type": "string", "label": "章节三", "default": "如何规模复制"}, {"id": "item4", "type": "string", "label": "章节四（可空）", "default": "常见踩坑清单"}, {"id": "item5", "type": "string", "label": "章节五（可空）", "default": ""}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      :root {
+        --bg: #f7f9fc;
+        --bg-2: #eef2f8;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --accent: #4f46e5;
+        --accent-2: #0ea5e9;
+        --danger: #ef4444;
+        --success: #10b981;
+        --line: rgba(15,23,42,.08);
+        --line-strong: rgba(15,23,42,.16);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 50% at 50% 45%, rgba(79,70,229,.06) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 40% at 80% 70%, rgba(14,165,233,.04) 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (agenda_roadmap) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 80px 120px;
+        gap: 18px;
+        box-sizing: border-box;
+        counter-reset: agenda;
+      }
+
+      [data-hf="structure-dom"] .section-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 72px;
+        line-height: 1.15;
+        color: var(--ink-1);
+        max-width: 1100px;
+      }
+
+      [data-hf="structure-dom"] .divider-line {
+        width: 130px;
+        height: 4px;
+        border-radius: var(--radius-pill);
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        margin-bottom: 14px;
+      }
+
+      [data-hf="structure-dom"] .agenda-list {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 18px;
+        width: 100%;
+        max-width: 1180px;
+      }
+
+      [data-hf="structure-dom"] .agenda-item {
+        counter-increment: agenda;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        padding: 18px 28px;
+        border-radius: var(--radius-card);
+        background: var(--surface);
+        border: 1px solid var(--line);
+      }
+
+      [data-hf="structure-dom"] .agenda-item:has(.item-text:empty) {
+        display: none;
+      }
+
+      [data-hf="structure-dom"] .item-num {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-pill);
+        background: var(--surface-2);
+        border: 1px solid var(--line-strong);
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 26px;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+
+      [data-hf="structure-dom"] .item-num::before {
+        content: counter(agenda, decimal-leading-zero);
+      }
+
+      [data-hf="structure-dom"] .item-text {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 34px;
+        line-height: 1.35;
+        color: var(--ink-1);
+        max-width: 980px;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="6.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="6.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h1 class="section-title" data-anim-role="title" data-slot="headline">本期我们会讲三件事</h1>
+            <div class="divider-line" data-anim-role="accent-line"></div>
+            <div class="agenda-list">
+              <div class="agenda-item" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item1">问题从哪里来</span></div>
+              <div class="agenda-item" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item2">核心方法拆解</span></div>
+              <div class="agenda-item" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item3">真实案例验证</span></div>
+              <div class="agenda-item" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item4">落地清单</span></div>
+              <div class="agenda-item" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item5"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-1" data-start="0.5" data-duration="0.3" data-track-index="103" src="sfx/tick.mp3" data-volume="0.25"></audio>
+      <audio id="sfx-2" data-start="1.2" data-duration="0.3" data-track-index="104" src="sfx/tick.mp3" data-volume="0.25"></audio>
+    </div>
+    <!-- ===== Layer 2: motion (card_stack_sequence) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["card_stack_sequence"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 18, opacity: 0, duration: 0.45, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)" }, 0.50);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, duration: 0.35, ease: "power2.out" }, 0.75);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.7, ease: "expo.out", transformOrigin: "left center" }, 0.30);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)", stagger: 0.22 }, 0.70);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 1.10);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { y: 30, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.2)" }, 0.55);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 1.20);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -12, opacity: 0, duration: 0.35, ease: "power2.out" }, 1.30);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, scale: 0.96, duration: 0.45, ease: "back.out(1.2)" }, 1.40);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["card_stack_sequence"]) {
+              window.__hf_motions["card_stack_sequence"](tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

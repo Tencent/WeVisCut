@@ -1,0 +1,11 @@
+{
+  "headline": "四个季度的毛利率",
+  "series": [
+    { "label": "Q1", "value": 18 },
+    { "label": "Q2", "value": 23 },
+    { "label": "Q3", "value": 29 },
+    { "label": "Q4", "value": 41 }
+  ],
+  "callout_text": "Q4 规模效应开始显现",
+  "source_note": "数据来源：财报"
+}

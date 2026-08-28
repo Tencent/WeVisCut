@@ -1,0 +1,483 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  WeDirector — single configuration entry point
+#
+#  Every external interface (policy model, TTS, footage source, BGM source,
+#  templates, renderer, ffmpeg) is declared here. No other file hardcodes a
+#  path, so retargeting a deployment is a one-file change.
+#
+#  Start:     bash run_studio.sh
+#  Validate:  bash run_studio.sh --check          (no GPU required)
+#  Inspect:   python3 -m studio.config --summary
+#
+#  Values support ${VAR} and ${VAR:-fallback} interpolation. ${REPO_ROOT} is
+#  injected automatically and points at the directory holding this file, so a
+#  fresh clone works without exporting anything.
+#
+#  Large binaries (renderer, Node, ffmpeg, fonts, model weights) are NOT in the
+#  repository. Run `bash scripts/setup_external_tools.sh` and see
+#  docs/external_tools.md, then adjust the paths below if you put them
+#  somewhere other than external_tool/.
+# ═══════════════════════════════════════════════════════════════════════════
+
+studio:
+  name: WeDirector
+  # UI language: zh | en
+  locale: zh
+  # Root for generated cuts and project files (one subdirectory per run).
+  workspace_root: ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}
+
+server:
+  host: 0.0.0.0
+  port: 8081
+  # Directory allow-list for /api/media. Only files under these roots are ever
+  # served to the browser, which is what stops path traversal.
+  media_roots:
+    - ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}
+    - ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
+    - /tmp/wedirector_hyperframes_outputs
+    - /tmp/wedirector_render_split
+
+# ───────────────────────────────────────────────────────────────────────────
+#  1. Policy model — the RL-trained 9B agent
+#
+#  Download the weights first (see docs/external_tools.md):
+#      hf download <org>/WeDirector-9B --local-dir checkpoints/wedirector-9b
+#
+#  If you train your own policy: DAPO emits sharded verl FSDP checkpoints that
+#  vLLM cannot read, so merge them into HF format before pointing a profile at
+#  them. The released checkpoint is already merged.
+# ───────────────────────────────────────────────────────────────────────────
+model:
+  active_profile: ${WEDIRECTOR_MODEL_PROFILE:-wedirector_9b}
+
+  # Custom architecture id. Only a ms-swift build that registers `qwen3_5`
+  # can load it — see docs/external_tools.md.
+  model_type: qwen3_5
+  template_type: qwen3_5
+
+  # Root of a ms-swift checkout that registers `qwen3_5`. Leave empty to use
+  # whatever `pip install ms-swift` provides. The AICUT_MS_SWIFT_PATH env var
+  # overrides this.
+  ms_swift_path: ${AICUT_MS_SWIFT_PATH:-}
+
+  profiles:
+    # In-process vLLM. The production configuration.
+    wedirector_9b:
+      base_model: ${WEDIRECTOR_MODEL_PATH:-${REPO_ROOT}/checkpoints/wedirector-9b}
+      adapter: ""
+      infer_backend: vllm
+
+    # Plain transformers: slower, but works without a vLLM build and accepts a
+    # LoRA adapter on top of the base weights.
+    wedirector_9b_hf:
+      base_model: ${WEDIRECTOR_MODEL_PATH:-${REPO_ROOT}/checkpoints/wedirector-9b}
+      adapter: ${WEDIRECTOR_LORA_PATH:-}
+      infer_backend: transformers
+
+  # Qwen3.5 is a hybrid-thinking model. Left off, the chat template injects an
+  # already-closed empty <think></think>, so the model physically cannot emit a
+  # thought and the frontend's thinking panel stays blank. SFT and DAPO were
+  # both trained think-then-tool_call, so inference must match.
+  enable_thinking: true
+
+  # Deterministic decoding, so a given script always yields the same cut.
+  temperature: 0.0
+  top_p: 1.0
+  max_new_tokens: 24576
+  max_new_tokens_by_role:
+    orchestrator: 24576
+    generator: 8192
+    critic: 4096
+  stop_words:
+    - "</tool_call>"
+
+  device_map: "cuda:0"
+  attn_impl: flash_attention_2
+  vllm_gpu_memory_utilization: 0.90
+  vllm_max_model_len: 32768
+  vllm_max_num_seqs: 32
+  vllm_enable_prefix_caching: true
+  vllm_max_lora_rank: 32
+  vllm_tensor_parallel_size: 1
+
+  # Must be byte-identical to the training prompt. Relative to this file.
+  system_prompt_file: configs/unified_v5_system_prompt.txt
+  stage_config_file: configs/stage_allowed_tools.yaml
+
+# ───────────────────────────────────────────────────────────────────────────
+#  2. Agent policy
+#     The RL-trained model drives the whole run itself, so every server-side
+#     "correction" is off. The remaining limits are pure cost ceilings.
+# ───────────────────────────────────────────────────────────────────────────
+agent:
+  mode: long_horizon
+  max_steps: 48
+  max_same_tool_repeats: 10
+
+  autonomy:
+    # true = the model picks every tool and decides when to finish.
+    fully_autonomous: true
+    # Rewrite an illegal tool call into a legal one server-side.
+    force_valid_tool: false
+    # Inject Tool_StitchVideo when the model will not wrap up.
+    force_terminal_stitch: false
+    # Advance stages along the expert path regardless of the model.
+    force_stage_order: false
+    # Report illegal calls back as observations and let the model self-correct.
+    report_invalid_as_observation: true
+    max_consecutive_parse_failures: 4
+    max_consecutive_blocked: 6
+    # Same tool failing the same way this many times means the environment is
+    # broken, not the model. Stop and surface the real error instead of
+    # burning the whole retry budget.
+    max_identical_tool_failures: 3
+    # Same tool with byte-identical arguments this many times is a livelock.
+    # Checked regardless of return status, because Stage-4 repairs return
+    # completed_with_warnings and would otherwise reset the failure counter.
+    max_identical_tool_calls: 3
+    # A third repair pass over the same shots almost never helps. Past this the
+    # server refuses, reports "budget exhausted, wrap up", and relaxes the
+    # preconditions for finishing.
+    max_stage4_repairs: 2
+    max_stage4_attempts: 6
+    # Hard ceiling on executed tool calls per run. A clean run takes about 12.
+    max_tool_calls: 30
+
+# ───────────────────────────────────────────────────────────────────────────
+#  3. External services
+# ───────────────────────────────────────────────────────────────────────────
+services:
+
+  # ─── Text to speech ───
+  # Any OpenAI-style HTTP TTS server. The reference deployment uses Qwen3-TTS.
+  tts:
+    enabled: true
+    service_url: ${WEDIRECTOR_TTS_URL:-http://127.0.0.1:7865}
+    backend: qwen3_service
+    voice: Serena
+    language: Chinese
+    instruct: "Natural, clear, fluent Chinese narration. Normal pace, steady tone."
+    speed: 1.0
+    timeout_sec: 1200
+    dispatch_mode: batch
+    batch_size: 64
+    batch_concurrency: 1
+    health_probe_timeout_sec: 3
+
+  # ─── Footage source ───────────────────────────────────────────────────────
+  # Built-in values:
+  #   asset_retrieval_tool  — open-web search (YouTube / Bilibili / Internet
+  #                           Archive). Works anywhere, no extra service.
+  #   mmfinder              — internal embedding-recall service; needs the
+  #                           client under external_tool/mmfinder plus network
+  #                           access to that service.
+  # Or the name of anything registered in pipeline.providers:
+  #   http_video            — your own HTTP search endpoint, config only.
+  #   local_folder_video    — a directory of clips on disk.
+  # See docs/providers.md to add your own.
+  retrieval_provider: ${WEDIRECTOR_VIDEO_PROVIDER:-asset_retrieval_tool}
+
+  # BGM source. Defaults to retrieval_provider when unset, so footage and music
+  # can come from different places (e.g. mmfinder footage + http_bgm music).
+  bgm_provider: ${WEDIRECTOR_BGM_PROVIDER:-}
+
+  # ─── Pluggable provider settings ─────────────────────────────────────────
+  providers:
+    # Python modules or .py file paths to import at startup. Each one registers
+    # its providers via @register_video_provider / @register_bgm_provider.
+    plugins: []
+
+    # Config-only HTTP adapters. Fill in `url` and set
+    # retrieval_provider: http_video / bgm_provider: http_bgm to use them.
+    http_video:
+      url: ${WEDIRECTOR_VIDEO_API_URL:-}
+      method: POST
+      headers:
+        Authorization: "Bearer ${WEDIRECTOR_VIDEO_API_TOKEN:-}"
+      timeout_sec: 30
+      # Request field names your endpoint expects.
+      query_field: query
+      top_k_field: top_k
+      # Dotted path to the result array inside the JSON response.
+      results_path: results
+      # Response field -> canonical field. Omit anything already named
+      # url / path / title / duration — those are matched automatically.
+      field_map: {}
+
+    http_bgm:
+      url: ${WEDIRECTOR_BGM_API_URL:-}
+      method: POST
+      headers:
+        Authorization: "Bearer ${WEDIRECTOR_BGM_API_TOKEN:-}"
+      timeout_sec: 30
+      query_field: query
+      top_k_field: top_k
+      results_path: results
+      field_map: {}
+
+    # Offline directory scan. Media is matched against file names, parent
+    # directory names, and optional `<name>.json` / `<name>.txt` sidecars.
+    local_folder_video:
+      roots:
+        - ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}/clips
+      # true = drop clips that match no query token at all.
+      require_match: false
+
+    local_folder_bgm:
+      roots:
+        - ${WEDIRECTOR_MUSIC_LIBRARY:-${REPO_ROOT}/workspace/music_library}
+
+  # ─── Footage selection constraints (provider-independent) ───
+  visual_retrieval:
+    enabled: true
+    top_k: 12
+    return_candidates: 12
+    video_cli_size: 24
+    # Let the policy model pick the best candidate instead of taking top score.
+    select_with_llm: true
+    # Backend cascade, tried in order. Only consulted when
+    # retrieval_provider is `mmfinder`; any other provider replaces this list.
+    backend_order:
+      - mmfinder_video_cli
+      - mmfinder_embedding_recall
+      - mmfinder_subprocess
+    # Footage must be landscape and long enough to cover the shot.
+    require_horizontal: true
+    min_aspect_ratio: 1.33
+    min_duration_ratio: 0.55
+    max_loop_count: 2.0
+    duration_tolerance_sec: 1.5
+    allow_short_candidate_fallback: false
+    allow_local_scan_fallback: false
+
+  # ─── asset_retrieval_tool settings ───
+  # Only read when a provider above is `asset_retrieval_tool`.
+  asset_retrieval:
+    # Video platforms to search: youtube | bilibili
+    video_sources:
+      - bilibili
+    # Bilibili rejects anonymous requests with HTTP 412. Paste a logged-in
+    # cookie, or better, export BILIBILI_COOKIE and leave this empty.
+    bilibili_cookie: ${BILIBILI_COOKIE:-}
+    # YouTube Data API v3 key; env var YOUTUBE_API_KEY also works.
+    youtube_api_key: ${YOUTUBE_API_KEY:-}
+    # Download matches locally (needed for rendering; requires yt-dlp).
+    auto_download: true
+    max_download_height: 720
+    download_workers: 3
+    # BGM source collection.
+    bgm_sources:
+      - internet_archive
+
+  # ─── BGM playlist policy (provider-independent) ───
+  bgm:
+    enabled: true
+    top_k: 10
+    bgm_volume: 0.5
+    duck_under_voice: true
+    long_video_threshold_sec: 90
+    very_long_video_threshold_sec: 300
+    min_tracks_short_video: 1
+    min_tracks_long_video: 2
+    min_tracks_very_long_video: 3
+    # Extra directories for the local-scan fallback (colon-separated or a list).
+    local_library_dirs: []
+
+  # ─── HyperFrames renderer (template animation for spotlight shots) ───
+  hyperframes:
+    enabled: true
+    mode: cli
+    hf_bin: ${REPO_ROOT}/external_tool/hyperframes/cli/hyperframes/dist/cli.js
+    node_bin_dir: ${WEDIRECTOR_NODE_BIN:-${REPO_ROOT}/external_tool/node/bin}
+    # Self-contained runtime tarball (hyperframes + all node deps). Unpacked
+    # once into runtime_cache_dir, then reused — much faster than reading
+    # thousands of small files off a network filesystem on every render.
+    runtime_archive: ${REPO_ROOT}/external_tool/hyperframes/runtime/hyperframes-runtime.tar.gz
+    runtime_cache_dir: /tmp/wedirector_hyperframes_runtime
+    render_cache_dir: /tmp/wedirector_hyperframes_outputs
+    browser_path: ${WEDIRECTOR_CHROME:-${REPO_ROOT}/external_tool/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell}
+    # Local GSAP so template HTML never reaches for a CDN.
+    gsap_local_path: ${REPO_ROOT}/external_tool/hyperframes/vendor/gsap.min.js
+    render_quality: draft
+    timeout: 600
+    run_check: false
+    run_render: true
+    use_xvfb: false
+    accelerated_render:
+      enabled: true
+      fps: 14
+      quality: draft
+      workers: 8
+      format: mp4
+      extra_args: ["--browser-gpu", "--sdr"]
+      # Wrapper that gives headless Chrome a GPU. Falls back to the plain
+      # binary when the machine has no usable GPU.
+      browser_path: ${REPO_ROOT}/external_tool/hyperframes/browser-gpu-wrapper.sh
+      browser_source_path: ${WEDIRECTOR_CHROME:-${REPO_ROOT}/external_tool/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell}
+      browser_cache_dir: /tmp/wedirector_chrome_headless_shell
+      skip_lint: true
+      skip_check: true
+      nav_timeout_ms: 60000
+      timeout_seconds: 600
+
+  # ─── ffmpeg / ffprobe ───
+  ffmpeg:
+    # A static build is strongly preferred; setup_external_tools.sh fetches one.
+    ffmpeg_path: ${WEDIRECTOR_FFMPEG:-${REPO_ROOT}/external_tool/ffmpeg/ffmpeg}
+    ffprobe_path: ${WEDIRECTOR_FFPROBE:-${REPO_ROOT}/external_tool/ffmpeg/ffprobe}
+
+# ───────────────────────────────────────────────────────────────────────────
+#  4. Resource paths
+# ───────────────────────────────────────────────────────────────────────────
+paths:
+  # Your own video library (used by local_scan / local_folder_video).
+  asset_library: ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
+  # Gold Template library: structure x motion x visual layers + assemble.py.
+  gold_template_root: ${WEDIRECTOR_GOLD_TEMPLATE:-${REPO_ROOT}/external_tool/gold_template}
+  # Pipeline intermediates and rendered output.
+  output_root: ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}/pipeline_out
+  storage_root: ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}/storage
+  # Optional decoration hints. Missing files degrade gracefully.
+  gold_template_policies_file: ${REPO_ROOT}/external_tool/configs/gold_template_policies.yaml
+  instructions_file: ${REPO_ROOT}/external_tool/configs/instructions.yaml
+
+# ───────────────────────────────────────────────────────────────────────────
+#  5. Rendering and subtitles
+# ───────────────────────────────────────────────────────────────────────────
+render:
+  # Transparent-layer acceleration: A cacheable base video + B webm alpha
+  # animation layer + C ffmpeg overlay. Any failure falls back to rendering the
+  # whole scene, so quality never degrades — only speed.
+  split:
+    enabled: true
+    overlay_format: webm
+    cache_dir: /tmp/wedirector_render_split
+
+  subtitles:
+    fontfile: ${WEDIRECTOR_SUBTITLE_FONT:-${REPO_ROOT}/external_tool/gold_template/fonts/NotoSerifSC-Bold.otf}
+    font_size: 45
+    line_spacing: 56
+    bottom_margin: 132
+    max_chars_per_line: 18
+    max_lines: 1
+    min_segment_duration_sec: 0.45
+    boxcolor: "black@0.52"
+    boxborderw: 18
+
+  stitch:
+    recompose_missing_shots: false
+    # Keep this on. Rendered shots are not uniform: the ffmpeg backend emits
+    # 25fps + 24kHz mono narration, HyperFrames emits 14-24fps + 48kHz stereo.
+    # concat cannot reconcile that — it produces non-monotonic DTS and feeds NaN
+    # samples to the AAC encoder, failing the whole stitch. With this on, each
+    # shot is first normalised to h264/24fps + aac 48k stereo (silence added
+    # where there is no narration), after which a stream copy finishes in about
+    # a second with no full re-encode.
+    sanitize_shots: true
+    # stitch_video.py probes every shot's codec, resolution and frame rate
+    # before concatenating; on any mismatch, or any codec a browser cannot
+    # decode, it transcodes instead. Without this the output can end up as
+    # audio over a black screen.
+    fast_concat_copy: true
+    concat_timeout_sec: 300
+
+# ───────────────────────────────────────────────────────────────────────────
+#  6. Quality check and severity routing (Stage 4)
+# ───────────────────────────────────────────────────────────────────────────
+quality:
+  # Score every shot for likely defects first and send only the worst ones
+  # through VLM review, instead of paying for a judgement on all of them.
+  severity_rank:
+    enable: true
+    top_ratio: 0.25
+    min_shots_to_process: 4
+    llm_temperature: 0.1
+    max_retries: 2
+    # When model scoring fails, fall back to heuristics over real metadata
+    # (audio/video length delta, missing caption, decoration validation score).
+    # Off, the ranking degenerates to all-zero and Stage 4 reviews nothing.
+    allow_heuristic_fallback: true
+
+# ───────────────────────────────────────────────────────────────────────────
+#  7. Live progress
+# ───────────────────────────────────────────────────────────────────────────
+progress:
+  # Timeline tracks the frontend shows, in display order.
+  tracks:
+    - segments      # chapter segmentation
+    - shots         # shot list
+    - narration     # TTS
+    - subtitle
+    - footage       # retrieved clips
+    - spotlight     # template decoration layer
+    - bgm
+    - render        # render artifacts
+  # Minimum interval between progress pushes, to keep the browser responsive.
+  push_throttle_ms: 120
+  # Raw model output lines retained for the "terminal" panel.
+  raw_output_buffer: 400
+  # Events retained per run; older non-critical events roll off.
+  max_events_per_run: 5000
+
+# ───────────────────────────────────────────────────────────────────────────
+#  8. Post-production editing
+# ───────────────────────────────────────────────────────────────────────────
+editor:
+  enabled: true
+
+  manual_ops:
+    edit_subtitle: true        # change subtitle text (no TTS re-run)
+    edit_narration: true       # change narration (re-runs TTS + that shot)
+    replace_footage: true
+    edit_spotlight_slots: true # change template slot text
+    swap_template: true        # swap the structure/motion/visual triple
+    reorder_shots: true
+    delete_shot: true
+    adjust_bgm: true
+
+  rerender:
+    # only_dirty = re-render just the edited shots, reuse the cache elsewhere.
+    scope: only_dirty
+    auto_restitch: true
+    keep_version_history: true
+    max_versions: 10
+
+# ───────────────────────────────────────────────────────────────────────────
+#  9. Conversational editing
+#     Uses the same 9B policy model to locate and rewrite parts of a finished
+#     cut. Off, the frontend keeps only the manual editing panel.
+# ───────────────────────────────────────────────────────────────────────────
+chat_edit:
+  enabled: true
+
+  # inproc = reuse the already-loaded 9B; openai = call an external /v1 endpoint.
+  backend: inproc
+  openai_base_url: ${WEDIRECTOR_CHAT_BASE_URL:-}
+  openai_api_key: ${WEDIRECTOR_CHAT_API_KEY:-}
+  openai_model: ${WEDIRECTOR_CHAT_MODEL:-}
+
+  temperature: 0.2
+  max_tokens: 4096
+
+  context:
+    # Token budget for conversation history; over this, older turns get summarised.
+    max_history_tokens: 12000
+    keep_recent_turns: 6
+    summary_target_tokens: 600
+    # Cap on shots injected into the project digest. Past this, only shots
+    # relevant to the user's message are included.
+    project_digest_max_shots: 60
+    relevant_shot_topk: 20
+    # Rough token estimate: CJK characters divided by this.
+    chars_per_token: 1.7
+
+  safety:
+    max_ops_per_turn: 12
+    # Destructive operations the user must confirm in the UI.
+    require_confirm_for:
+      - delete_shot
+      - swap_template
+      - reorder_shots
+    # Retries when the model's edit plan fails schema validation.
+    max_parse_retries: 2
+    allow_rerender: true

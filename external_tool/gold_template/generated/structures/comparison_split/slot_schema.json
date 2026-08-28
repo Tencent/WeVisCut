@@ -1,0 +1,37 @@
+{
+  "structure_id": "comparison_split",
+  "family": "narrative",
+  "duration_default": 6.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "关于胆固醇，90%的人都理解错了",
+      "max_chars": 20
+    },
+    "left_label": {
+      "type": "string",
+      "label": "左侧标签",
+      "default": "常见误区",
+      "max_chars": 8
+    },
+    "left_text": {
+      "type": "string",
+      "label": "左侧内容",
+      "default": "胆固醇越低越好，高胆固醇食物应完全避免摄入",
+      "max_chars": 28
+    },
+    "right_label": {
+      "type": "string",
+      "label": "右侧标签",
+      "default": "科学事实",
+      "max_chars": 8
+    },
+    "right_text": {
+      "type": "string",
+      "label": "右侧内容",
+      "default": "人体需要适量胆固醇来维持细胞膜完整性与激素合成",
+      "max_chars": 28
+    }
+  }
+}

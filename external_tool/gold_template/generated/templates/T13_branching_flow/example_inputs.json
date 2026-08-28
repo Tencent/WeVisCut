@@ -1,0 +1,9 @@
+{
+  "headline": "光遇到物体后的三种命运",
+  "root_label": "入射光",
+  "branches": [
+    { "label": "反射" },
+    { "label": "折射" },
+    { "label": "吸收" }
+  ]
+}

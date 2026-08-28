@@ -1,0 +1,28 @@
+{
+  "structure_id": "method_comparison",
+  "family": "dataviz",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "对比标题",
+      "default": "两种方案的硬指标对比",
+      "max_chars": 16
+    },
+    "columns": {
+      "type": "json",
+      "label": "方法列名",
+      "default": ["Baseline", "Ours"]
+    },
+    "rows": {
+      "type": "json",
+      "label": "维度行数据",
+      "default": [
+        { "dim": "准确率", "values": ["82%", "94%"] },
+        { "dim": "延迟", "values": ["120ms", "45ms"] },
+        { "dim": "成本", "values": ["高", "低"] }
+      ]
+    }
+  },
+  "data_slots": ["columns", "rows"]
+}

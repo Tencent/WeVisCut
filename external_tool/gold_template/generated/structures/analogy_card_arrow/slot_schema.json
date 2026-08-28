@@ -1,0 +1,12 @@
+{
+  "structure_id": "analogy_card_arrow",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {"type": "string", "label": "顶部标签", "default": "类比理解", "max_chars": 10},
+    "concept_name": {"type": "string", "label": "概念名称", "default": "DNA", "max_chars": 10},
+    "concept_desc": {"type": "string", "label": "概念描述", "default": "储存生物遗传信息的双螺旋分子", "max_chars": 24},
+    "analogy_emoji": {"type": "string", "label": "类比Emoji", "default": "📖", "max_chars": 2},
+    "analogy_text": {"type": "string", "label": "类比文字", "default": "一本生命说明书", "max_chars": 16}
+  }
+}

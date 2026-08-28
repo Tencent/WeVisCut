@@ -1,0 +1,236 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 52px 72px 48px;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .vfz-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 60px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .vfz-area {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .vfz-spine {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  bottom: 6%;
+  width: 4px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: var(--line-strong);
+  transform-origin: top center;
+}
+
+[data-hf="structure-dom"] .vfz-rows {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-hf="structure-dom"] .vfz-row {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .vfz-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 3px solid var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+[data-hf="structure-dom"] .vfz-connector {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  width: 84px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+[data-hf="structure-dom"] .vfz-row.is-left .vfz-connector {
+  right: 50%;
+  transform-origin: right center;
+}
+
+[data-hf="structure-dom"] .vfz-row.is-right .vfz-connector {
+  left: 50%;
+  transform-origin: left center;
+}
+
+[data-hf="structure-dom"] .vfz-node {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 38%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .vfz-row.is-left .vfz-node {
+  right: calc(50% + 84px);
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+[data-hf="structure-dom"] .vfz-row.is-right .vfz-node {
+  left: calc(50% + 84px);
+}
+
+[data-hf="structure-dom"] .vfz-index {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 30px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .vfz-node-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--ink-1);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="vfz-title" data-anim-role="title" data-slot="headline">数据到模型的四个阶段</h2>
+
+  <div class="vfz-area">
+    <div class="vfz-spine"></div>
+    <div class="vfz-rows">
+      <div class="vfz-row is-left">
+        <div class="vfz-connector" data-anim-role="edge"></div>
+        <div class="vfz-dot" data-anim-role="marker"></div>
+        <div class="vfz-node" data-anim-role="node">
+          <span class="vfz-index">1</span>
+          <span class="vfz-node-label" data-anim-role="node-label">采集原始数据</span>
+        </div>
+      </div>
+      <div class="vfz-row is-right">
+        <div class="vfz-connector" data-anim-role="edge"></div>
+        <div class="vfz-dot" data-anim-role="marker"></div>
+        <div class="vfz-node" data-anim-role="node">
+          <span class="vfz-index">2</span>
+          <span class="vfz-node-label" data-anim-role="node-label">清洗与标注</span>
+        </div>
+      </div>
+      <div class="vfz-row is-left">
+        <div class="vfz-connector" data-anim-role="edge"></div>
+        <div class="vfz-dot" data-anim-role="marker"></div>
+        <div class="vfz-node" data-anim-role="node">
+          <span class="vfz-index">3</span>
+          <span class="vfz-node-label" data-anim-role="node-label">模型训练</span>
+        </div>
+      </div>
+      <div class="vfz-row is-right">
+        <div class="vfz-connector" data-anim-role="edge"></div>
+        <div class="vfz-dot" data-anim-role="marker"></div>
+        <div class="vfz-node" data-anim-role="node">
+          <span class="vfz-index">4</span>
+          <span class="vfz-node-label" data-anim-role="node-label">评估上线</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var raw = V.nodes || null;
+  var nodes = null;
+  try { nodes = typeof raw === "string" ? JSON.parse(raw) : raw; } catch (e) { nodes = null; }
+
+  var rows = root.querySelector(".vfz-rows");
+  if (nodes && Array.isArray(nodes) && nodes.length > 0 && rows) {
+    rows.innerHTML = "";
+    for (var i = 0; i < nodes.length; i++) {
+      var side = (i % 2 === 0) ? "is-left" : "is-right";
+      var row = document.createElement("div");
+      row.className = "vfz-row " + side;
+      var conn = document.createElement("div");
+      conn.className = "vfz-connector";
+      conn.setAttribute("data-anim-role", "edge");
+      var dot = document.createElement("div");
+      dot.className = "vfz-dot";
+      dot.setAttribute("data-anim-role", "marker");
+      var node = document.createElement("div");
+      node.className = "vfz-node";
+      node.setAttribute("data-anim-role", "node");
+      var idx = document.createElement("span");
+      idx.className = "vfz-index";
+      idx.textContent = String(i + 1);
+      var label = document.createElement("span");
+      label.className = "vfz-node-label";
+      label.setAttribute("data-anim-role", "node-label");
+      label.textContent = nodes[i].label != null ? nodes[i].label : "";
+      node.appendChild(idx);
+      node.appendChild(label);
+      row.appendChild(conn);
+      row.appendChild(dot);
+      row.appendChild(node);
+      rows.appendChild(row);
+    }
+  }
+
+  var spine = root.querySelector(".vfz-spine");
+  if (spine) {
+    tl.from(spine, { scaleY: 0, opacity: 0, duration: 0.6, ease: "power2.out", transformOrigin: "top center" }, 0.1);
+  }
+
+  var allNodes = $("node"), allEdges = $("edge"), allLabels = $("node-label"), allMarkers = $("marker");
+  for (var n = 0; n < allNodes.length; n++) {
+    var t = 0.4 + n * 0.45;
+    var fromLeft = (n % 2 === 0);
+    if (n < allEdges.length) {
+      tl.from(allEdges[n], { scaleX: 0, duration: 0.3, ease: "power2.out" }, t);
+    }
+    if (n < allMarkers.length) {
+      tl.from(allMarkers[n], { scale: 0, opacity: 0, duration: 0.3, ease: "back.out(1.6)" }, t + 0.05);
+    }
+    tl.from(allNodes[n], { x: fromLeft ? -36 : 36, opacity: 0, duration: 0.45, ease: "power3.out" }, t + 0.12);
+    if (n < allLabels.length) {
+      tl.from(allLabels[n], { opacity: 0, duration: 0.3, ease: "power2.out" }, t + 0.2);
+    }
+  }
+
+  function strip(role) { var els = $(role); for (var k = 0; k < els.length; k++) els[k].removeAttribute("data-anim-role"); }
+  strip("node"); strip("edge"); strip("node-label"); strip("marker");
+};
+</script>

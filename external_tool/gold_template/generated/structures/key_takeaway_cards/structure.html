@@ -1,0 +1,104 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .head {
+  position: absolute;
+  z-index: 2;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  max-width: 78%;
+}
+
+[data-hf="structure-dom"] .title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 68px;
+  line-height: 1.16;
+  color: var(--ink-1);
+  max-width: 100%;
+}
+
+[data-hf="structure-dom"] .title .accent { color: var(--accent); }
+
+[data-hf="structure-dom"] .accent-line {
+  width: 132px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  transform-origin: center;
+}
+
+[data-hf="structure-dom"] .tk-card {
+  position: absolute;
+  z-index: 1;
+  width: 31%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-card);
+  padding: 22px 26px;
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .card-1 { top: 50%; left: 5%; }
+[data-hf="structure-dom"] .card-2 { bottom: 9%; left: 50%; transform: translateX(-50%); }
+[data-hf="structure-dom"] .card-3 { top: 46%; right: 5%; }
+
+[data-hf="structure-dom"] .tk-mark {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .tk-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 30px;
+  line-height: 1.3;
+  color: var(--ink-1);
+  max-width: 100%;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="head">
+    <h2 class="title" data-anim-role="title" data-slot="headline">记住<span class="accent">这三件事</span>就够了</h2>
+    <div class="accent-line" data-anim-role="accent-line"></div>
+  </div>
+  <div class="tk-card card-1" data-anim-role="list-item">
+    <div class="tk-mark">1</div>
+    <div class="tk-text" data-slot="takeaway1">先解决真问题，再谈工具</div>
+  </div>
+  <div class="tk-card card-2" data-anim-role="list-item">
+    <div class="tk-mark">2</div>
+    <div class="tk-text" data-slot="takeaway2">用最小成本快速验证</div>
+  </div>
+  <div class="tk-card card-3" data-anim-role="list-item">
+    <div class="tk-mark">3</div>
+    <div class="tk-text" data-slot="takeaway3">让每一轮迭代都更准</div>
+  </div>
+</div>

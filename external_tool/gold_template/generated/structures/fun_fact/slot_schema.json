@@ -1,0 +1,11 @@
+{
+  "structure_id": "fun_fact",
+  "family": "narrative",
+  "duration_default": 5.0,
+  "slots": {
+    "eyebrow": {"type": "string", "label": "顶部标签", "default": "冷知识", "max_chars": 10},
+    "emoji_icon": {"type": "string", "label": "主图标Emoji", "default": "🐙", "max_chars": 2},
+    "fact_text": {"type": "string", "label": "核心事实", "default": "章鱼有三颗心脏", "max_chars": 16},
+    "explain_text": {"type": "string", "label": "解释说明", "default": "两颗负责鳃部供血，一颗负责全身循环", "max_chars": 30}
+  }
+}

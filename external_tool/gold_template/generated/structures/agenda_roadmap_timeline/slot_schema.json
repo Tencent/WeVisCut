@@ -1,0 +1,13 @@
+{
+  "structure_id": "agenda_roadmap_timeline",
+  "family": "narrative",
+  "duration_default": 6.5,
+  "slots": {
+    "headline": {"type": "string", "label": "目录标题", "default": "本期我们会讲三件事", "max_chars": 16},
+    "item1": {"type": "string", "label": "章节一", "default": "问题从哪里来", "max_chars": 18},
+    "item2": {"type": "string", "label": "章节二", "default": "核心方法拆解", "max_chars": 18},
+    "item3": {"type": "string", "label": "章节三", "default": "真实案例验证", "max_chars": 18},
+    "item4": {"type": "string", "label": "章节四（可空）", "default": "落地清单", "max_chars": 18},
+    "item5": {"type": "string", "label": "章节五（可空）", "default": "", "max_chars": 18}
+  }
+}

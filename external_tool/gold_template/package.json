@@ -1,0 +1,8 @@
+{
+  "name": "gold-template",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "hyperframes": "0.6.64"
+  }
+}

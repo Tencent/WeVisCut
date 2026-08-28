@@ -1,0 +1,14 @@
+{
+  "headline": "一整年的访问量曲线",
+  "series": [
+    { "label": "1月", "value": 20 },
+    { "label": "3月", "value": 26 },
+    { "label": "5月", "value": 33 },
+    { "label": "7月", "value": 31 },
+    { "label": "9月", "value": 48 },
+    { "label": "11月", "value": 67 },
+    { "label": "12月", "value": 82 }
+  ],
+  "callout_text": "9 月起进入加速增长区间",
+  "source_note": "数据来源：内部分析平台 2024"
+}

@@ -1,0 +1,78 @@
+# AICut Agent SFT v3
+#
+# v3 trains a compact ReAct-style agent trace:
+#   decision:     state + memory -> thought/reflection + action + rich action_input
+#   verification: state + action + observation -> verdict + repair/next_action
+#
+# We intentionally train concise thought/reflection fields instead of long hidden
+# chain-of-thought. The JSON is directly machine-parseable for LangGraph.
+
+input:
+  processed_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed
+  transitions_file: transitions_valid.jsonl
+  include_source_kinds: [base, augmented]
+
+output:
+  output_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed_agent_v3
+
+limits:
+  max_user_chars: 22000
+  max_assistant_chars: 24000
+  max_total_chars: 42000
+  input_script_chars: 10000
+  max_memory_segments: 10
+  max_memory_shots: 24
+  max_plan_chunk_shots: 12
+  max_action_shot_ids: 40
+  max_decoration_samples_per_project: 8
+  max_judge_samples_per_project: 8
+  max_repair_samples_per_project: 8
+  segment_raw_span_chars: 700
+  shot_vocal_chars: 360
+  shot_visual_chars: 200
+  issue_chars: 360
+
+sampling:
+  include_decision: true
+  include_verification: true
+  # Execution-heavy tools are useful for loop learning but should not dominate
+  # content-generation samples.
+  execution_tool_sample_rate: 0.35
+  seed: 13
+
+weights:
+  source_kind:
+    base: 1.0
+    augmented: 0.45
+  trace_type:
+    decision: 1.0
+    verification: 0.9
+  action:
+    Tool_SegmentArticle: 1.5
+    Tool_PlanShots: 1.8
+    Tool_SelfReflect: 1.1
+    Tool_SelfReflect_Patch: 1.2
+    Tool_SelfReflect_RepairShot: 1.0
+    Tool_MusicSearch: 0.8
+    Tool_BatchDecorateSpotlights: 0.9
+    Tool_Stage4DimensionJudge: 1.0
+    Tool_Stage4DimensionalRepair: 1.0
+
+thresholds:
+  json_parse_rate: 0.99
+  trace_schema_rate: 0.98
+  action_valid_rate: 0.98
+  allowed_action_rate: 0.96
+  next_action_valid_rate: 0.94
+  content_rich_rate: 0.85
+  no_markdown_rate: 0.99
+  repair_loop_coverage_rate: 0.60
+  trace_type_match_rate: 0.85
+  action_match_rate: 0.75
+  next_action_match_rate: 0.65
+  verdict_match_rate: 0.75
+  repair_action_presence_match_rate: 0.70
+  action_input_key_recall: 0.55
+
+sharegpt:
+  export_train: true

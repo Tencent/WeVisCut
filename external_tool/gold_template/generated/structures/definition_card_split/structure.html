@@ -1,0 +1,106 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 80px 100px;
+  gap: 64px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .def-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+  border-right: 2px solid var(--line);
+  padding-right: 56px;
+}
+
+[data-hf="structure-dom"] .def-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 26px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.1em;
+}
+
+[data-hf="structure-dom"] .def-term {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 76px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  max-width: 560px;
+}
+
+[data-hf="structure-dom"] .def-term .accent {
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .def-line {
+  width: 88px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+[data-hf="structure-dom"] .def-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+[data-hf="structure-dom"] .def-body {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 32px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 760px;
+}
+
+[data-hf="structure-dom"] .def-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .def-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-1);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="def-left">
+    <div class="def-eyebrow" data-anim-role="eyebrow" data-slot="eyebrow">概念</div>
+    <h1 class="def-term" data-anim-role="title" data-slot="term">向量数据库</h1>
+    <div class="def-line" data-anim-role="accent-line"></div>
+  </div>
+  <div class="def-right">
+    <p class="def-body" data-anim-role="subtitle" data-slot="definition">一种以高维向量为索引单元、按相似度而非精确匹配检索数据的存储系统</p>
+    <div class="def-keywords">
+      <span class="def-pill" data-anim-role="list-item" data-slot="keyword1">相似检索</span>
+      <span class="def-pill" data-anim-role="list-item" data-slot="keyword2">嵌入</span>
+      <span class="def-pill" data-anim-role="list-item" data-slot="keyword3">近邻搜索</span>
+    </div>
+  </div>
+</div>

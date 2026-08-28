@@ -1,0 +1,49 @@
+{
+  "structure_id": "scale_comparison",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "顶部标签",
+      "default": "尺度感知",
+      "max_chars": 10
+    },
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "太阳与地球的大小差距",
+      "max_chars": 20
+    },
+    "big_emoji": {
+      "type": "string",
+      "label": "大物体表情",
+      "default": "☀️",
+      "max_chars": 4
+    },
+    "big_label": {
+      "type": "string",
+      "label": "大物体标签",
+      "default": "太阳（篮球）",
+      "max_chars": 12
+    },
+    "small_emoji": {
+      "type": "string",
+      "label": "小物体表情",
+      "default": "🌍",
+      "max_chars": 4
+    },
+    "small_label": {
+      "type": "string",
+      "label": "小物体标签",
+      "default": "地球（玻璃珠）",
+      "max_chars": 12
+    },
+    "ratio_text": {
+      "type": "string",
+      "label": "比例说明",
+      "default": "体积是地球的 130 万倍",
+      "max_chars": 20
+    }
+  }
+}

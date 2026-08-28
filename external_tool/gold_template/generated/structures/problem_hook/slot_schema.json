@@ -1,0 +1,12 @@
+{
+  "structure_id": "problem_hook",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "eyebrow": {"type": "string", "label": "顶部小标签", "default": "现状观察", "max_chars": 14},
+    "question_text": {"type": "string", "label": "核心问句", "default": "为什么90%的项目都卡在这一步？", "max_chars": 24},
+    "tag1": {"type": "string", "label": "痛点一", "default": "成本失控", "max_chars": 10},
+    "tag2": {"type": "string", "label": "痛点二", "default": "交付延期", "max_chars": 10},
+    "tag3": {"type": "string", "label": "痛点三", "default": "质量波动", "max_chars": 10}
+  }
+}

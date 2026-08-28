@@ -1,0 +1,13 @@
+{
+  "structure_id": "emoji_concept",
+  "family": "narrative",
+  "use_for": ["概念引入", "名词解释", "核心术语", "单点聚焦"],
+  "spotlight_level": "high",
+  "duration_range": [3.5, 5.5],
+  "anim_roles": ["decoration", "title", "subtitle"],
+  "slots": ["emoji_icon", "concept_name", "explain_text"],
+  "sfx_cues": [
+    {"at": 0.3, "sfx": "pop", "comment": "emoji弹入"},
+    {"at": 0.8, "sfx": "tick", "comment": "文字出现"}
+  ]
+}

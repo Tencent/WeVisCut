@@ -1,0 +1,131 @@
+{
+  "_comment": "Layer 3 视觉令牌包登记。每个 id 对应 visuals/<id>/tokens.css，键集合必须与 CONTRACT.md §1 完全一致。背景分两层：外层 .bg-stage 全屏氛围底（视觉层写治理），内层 .stage-panel 居中半透明圆角面板（几何由 assemble.py 固定，视觉层只给 --stage-bg / --radius-stage / --stage-blur）。--stage-bg 的 alpha 一律 0.5（=50% 透明）。",
+  "visuals": [
+    {
+      "id": "dark_tech",
+      "keywords": ["深色", "科技网格", "青色霓光", "数据界面", "理性"],
+      "use_for": ["科技/AI/工程科普", "数据解释", "硬核知识"],
+      "palette": {
+        "--bg": "#060d1a", "--bg-2": "#0a1525",
+        "--surface": "rgba(20,38,60,.55)", "--surface-2": "rgba(20,38,60,.82)",
+        "--ink-1": "#eef6fb", "--ink-2": "#b9d3e6", "--ink-3": "#7d96ad",
+        "--accent": "#7fc7d9", "--accent-2": "#f5b14a", "--danger": "#ff7a7a", "--success": "#6ee7b7",
+        "--line": "rgba(127,199,217,.18)", "--line-strong": "rgba(127,199,217,.42)",
+        "--font-display": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-body": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-caption": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--weight-display": "800", "--weight-body": "500",
+        "--radius-card": "22px", "--radius-pill": "999px",
+        "--shadow-soft": "0 12px 36px rgba(0,0,0,.45)", "--shadow-glow": "0 0 36px rgba(127,199,217,.35)",
+        "--grid-color": "rgba(127,199,217,.05)",
+        "--stage-bg": "rgba(10,21,37,.5)", "--radius-stage": "48px", "--stage-blur": "10px"
+      },
+      "bg_recipe": "外层 .bg-stage: 深色径向双光晕(青+金) + 80px 网格 + 椭圆暗角；内层 .stage-panel 透出该底，呈深色玻璃"
+    },
+    {
+      "id": "warm_editorial",
+      "keywords": ["暖色", "杂志编辑感", "米白纸感", "赭石/陶土强调", "衬线大标题"],
+      "use_for": ["人文历史", "深度评论", "故事叙述"],
+      "palette": {
+        "--bg": "#f6f1e7", "--bg-2": "#efe7d6",
+        "--surface": "rgba(255,255,255,.7)", "--surface-2": "#ffffff",
+        "--ink-1": "#211b14", "--ink-2": "#5c5043", "--ink-3": "#8a7d6b",
+        "--accent": "#b5532a", "--accent-2": "#c79a3e", "--danger": "#a83232", "--success": "#5c7a3e",
+        "--line": "rgba(33,27,20,.12)", "--line-strong": "rgba(33,27,20,.28)",
+        "--font-display": "\"Noto Serif SC\", Georgia, serif",
+        "--font-body": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-caption": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--weight-display": "700", "--weight-body": "400",
+        "--radius-card": "6px", "--radius-pill": "999px",
+        "--shadow-soft": "0 8px 24px rgba(33,27,20,.10)", "--shadow-glow": "none",
+        "--grid-color": "rgba(33,27,20,.04)",
+        "--stage-bg": "rgba(255,253,248,.5)", "--radius-stage": "28px", "--stage-blur": "6px"
+      },
+      "bg_recipe": "外层 .bg-stage: 米白纸面 + 极淡纸纹噪点 + 边缘发丝线(无强光晕)；内层 .stage-panel 半透明米白，圆边克制(28px)"
+    },
+    {
+      "id": "clean_saas",
+      "keywords": ["白底", "靛蓝强调", "柔和阴影", "现代 SaaS", "清爽"],
+      "use_for": ["财经商业解释", "产品/工具讲解", "通用科普"],
+      "palette": {
+        "--bg": "#f7f9fc", "--bg-2": "#eef2f8",
+        "--surface": "#ffffff", "--surface-2": "#ffffff",
+        "--ink-1": "#0f172a", "--ink-2": "#475569", "--ink-3": "#94a3b8",
+        "--accent": "#4f46e5", "--accent-2": "#0ea5e9", "--danger": "#ef4444", "--success": "#10b981",
+        "--line": "rgba(15,23,42,.08)", "--line-strong": "rgba(15,23,42,.16)",
+        "--font-display": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-body": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-caption": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--weight-display": "800", "--weight-body": "500",
+        "--radius-card": "20px", "--radius-pill": "999px",
+        "--shadow-soft": "0 16px 40px rgba(15,23,42,.10)", "--shadow-glow": "0 0 30px rgba(79,70,229,.18)",
+        "--grid-color": "rgba(15,23,42,.04)",
+        "--stage-bg": "rgba(255,255,255,.5)", "--radius-stage": "40px", "--stage-blur": "8px"
+      },
+      "bg_recipe": "外层 .bg-stage: 白到极浅蓝径向渐变 + 局部柔光斑(禁全屏线性渐变防 banding)；内层 .stage-panel 半透明白玻璃，圆边 40px"
+    },
+    {
+      "id": "minimal_academic",
+      "keywords": ["米白", "藏青墨色", "克制单强调", "发丝分隔线", "学术"],
+      "use_for": ["医学健康科普", "严肃知识", "教学讲解"],
+      "palette": {
+        "--bg": "#fbfbf9", "--bg-2": "#f3f3ee",
+        "--surface": "#ffffff", "--surface-2": "#ffffff",
+        "--ink-1": "#1a2238", "--ink-2": "#454f6b", "--ink-3": "#8b93a7",
+        "--accent": "#2f5d8a", "--accent-2": "#b08328", "--danger": "#9b2c2c", "--success": "#2f7a55",
+        "--line": "rgba(26,34,56,.10)", "--line-strong": "rgba(26,34,56,.24)",
+        "--font-display": "\"Noto Serif SC\", Georgia, serif",
+        "--font-body": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-caption": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--weight-display": "700", "--weight-body": "400",
+        "--radius-card": "4px", "--radius-pill": "999px",
+        "--shadow-soft": "none", "--shadow-glow": "none",
+        "--grid-color": "rgba(26,34,56,.05)",
+        "--stage-bg": "rgba(255,255,255,.5)", "--radius-stage": "22px", "--stage-blur": "0px"
+      },
+      "bg_recipe": "外层 .bg-stage: 纯净米白 + 唯一发丝分隔线(扁平无阴影)；内层 .stage-panel 半透明白、圆边克制(22px)、无玻璃模糊"
+    },
+    {
+      "id": "neon_cyber",
+      "keywords": ["极暗", "品红+青霓虹", "辉光", "赛博", "高能"],
+      "use_for": ["反常识/冲击点", "悬念钩子", "热点解读"],
+      "palette": {
+        "--bg": "#070612", "--bg-2": "#0d0a20",
+        "--surface": "rgba(30,20,60,.55)", "--surface-2": "rgba(30,20,60,.8)",
+        "--ink-1": "#f5f0ff", "--ink-2": "#c9bdf0", "--ink-3": "#8a7fb5",
+        "--accent": "#ff3df0", "--accent-2": "#27e1ff", "--danger": "#ff5470", "--success": "#5cffb0",
+        "--line": "rgba(255,61,240,.18)", "--line-strong": "rgba(39,225,255,.5)",
+        "--font-display": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-body": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-caption": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--weight-display": "800", "--weight-body": "500",
+        "--radius-card": "16px", "--radius-pill": "999px",
+        "--shadow-soft": "0 12px 40px rgba(0,0,0,.6)", "--shadow-glow": "0 0 48px rgba(255,61,240,.45)",
+        "--grid-color": "rgba(39,225,255,.06)",
+        "--stage-bg": "rgba(13,10,32,.5)", "--radius-stage": "36px", "--stage-blur": "12px"
+      },
+      "bg_recipe": "外层 .bg-stage: 极暗紫黑 + 品红/青双色径向辉光 + 透视网格(强 glow)；内层 .stage-panel 深紫玻璃，圆边 36px，可加 line-strong 描边发光"
+    },
+    {
+      "id": "documentary_caption",
+      "keywords": ["纪录片", "降饱和", "粗体字幕", "白/琥珀", "现实质感"],
+      "use_for": ["社会热点", "案例叙述", "实拍叠字"],
+      "palette": {
+        "--bg": "#101012", "--bg-2": "#17171a",
+        "--surface": "rgba(0,0,0,.55)", "--surface-2": "rgba(0,0,0,.78)",
+        "--ink-1": "#f7f5f0", "--ink-2": "#c8c4bb", "--ink-3": "#8d8980",
+        "--accent": "#e8b84b", "--accent-2": "#d9d4c8", "--danger": "#d9534f", "--success": "#7fae5a",
+        "--line": "rgba(247,245,240,.16)", "--line-strong": "rgba(247,245,240,.4)",
+        "--font-display": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-body": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--font-caption": "\"Noto Sans SC\", system-ui, sans-serif",
+        "--weight-display": "800", "--weight-body": "500",
+        "--radius-card": "8px", "--radius-pill": "999px",
+        "--shadow-soft": "0 10px 30px rgba(0,0,0,.6)", "--shadow-glow": "none",
+        "--grid-color": "rgba(247,245,240,.04)",
+        "--stage-bg": "rgba(0,0,0,.5)", "--radius-stage": "24px", "--stage-blur": "4px"
+      },
+      "bg_recipe": "外层 .bg-stage: 近黑 + 底部渐暗压角 + 顶/底安全条；内层 .stage-panel 半透明黑玻璃(适合压在实拍上)，圆边 24px"
+    }
+  ]
+}

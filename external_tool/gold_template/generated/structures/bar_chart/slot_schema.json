@@ -1,0 +1,36 @@
+{
+  "structure_id": "bar_chart",
+  "family": "dataviz",
+  "duration_default": 6.5,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "图表标题",
+      "default": "全球市场规模变化趋势",
+      "max_chars": 18
+    },
+    "series": {
+      "type": "json",
+      "label": "数据系列",
+      "default": [
+        { "label": "2021", "value": 1.2 },
+        { "label": "2022", "value": 2.8 },
+        { "label": "2023", "value": 4.1 },
+        { "label": "2024", "value": 6.5 }
+      ]
+    },
+    "unit": {
+      "type": "string",
+      "label": "数值单位",
+      "default": "万亿",
+      "max_chars": 4
+    },
+    "source_note": {
+      "type": "string",
+      "label": "数据来源",
+      "default": "数据来源：Statista 2024",
+      "max_chars": 24
+    }
+  },
+  "data_slots": ["series"]
+}

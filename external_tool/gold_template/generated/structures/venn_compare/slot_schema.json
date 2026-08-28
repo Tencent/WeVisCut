@@ -1,0 +1,31 @@
+{
+  "structure_id": "venn_compare",
+  "family": "diagram",
+  "duration_default": 6.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "人工智能 vs 人类智能",
+      "max_chars": 20
+    },
+    "left_label": {
+      "type": "string",
+      "label": "左圈标签",
+      "default": "海量计算 / 不知疲倦",
+      "max_chars": 30
+    },
+    "right_label": {
+      "type": "string",
+      "label": "右圈标签",
+      "default": "情感共鸣 / 创造力",
+      "max_chars": 30
+    },
+    "overlap_label": {
+      "type": "string",
+      "label": "交叠区标签",
+      "default": "模式识别 / 学习",
+      "max_chars": 20
+    }
+  }
+}

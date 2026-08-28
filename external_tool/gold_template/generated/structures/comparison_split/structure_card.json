@@ -1,0 +1,9 @@
+{
+  "structure_id": "comparison_split",
+  "family": "narrative",
+  "use_for": ["正误对比", "A vs B", "二元对比"],
+  "spotlight_level": "high",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["title", "card", "accent-line"],
+  "slots": ["headline", "left_label", "left_text", "right_label", "right_text"]
+}

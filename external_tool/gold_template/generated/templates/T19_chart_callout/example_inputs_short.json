@@ -1,0 +1,11 @@
+{
+  "headline": "四周内稳步回升",
+  "series": [
+    { "label": "第1周", "value": 26 },
+    { "label": "第2周", "value": 24 },
+    { "label": "第3周", "value": 31 },
+    { "label": "第4周", "value": 39 }
+  ],
+  "callout_text": "第 3 周触底反弹",
+  "source_note": "数据来源：运营周报"
+}

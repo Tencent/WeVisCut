@@ -1,0 +1,9 @@
+{
+  "visual_id": "neon_cyber",
+  "label": "霓虹赛博",
+  "mood": "sci-fi, neon, cyberpunk",
+  "skins": ["bg-stage", "caption-bar", "caption-text"],
+  "palette_dominants": ["#ff3df0", "#27e1ff", "#070612"],
+  "contrast_ratio": "AAA",
+  "best_with": ["flash_transition", "glitch_reveal"]
+}

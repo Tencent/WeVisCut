@@ -1,0 +1,28 @@
+# ==========================================================================
+#  WeDirector — inference stack (GPU machines only)
+#
+#  Install torch for your CUDA version FIRST, from the PyTorch index:
+#      pip install torch --index-url https://download.pytorch.org/whl/cu121
+#  then:
+#      pip install -r requirements-gpu.txt
+#
+#  Skip this file entirely to run the UI and APIs with `--no-model`.
+# ==========================================================================
+
+# In-process engine used via ms-swift's VllmEngine.
+vllm>=0.8.0
+
+# The policy is a custom `qwen3_5` architecture. This must be a build that
+# registers that model type in swift/model/constant.py — the released PyPI
+# package may not. If it does not, point model.ms_swift_path (or the
+# AICUT_MS_SWIFT_PATH env var) at a checkout that does; see
+# docs/external_tools.md.
+ms-swift>=3.0.0
+
+# Must recognise Qwen3_5ForConditionalGeneration.
+transformers>=4.51.0
+accelerate>=1.0.0
+
+# Optional: faster attention. Needs a toolchain matching your torch build,
+# and `model.attn_impl` must then be flash_attention_2.
+# flash-attn>=2.7.0

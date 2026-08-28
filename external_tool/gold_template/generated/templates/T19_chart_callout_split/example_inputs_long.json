@@ -1,0 +1,14 @@
+{
+  "headline": "七个版本的崩溃率下降",
+  "series": [
+    { "label": "v1.0", "value": 82 },
+    { "label": "v1.2", "value": 70 },
+    { "label": "v1.4", "value": 58 },
+    { "label": "v1.6", "value": 49 },
+    { "label": "v1.8", "value": 60 },
+    { "label": "v2.0", "value": 75 },
+    { "label": "v2.2", "value": 91 }
+  ],
+  "callout_text": "v2.0 重构后稳定性大幅提升",
+  "source_note": "数据来源：稳定性监控 2024"
+}

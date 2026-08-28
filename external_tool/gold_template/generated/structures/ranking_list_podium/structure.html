@@ -1,0 +1,209 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 64px 80px;
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-hf="structure-dom"] .rl-headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 48px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .rl-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  width: 80%;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 20px;
+}
+
+[data-hf="structure-dom"] .rl-podium-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-hf="structure-dom"] .rl-podium-slot.rank-1 .rl-podium-bar { height: 200px; }
+[data-hf="structure-dom"] .rl-podium-slot.rank-2 .rl-podium-bar { height: 150px; }
+[data-hf="structure-dom"] .rl-podium-slot.rank-3 .rl-podium-bar { height: 110px; }
+
+[data-hf="structure-dom"] .rl-podium-bar {
+  width: 120px;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+[data-hf="structure-dom"] .rl-podium-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 22px;
+}
+
+[data-hf="structure-dom"] .rl-podium-emoji {
+  font-size: 32px;
+}
+
+[data-hf="structure-dom"] .rl-podium-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 18px;
+  color: var(--ink-1);
+  text-align: center;
+  max-width: 120px;
+}
+
+[data-hf="structure-dom"] .rl-podium-value {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 16px;
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .rl-rest {
+  display: flex;
+  gap: 16px;
+  width: 70%;
+  justify-content: center;
+}
+
+[data-hf="structure-dom"] .rl-rest-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+[data-hf="structure-dom"] .rl-rest-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+[data-hf="structure-dom"] .rl-rest-label {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--ink-2);
+}
+
+[data-hf="structure-dom"] .rl-rest-value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--ink-3);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">Top 5</div>
+  <h1 class="rl-headline" data-anim-role="title" data-slot="headline">全球最深的五个海沟</h1>
+  <div class="rl-podium">
+    <div class="rl-podium-slot rank-2" data-anim-role="list-item">
+      <span class="rl-podium-emoji">🌊</span>
+      <span class="rl-podium-label">汤加海沟</span>
+      <span class="rl-podium-value">10882m</span>
+      <div class="rl-podium-bar"><span class="rl-podium-badge">2</span></div>
+    </div>
+    <div class="rl-podium-slot rank-1" data-anim-role="list-item">
+      <span class="rl-podium-emoji">🌊</span>
+      <span class="rl-podium-label">马里亚纳海沟</span>
+      <span class="rl-podium-value">10994m</span>
+      <div class="rl-podium-bar"><span class="rl-podium-badge">1</span></div>
+    </div>
+    <div class="rl-podium-slot rank-3" data-anim-role="list-item">
+      <span class="rl-podium-emoji">🌊</span>
+      <span class="rl-podium-label">千岛海沟</span>
+      <span class="rl-podium-value">10542m</span>
+      <div class="rl-podium-bar"><span class="rl-podium-badge">3</span></div>
+    </div>
+  </div>
+  <div class="rl-rest">
+    <div class="rl-rest-item" data-anim-role="list-item">
+      <span class="rl-rest-badge">4</span>
+      <span class="rl-rest-label">菲律宾海沟</span>
+      <span class="rl-rest-value">10540m</span>
+    </div>
+    <div class="rl-rest-item" data-anim-role="list-item">
+      <span class="rl-rest-badge">5</span>
+      <span class="rl-rest-label">克马德克海沟</span>
+      <span class="rl-rest-value">10047m</span>
+    </div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var podiumSlots = root.querySelectorAll('.rl-podium-slot');
+  var restItems = root.querySelectorAll('.rl-rest-item');
+  var bars = root.querySelectorAll('.rl-podium-bar');
+
+  for (var i = 0; i < bars.length; i++) {
+    tl.from(bars[i], { scaleY: 0, transformOrigin: "bottom", duration: 0.6, ease: "power2.out" }, 0.5 + i * 0.4);
+  }
+
+  for (var i = 0; i < podiumSlots.length; i++) {
+    var emoji = podiumSlots[i].querySelector('.rl-podium-emoji');
+    var label = podiumSlots[i].querySelector('.rl-podium-label');
+    tl.from(emoji, { scale: 0, duration: 0.3, ease: "back.out(1.7)" }, 1.0 + i * 0.4);
+    tl.from(label, { opacity: 0, y: 10, duration: 0.3, ease: "power2.out" }, 1.2 + i * 0.4);
+  }
+
+  for (var i = 0; i < restItems.length; i++) {
+    tl.from(restItems[i], { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 2.8 + i * 0.3);
+  }
+
+  var allEls = root.querySelectorAll('[data-anim-role]');
+  for (var i = 0; i < allEls.length; i++) allEls[i].removeAttribute('data-anim-role');
+};
+</script>

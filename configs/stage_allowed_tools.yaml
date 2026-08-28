@@ -1,0 +1,67 @@
+# stage -> 允许调用的工具 + stage 顺序（来自真实 data_pipeline 轨迹）
+#
+# allowed_tools 是多任务 SFT 不混乱的关键：任何 stage 都不允许自由选择全部工具。
+# stage_order 用于 stage-order 校验、stitch 过早检测、replay。
+#
+# stage_alias 把轨迹里出现的细分/变体 stage 名归一到下面的 canonical stage。
+
+stage_order:
+  init: 0
+  data_stage1: 1
+  stage2_planning: 2
+  stage2_self_reflect: 3
+  stage2_self_reflect_repair: 3
+  stage3_visual_audio: 4
+  stage3_decoration: 5
+  stage3_post_decoration_reflect: 5
+  stage3_bgm_search: 6
+  stage4_severity_rank: 7
+  stage4_compose: 8
+  stage4_dimension_judge: 9
+  stage4_dimension_repair: 9
+  stage4_text_routed_batch: 9
+  stage5_final_render: 10
+  stage5_stitch: 11
+
+allowed_tools:
+  init: []
+  data_stage1: [DataPipeline_Stage1_Reverse]
+  stage2_planning: [Tool_SegmentArticle, Tool_PlanShots]
+  stage2_self_reflect: [Tool_SelfReflect]
+  stage2_self_reflect_repair: [Tool_SelfReflect_RepairShot, Tool_SelfReflect_Patch]
+  stage3_visual_audio: [Tool_BatchVisualAudio]
+  stage3_decoration: [Tool_BatchDecorateSpotlights, Tool_BatchTimelineCompose]
+  stage3_post_decoration_reflect: [Tool_SelfReflect, Tool_SelfReflect_Patch]
+  stage3_bgm_search: [Tool_MusicSearch]
+  stage4_severity_rank: [Tool_SeverityRank]
+  stage4_compose: [Tool_BatchTimelineCompose]
+  stage4_dimension_judge: [Tool_Stage4DimensionJudge, Tool_TextQuickJudge]
+  stage4_dimension_repair: [Tool_Stage4DimensionalRepair, Tool_SelfReflect_RepairShot]
+  stage4_text_routed_batch: [Tool_TextQuickJudge, Tool_Stage4DimensionJudge]
+  stage5_final_render: [Tool_FinalRender]
+  stage5_stitch: [Tool_StitchVideo]
+
+# 轨迹里出现的非 canonical stage 名 -> canonical stage 名
+stage_alias:
+  stage2_segmentation_reflect: stage2_self_reflect
+  stage2_reflect_failed: stage2_self_reflect
+  stage2_approved: stage2_self_reflect
+  stage4_judge: stage4_dimension_judge
+  stage4_judge_auto_repair: stage4_dimension_repair
+  stage4_repair: stage4_dimension_repair
+  stage4_spotlight_repair: stage4_dimension_repair
+  stage4_non_spotlight_repair: stage4_dimension_repair
+  stage4_all_done: stage4_dimension_judge
+  stage4_compose_judge: stage4_compose
+  stage5_complete: stage5_stitch
+
+# 修复预算（按 project 统计；超过记 invalid: repair_budget_exceeded）
+repair_budget:
+  Tool_SelfReflect_RepairShot: 3
+  Tool_Stage4DimensionalRepair: 4
+
+# 进入 stitch 之前必须出现过的 stage（否则记 stitch_too_early）
+stitch_requires_seen:
+  - stage2_planning
+  - stage3_visual_audio
+  - stage4_compose

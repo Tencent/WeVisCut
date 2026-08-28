@@ -1,0 +1,195 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 56px 72px 48px;
+  gap: 32px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .flow-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 60px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 900px;
+}
+
+[data-hf="structure-dom"] .flow-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .flow-node-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 28px;
+  color: var(--ink-1);
+  text-align: center;
+  padding: 0 12px;
+}
+
+[data-hf="structure-dom"] .flow-edge-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 80px;
+  height: 4px;
+  position: relative;
+}
+
+[data-hf="structure-dom"] .flow-edge-line {
+  width: 100%;
+  height: 4px;
+  background: var(--line-strong);
+  transform-origin: left center;
+}
+
+[data-hf="structure-dom"] .flow-marker {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+[data-hf="structure-dom"] .flow-marker svg {
+  display: block;
+}
+
+[data-hf="structure-dom"] .flow-accent {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="flow-title" data-anim-role="title" data-slot="headline">数据处理流水线</h2>
+
+  <div class="flow-area">
+    <div class="flow-node" data-anim-role="node">
+      <span class="flow-node-label" data-anim-role="node-label">采集</span>
+    </div>
+
+    <div class="flow-edge-group">
+      <div class="flow-edge-line" data-anim-role="edge"></div>
+      <span class="flow-marker" data-anim-role="marker">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <polygon points="0,0 14,7 0,14" fill="var(--accent)"/>
+        </svg>
+      </span>
+    </div>
+
+    <div class="flow-node" data-anim-role="node">
+      <span class="flow-node-label" data-anim-role="node-label">清洗</span>
+    </div>
+
+    <div class="flow-edge-group">
+      <div class="flow-edge-line" data-anim-role="edge"></div>
+      <span class="flow-marker" data-anim-role="marker">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <polygon points="0,0 14,7 0,14" fill="var(--accent)"/>
+        </svg>
+      </span>
+    </div>
+
+    <div class="flow-node" data-anim-role="node">
+      <span class="flow-node-label" data-anim-role="node-label">训练</span>
+    </div>
+
+    <div class="flow-edge-group">
+      <div class="flow-edge-line" data-anim-role="edge"></div>
+      <span class="flow-marker" data-anim-role="marker">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <polygon points="0,0 14,7 0,14" fill="var(--accent)"/>
+        </svg>
+      </span>
+    </div>
+
+    <div class="flow-node" data-anim-role="node">
+      <span class="flow-node-label" data-anim-role="node-label">部署</span>
+    </div>
+  </div>
+
+  <div class="flow-accent" data-anim-role="accent-line"></div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  if ($("title").length) {
+    tl.from($("title"), { y: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+  }
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var nodesRaw = V.nodes || null;
+  var edgesRaw = V.edges || null;
+  var nodes = null, edges = null;
+  try { nodes = typeof nodesRaw === "string" ? JSON.parse(nodesRaw) : nodesRaw; } catch (e) { nodes = null; }
+  try { edges = typeof edgesRaw === "string" ? JSON.parse(edgesRaw) : edgesRaw; } catch (e) { edges = null; }
+
+  if (nodes && Array.isArray(nodes) && nodes.length > 0) {
+    var flowArea = root.querySelector(".flow-area");
+    if (flowArea) {
+      flowArea.innerHTML = "";
+      for (var i = 0; i < nodes.length; i++) {
+        var nodeEl = document.createElement("div"); nodeEl.className = "flow-node";
+        nodeEl.setAttribute("data-anim-role", "node");
+        var labelEl = document.createElement("span"); labelEl.className = "flow-node-label";
+        labelEl.setAttribute("data-anim-role", "node-label");
+        labelEl.textContent = nodes[i].label;
+        nodeEl.appendChild(labelEl); flowArea.appendChild(nodeEl);
+        if (edges && i < nodes.length - 1) {
+          var edgeGroup = document.createElement("div"); edgeGroup.className = "flow-edge-group";
+          var edgeLine = document.createElement("div"); edgeLine.className = "flow-edge-line";
+          edgeLine.setAttribute("data-anim-role", "edge");
+          var marker = document.createElement("span"); marker.className = "flow-marker";
+          marker.setAttribute("data-anim-role", "marker");
+          marker.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="0,0 14,7 0,14" fill="var(--accent)"/></svg>';
+          edgeGroup.appendChild(edgeLine); edgeGroup.appendChild(marker); flowArea.appendChild(edgeGroup);
+        }
+      }
+    }
+  }
+
+  var allNodes = $("node"), allEdges = $("edge"), allMarkers = $("marker"), allLabels = $("node-label");
+  for (var n = 0; n < allNodes.length; n++) {
+    var nodeDelay = 0.3 + n * 0.25;
+    tl.from(allNodes[n], { scale: 0, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, nodeDelay);
+    if (n < allLabels.length) {
+      tl.from(allLabels[n], { opacity: 0, duration: 0.3, ease: "power2.out" }, nodeDelay + 0.1);
+    }
+    if (n < allEdges.length) {
+      tl.from(allEdges[n], { scaleX: 0, duration: 0.35, ease: "power2.out", transformOrigin: "left center" }, nodeDelay + 0.2);
+    }
+    if (n < allMarkers.length) {
+      tl.from(allMarkers[n], { scale: 0, opacity: 0, duration: 0.25, ease: "back.out(1.4)" }, nodeDelay + 0.45);
+    }
+  }
+  if ($("accent-line").length) {
+    tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.4, ease: "power2.out", transformOrigin: "left center" }, 1.5);
+  }
+};
+</script>

@@ -1,0 +1,233 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 60px 80px 50px;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .chart-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .chart-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .chart-grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+[data-hf="structure-dom"] .chart-grid-line {
+  width: 100%;
+  height: 1px;
+  background: var(--line);
+}
+
+[data-hf="structure-dom"] .chart-baseline {
+  width: 100%;
+  height: 2px;
+  background: var(--line-strong);
+}
+
+[data-hf="structure-dom"] .chart-bars-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  height: 100%;
+  padding: 0 40px;
+  position: relative;
+  z-index: 1;
+}
+
+[data-hf="structure-dom"] .bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 140px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+[data-hf="structure-dom"] .bar-value {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .bar-rect {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  background: var(--accent);
+  transform-origin: bottom center;
+  min-height: 8px;
+}
+
+[data-hf="structure-dom"] .bar-group:nth-child(even) .bar-rect {
+  background: var(--accent-2);
+}
+
+[data-hf="structure-dom"] .bar-label {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  text-align: center;
+  white-space: nowrap;
+}
+
+[data-hf="structure-dom"] .chart-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .chart-source {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 18px;
+  color: var(--ink-3);
+}
+
+[data-hf="structure-dom"] .chart-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="chart-title" data-anim-role="title" data-slot="headline">全球市场规模变化趋势</h2>
+  <div class="chart-area">
+    <div class="chart-grid" data-anim-role="chart-axis">
+      <div class="chart-grid-line"></div>
+      <div class="chart-grid-line"></div>
+      <div class="chart-grid-line"></div>
+      <div class="chart-grid-line"></div>
+      <div class="chart-baseline"></div>
+    </div>
+    <div class="chart-bars-container" data-anim-role="chart-bars">
+      <div class="bar-group">
+        <span class="bar-value" data-anim-role="chart-value">1.2</span>
+        <div class="bar-rect" data-anim-role="chart-bar" style="height: 18%"></div>
+        <span class="bar-label" data-anim-role="chart-label">2021</span>
+      </div>
+      <div class="bar-group">
+        <span class="bar-value" data-anim-role="chart-value">2.8</span>
+        <div class="bar-rect" data-anim-role="chart-bar" style="height: 43%"></div>
+        <span class="bar-label" data-anim-role="chart-label">2022</span>
+      </div>
+      <div class="bar-group">
+        <span class="bar-value" data-anim-role="chart-value">4.1</span>
+        <div class="bar-rect" data-anim-role="chart-bar" style="height: 63%"></div>
+        <span class="bar-label" data-anim-role="chart-label">2023</span>
+      </div>
+      <div class="bar-group">
+        <span class="bar-value" data-anim-role="chart-value">6.5</span>
+        <div class="bar-rect" data-anim-role="chart-bar" style="height: 100%"></div>
+        <span class="bar-label" data-anim-role="chart-label">2024</span>
+      </div>
+    </div>
+  </div>
+  <div class="chart-footer">
+    <span class="chart-source" data-slot="source_note">数据来源：Statista 2024</span>
+    <div class="chart-divider" data-anim-role="accent-line"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  if ($("title").length) {
+    tl.from($("title"), { y: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+  }
+  if ($("chart-axis").length) {
+    tl.from($("chart-axis"), { scaleX: 0, opacity: 0, duration: 0.4, ease: "power2.out", transformOrigin: "left center" }, 0.2);
+  }
+
+  var barsContainer = root.querySelector('[data-anim-role="chart-bars"]');
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var seriesRaw = V.series || null;
+  var series = null;
+  if (seriesRaw) {
+    try { series = typeof seriesRaw === "string" ? JSON.parse(seriesRaw) : seriesRaw; } catch (e) { series = null; }
+  }
+
+  if (series && Array.isArray(series) && series.length > 0 && barsContainer) {
+    barsContainer.innerHTML = "";
+    var maxVal = 0;
+    for (var i = 0; i < series.length; i++) {
+      if (series[i].value > maxVal) maxVal = series[i].value;
+    }
+    if (maxVal === 0) maxVal = 1;
+    var unit = V.unit || "";
+    for (var j = 0; j < series.length; j++) {
+      var pct = Math.round((series[j].value / maxVal) * 100);
+      var group = document.createElement("div");
+      group.className = "bar-group";
+      var valEl = document.createElement("span");
+      valEl.className = "bar-value";
+      valEl.setAttribute("data-anim-role", "chart-value");
+      valEl.textContent = String(series[j].value) + (unit ? " " + unit : "");
+      valEl.style.fontVariantNumeric = "tabular-nums";
+      var barEl = document.createElement("div");
+      barEl.className = "bar-rect";
+      barEl.setAttribute("data-anim-role", "chart-bar");
+      barEl.style.height = pct + "%";
+      barEl.style.transformOrigin = "bottom center";
+      if (j % 2 === 1) { barEl.style.background = "var(--accent-2)"; }
+      var lblEl = document.createElement("span");
+      lblEl.className = "bar-label";
+      lblEl.setAttribute("data-anim-role", "chart-label");
+      lblEl.textContent = series[j].label;
+      group.appendChild(valEl);
+      group.appendChild(barEl);
+      group.appendChild(lblEl);
+      barsContainer.appendChild(group);
+    }
+  }
+
+  var bars = $("chart-bar");
+  if (bars.length) {
+    tl.from(bars, { scaleY: 0, duration: 0.6, ease: "back.out(1.2)", stagger: 0.08 }, 0.55);
+  }
+  var vals = $("chart-value");
+  if (vals.length) {
+    tl.from(vals, { opacity: 0, y: 10, duration: 0.35, ease: "power2.out", stagger: 0.08 }, 0.85);
+  }
+  var labels = $("chart-label");
+  if (labels.length) {
+    tl.from(labels, { opacity: 0, duration: 0.3, ease: "power1.out", stagger: 0.06 }, 0.75);
+  }
+  if ($("accent-line").length) {
+    tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.4, ease: "power2.out", transformOrigin: "left center" }, 1.2);
+  }
+};
+</script>

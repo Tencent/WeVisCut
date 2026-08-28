@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "数据到模型的四个阶段"}, {"id": "nodes", "type": "string", "label": "纵向阶段节点", "default": "[{\"label\": \"采集原始数据\"}, {\"label\": \"清洗与标注\"}, {\"label\": \"模型训练\"}, {\"label\": \"评估上线\"}]"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (clean_saas) ===== */
+      :root {
+        --bg: #f7f9fc;
+        --bg-2: #eef2f8;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #0f172a;
+        --ink-2: #475569;
+        --ink-3: #64748b;
+        --accent: #4f46e5;
+        --accent-2: #0ea5e9;
+        --danger: #ef4444;
+        --success: #10b981;
+        --line: rgba(15,23,42,.08);
+        --line-strong: rgba(15,23,42,.16);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 20px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 16px 40px rgba(15,23,42,.10);
+        --shadow-glow: 0 0 30px rgba(79,70,229,.18);
+        --grid-color: rgba(15,23,42,.04);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 40px;
+        --stage-blur: 8px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 50% at 50% 45%, rgba(79,70,229,.06) 0%, transparent 60%),
+          radial-gradient(ellipse 40% 40% at 80% 70%, rgba(14,165,233,.04) 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (vertical_flow_zigzag) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 52px 72px 48px;
+        gap: 20px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .vfz-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 60px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1000px;
+      }
+
+      [data-hf="structure-dom"] .vfz-area {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .vfz-spine {
+        position: absolute;
+        left: 50%;
+        top: 6%;
+        bottom: 6%;
+        width: 4px;
+        transform: translateX(-50%);
+        border-radius: 2px;
+        background: var(--line-strong);
+        transform-origin: top center;
+      }
+
+      [data-hf="structure-dom"] .vfz-rows {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      [data-hf="structure-dom"] .vfz-row {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .vfz-dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        transform: translate(-50%, -50%);
+        border-radius: var(--radius-pill);
+        background: var(--surface-2);
+        border: 3px solid var(--accent);
+        box-shadow: var(--shadow-glow);
+      }
+
+      [data-hf="structure-dom"] .vfz-connector {
+        position: absolute;
+        top: 50%;
+        height: 4px;
+        width: 84px;
+        transform: translateY(-50%);
+        border-radius: 2px;
+        background: var(--line-strong);
+      }
+
+      [data-hf="structure-dom"] .vfz-row.is-left .vfz-connector {
+        right: 50%;
+        transform-origin: right center;
+      }
+
+      [data-hf="structure-dom"] .vfz-row.is-right .vfz-connector {
+        left: 50%;
+        transform-origin: left center;
+      }
+
+      [data-hf="structure-dom"] .vfz-node {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        max-width: 38%;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 28px;
+        border-radius: var(--radius-card);
+        background: var(--surface);
+        border: 2px solid var(--line-strong);
+        box-shadow: var(--shadow-soft);
+      }
+
+      [data-hf="structure-dom"] .vfz-row.is-left .vfz-node {
+        right: calc(50% + 84px);
+        flex-direction: row-reverse;
+        text-align: right;
+      }
+
+      [data-hf="structure-dom"] .vfz-row.is-right .vfz-node {
+        left: calc(50% + 84px);
+      }
+
+      [data-hf="structure-dom"] .vfz-index {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 30px;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+      }
+
+      [data-hf="structure-dom"] .vfz-node-label {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 26px;
+        line-height: 1.25;
+        color: var(--ink-1);
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="vfz-title" data-anim-role="title" data-slot="headline">数据到模型的四个阶段</h2>
+
+            <div class="vfz-area">
+              <div class="vfz-spine"></div>
+              <div class="vfz-rows">
+                <div class="vfz-row is-left">
+                  <div class="vfz-connector" data-anim-role="edge"></div>
+                  <div class="vfz-dot" data-anim-role="marker"></div>
+                  <div class="vfz-node" data-anim-role="node">
+                    <span class="vfz-index">1</span>
+                    <span class="vfz-node-label" data-anim-role="node-label">采集原始数据</span>
+                  </div>
+                </div>
+                <div class="vfz-row is-right">
+                  <div class="vfz-connector" data-anim-role="edge"></div>
+                  <div class="vfz-dot" data-anim-role="marker"></div>
+                  <div class="vfz-node" data-anim-role="node">
+                    <span class="vfz-index">2</span>
+                    <span class="vfz-node-label" data-anim-role="node-label">清洗与标注</span>
+                  </div>
+                </div>
+                <div class="vfz-row is-left">
+                  <div class="vfz-connector" data-anim-role="edge"></div>
+                  <div class="vfz-dot" data-anim-role="marker"></div>
+                  <div class="vfz-node" data-anim-role="node">
+                    <span class="vfz-index">3</span>
+                    <span class="vfz-node-label" data-anim-role="node-label">模型训练</span>
+                  </div>
+                </div>
+                <div class="vfz-row is-right">
+                  <div class="vfz-connector" data-anim-role="edge"></div>
+                  <div class="vfz-dot" data-anim-role="marker"></div>
+                  <div class="vfz-node" data-anim-role="node">
+                    <span class="vfz-index">4</span>
+                    <span class="vfz-node-label" data-anim-role="node-label">评估上线</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.35" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-1" data-start="0.55" data-duration="0.3" data-track-index="103" src="sfx/tick.mp3" data-volume="0.25"></audio>
+    </div>
+    <!-- ===== Structure self-animation (vertical_flow_zigzag) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var raw = V.nodes || null;
+        var nodes = null;
+        try { nodes = typeof raw === "string" ? JSON.parse(raw) : raw; } catch (e) { nodes = null; }
+
+        var rows = root.querySelector(".vfz-rows");
+        if (nodes && Array.isArray(nodes) && nodes.length > 0 && rows) {
+          rows.innerHTML = "";
+          for (var i = 0; i < nodes.length; i++) {
+            var side = (i % 2 === 0) ? "is-left" : "is-right";
+            var row = document.createElement("div");
+            row.className = "vfz-row " + side;
+            var conn = document.createElement("div");
+            conn.className = "vfz-connector";
+            conn.setAttribute("data-anim-role", "edge");
+            var dot = document.createElement("div");
+            dot.className = "vfz-dot";
+            dot.setAttribute("data-anim-role", "marker");
+            var node = document.createElement("div");
+            node.className = "vfz-node";
+            node.setAttribute("data-anim-role", "node");
+            var idx = document.createElement("span");
+            idx.className = "vfz-index";
+            idx.textContent = String(i + 1);
+            var label = document.createElement("span");
+            label.className = "vfz-node-label";
+            label.setAttribute("data-anim-role", "node-label");
+            label.textContent = nodes[i].label != null ? nodes[i].label : "";
+            node.appendChild(idx);
+            node.appendChild(label);
+            row.appendChild(conn);
+            row.appendChild(dot);
+            row.appendChild(node);
+            rows.appendChild(row);
+          }
+        }
+
+        var spine = root.querySelector(".vfz-spine");
+        if (spine) {
+          tl.from(spine, { scaleY: 0, opacity: 0, duration: 0.6, ease: "power2.out", transformOrigin: "top center" }, 0.1);
+        }
+
+        var allNodes = $("node"), allEdges = $("edge"), allLabels = $("node-label"), allMarkers = $("marker");
+        for (var n = 0; n < allNodes.length; n++) {
+          var t = 0.4 + n * 0.45;
+          var fromLeft = (n % 2 === 0);
+          if (n < allEdges.length) {
+            tl.from(allEdges[n], { scaleX: 0, duration: 0.3, ease: "power2.out" }, t);
+          }
+          if (n < allMarkers.length) {
+            tl.from(allMarkers[n], { scale: 0, opacity: 0, duration: 0.3, ease: "back.out(1.6)" }, t + 0.05);
+          }
+          tl.from(allNodes[n], { x: fromLeft ? -36 : 36, opacity: 0, duration: 0.45, ease: "power3.out" }, t + 0.12);
+          if (n < allLabels.length) {
+            tl.from(allLabels[n], { opacity: 0, duration: 0.3, ease: "power2.out" }, t + 0.2);
+          }
+        }
+
+        function strip(role) { var els = $(role); for (var k = 0; k < els.length; k++) els[k].removeAttribute("data-anim-role"); }
+        strip("node"); strip("edge"); strip("node-label"); strip("marker");
+      };
+    </script>
+    <!-- ===== Layer 2: motion (slide_in_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["slide_in_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 24, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 20, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { x: -40, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.40);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.60);
+        }
+        if ($("card").length) {
+          var cards = $("card");
+          for (var i = 0; i < cards.length; i++) {
+            var xOff = (i % 2 === 0) ? -60 : 60;
+            tl.from(cards[i], { x: xOff, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.35 + i * 0.12);
+          }
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 14, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.75);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.80);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.55);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["slide_in_hold"]) {
+              window.__hf_motions["slide_in_hold"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+:root {
+  --bg: #060d1a;
+  --bg-2: #0a1525;
+  --surface: rgba(20,38,60,.55);
+  --surface-2: rgba(20,38,60,.82);
+  --ink-1: #eef6fb;
+  --ink-2: #b9d3e6;
+  --ink-3: #7d96ad;
+  --accent: #7fc7d9;
+  --accent-2: #f5b14a;
+  --danger: #ff7a7a;
+  --success: #6ee7b7;
+  --line: rgba(127,199,217,.18);
+  --line-strong: rgba(127,199,217,.42);
+  --font-display: "Noto Sans SC", system-ui, sans-serif;
+  --font-body: "Noto Sans SC", system-ui, sans-serif;
+  --font-caption: "Noto Sans SC", system-ui, sans-serif;
+  --weight-display: 800;
+  --weight-body: 500;
+  --radius-card: 22px;
+  --radius-pill: 999px;
+  --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+  --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+  --grid-color: rgba(127,199,217,.05);
+  --stage-bg: rgba(10,21,37,.5);
+  --radius-stage: 48px;
+  --stage-blur: 10px;
+}
+
+.stage {
+  font-family: var(--font-body);
+  color: var(--ink-1);
+  background: var(--bg);
+}
+
+.bg-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+    repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+    var(--bg);
+  mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+}
+
+.caption-bar .caption-text {
+  font-family: var(--font-caption);
+  color: var(--ink-1);
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 8px 20px;
+}

@@ -1,0 +1,9 @@
+{
+  "headline": "三步上手",
+  "point1_title": "采集",
+  "point1_desc": "先拿到数据",
+  "point2_title": "清洗",
+  "point2_desc": "去掉噪声",
+  "point3_title": "建模",
+  "point3_desc": "训练模型"
+}

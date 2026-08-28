@@ -1,0 +1,241 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 56px 80px 44px;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .fz-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 60px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  text-align: center;
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .fz-area {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .fz-detail {
+  position: absolute;
+  left: 2%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60%;
+  height: 78%;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 2px solid var(--accent-2);
+  box-shadow: var(--shadow-glow);
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .fz-detail-bar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  background: var(--surface-2);
+  border-bottom: 2px solid var(--accent);
+}
+
+[data-hf="structure-dom"] .fz-detail-label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 30px;
+  color: var(--ink-1);
+}
+
+[data-hf="structure-dom"] .fz-detail-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 28px;
+}
+
+[data-hf="structure-dom"] .fz-glyph {
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+}
+
+[data-hf="structure-dom"] .fz-detail-desc {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 26px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 440px;
+}
+
+[data-hf="structure-dom"] .fz-thumb {
+  position: absolute;
+  right: 2%;
+  top: 6%;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-hf="structure-dom"] .fz-thumb-grid {
+  position: relative;
+  width: 320px;
+  height: 200px;
+  border-radius: var(--radius-card);
+  background: var(--stage-bg);
+  border: 1px solid var(--line);
+}
+
+[data-hf="structure-dom"] .fz-block {
+  position: absolute;
+  width: 88px;
+  height: 76px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+
+[data-hf="structure-dom"] .fz-block.target { background: var(--accent); border-color: var(--accent); }
+
+[data-hf="structure-dom"] .fz-zoom-frame {
+  position: absolute;
+  left: 112px;
+  top: 18px;
+  width: 96px;
+  height: 84px;
+  border: 3px solid var(--accent-2);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+[data-hf="structure-dom"] .fz-caption {
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 20px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .fz-callout {
+  position: absolute;
+  right: 2%;
+  bottom: 6%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 320px;
+  padding: 24px 26px;
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .fz-callout-label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .fz-callout-desc {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+[data-hf="structure-dom"] .fz-line {
+  width: 96px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="fz-title" data-anim-role="title" data-slot="headline">拆开看其中一个模块</h2>
+  <div class="fz-area">
+    <div class="fz-detail">
+      <div class="fz-detail-bar">
+        <span class="fz-detail-label" data-slot="zoom_label">检索模块</span>
+      </div>
+      <div class="fz-detail-body">
+        <div class="fz-glyph"></div>
+        <p class="fz-detail-desc" data-slot="zoom_desc">负责把用户问题映射到最相关的知识片段</p>
+      </div>
+    </div>
+    <div class="fz-thumb" data-anim-role="overview">
+      <div class="fz-thumb-grid">
+        <div class="fz-block" style="left: 14px; top: 18px;"></div>
+        <div class="fz-block target" style="left: 116px; top: 18px;"></div>
+        <div class="fz-block" style="left: 218px; top: 18px;"></div>
+        <div class="fz-block" style="left: 14px; top: 106px;"></div>
+        <div class="fz-block" style="left: 116px; top: 106px;"></div>
+        <div class="fz-block" style="left: 218px; top: 106px;"></div>
+        <div class="fz-zoom-frame" data-anim-role="zoom-frame"></div>
+      </div>
+      <div class="fz-caption" data-slot="overview_caption">系统总览</div>
+    </div>
+    <div class="fz-callout" data-anim-role="callout">
+      <div class="fz-callout-label">放大细节</div>
+      <div class="fz-callout-desc">从总览定位到该模块，聚焦其职责与边界</div>
+    </div>
+  </div>
+  <div class="fz-line" data-anim-role="accent-line"></div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+
+  var thumb = root.querySelector(".fz-thumb");
+  var blocks = root.querySelectorAll(".fz-block");
+  var frame = root.querySelector(".fz-zoom-frame");
+  var detail = root.querySelector(".fz-detail");
+  var callout = root.querySelector(".fz-callout");
+
+  if (thumb) {
+    tl.from(thumb, { opacity: 0, y: -16, duration: 0.45, ease: "power2.out" }, 0.2);
+  }
+  if (blocks.length) {
+    tl.from(blocks, { scale: 0.8, opacity: 0, duration: 0.3, ease: "power2.out", stagger: 0.05, transformOrigin: "center center" }, 0.35);
+  }
+  if (frame) {
+    frame.style.opacity = 0;
+    tl.to(frame, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.9);
+  }
+  if (detail) {
+    tl.from(detail, { scale: 0.4, opacity: 0, duration: 0.7, ease: "power3.out", transformOrigin: "85% 15%" }, 1.2);
+  }
+  if (callout) {
+    tl.from(callout, { x: 60, opacity: 0, duration: 0.5, ease: "back.out(1.2)" }, 2.0);
+  }
+
+  ["overview", "zoom-frame", "callout"].forEach(function (r) {
+    var els = root.querySelectorAll('[data-anim-role="' + r + '"]');
+    for (var m = 0; m < els.length; m++) { els[m].removeAttribute("data-anim-role"); }
+  });
+};
+</script>

@@ -1,0 +1,9 @@
+{
+  "headline": "全年四大增长",
+  "metrics": [
+    { "value": 87, "unit": "%", "label": "用户留存率" },
+    { "value": 2.1, "unit": "x", "label": "营收增长" },
+    { "value": 35, "unit": "%", "label": "投诉下降" },
+    { "value": 1560, "unit": "万", "label": "累计用户" }
+  ]
+}

@@ -1,0 +1,194 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 64px 100px;
+  gap: 24px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+[data-hf="structure-dom"] .rcc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+}
+
+[data-hf="structure-dom"] .rcc-headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 64px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .rcc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+[data-hf="structure-dom"] .rcc-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .rcc-check {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--line);
+  background: var(--surface-2);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+[data-hf="structure-dom"] .rcc-check.lit {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+[data-hf="structure-dom"] .rcc-check svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+}
+
+[data-hf="structure-dom"] .rcc-check.lit svg {
+  opacity: 1;
+}
+
+[data-hf="structure-dom"] .rcc-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 32px;
+  line-height: 1.35;
+  color: var(--ink-1);
+  max-width: 800px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <span class="rcc-eyebrow" data-anim-role="eyebrow" data-slot="eyebrow">本期回顾</span>
+  <h2 class="rcc-headline" data-anim-role="title" data-slot="headline">记住这三点</h2>
+  <div class="rcc-list">
+    <div class="rcc-item" data-anim-role="list-item">
+      <div class="rcc-check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg></div>
+      <span class="rcc-text">熵是混乱度的度量</span>
+    </div>
+    <div class="rcc-item" data-anim-role="list-item">
+      <div class="rcc-check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg></div>
+      <span class="rcc-text">熵只增不减（热力学第二定律）</span>
+    </div>
+    <div class="rcc-item" data-anim-role="list-item">
+      <div class="rcc-check"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg></div>
+      <span class="rcc-text">这就是时间箭头的方向</span>
+    </div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var itemsRaw = V.items || null;
+  var itemsData = null;
+  try { itemsData = typeof itemsRaw === "string" ? JSON.parse(itemsRaw) : itemsRaw; } catch (e) { itemsData = null; }
+
+  if (itemsData && Array.isArray(itemsData) && itemsData.length > 0) {
+    var listEl = root.querySelector(".rcc-list");
+    if (listEl) {
+      listEl.innerHTML = "";
+      for (var i = 0; i < itemsData.length; i++) {
+        var item = document.createElement("div");
+        item.className = "rcc-item";
+        item.setAttribute("data-anim-role", "list-item");
+
+        var check = document.createElement("div");
+        check.className = "rcc-check";
+        check.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 L9 17 L4 12"></path></svg>';
+        item.appendChild(check);
+
+        var text = document.createElement("span");
+        text.className = "rcc-text";
+        text.textContent = itemsData[i];
+        item.appendChild(text);
+
+        listEl.appendChild(item);
+      }
+    }
+  }
+
+  var eyebrow = root.querySelector('[data-anim-role="eyebrow"]');
+  var title = root.querySelector('[data-anim-role="title"]');
+
+  if (eyebrow) {
+    tl.from(eyebrow, { opacity: 0, y: -16, duration: 0.4, ease: "power2.out" }, 0.1);
+  }
+  if (title) {
+    tl.from(title, { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, 0.3);
+  }
+
+  var items = root.querySelectorAll(".rcc-item");
+  var checks = root.querySelectorAll(".rcc-check");
+  var interval = 1.2;
+  var baseTime = 1.0;
+
+  for (var n = 0; n < items.length; n++) {
+    var t = baseTime + n * interval;
+    var textEl = items[n].querySelector(".rcc-text");
+    var checkEl = checks[n];
+
+    tl.from(items[n], { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, t);
+
+    if (textEl) {
+      tl.from(textEl, { x: -20, opacity: 0, duration: 0.4, ease: "power2.out" }, t + 0.05);
+    }
+
+    if (checkEl) {
+      tl.to(checkEl, {
+        onStart: function () { this.targets()[0].classList.add("lit"); },
+        duration: 0.01
+      }, t + 0.35);
+      tl.from(checkEl, { scale: 0, duration: 0.4, ease: "back.out(2.5)" }, t + 0.35);
+    }
+  }
+
+  if (checks.length > 1) {
+    var pulseTime = baseTime + items.length * interval + 0.2;
+    for (var p = 0; p < checks.length; p++) {
+      tl.to(checks[p], { scale: 1.15, duration: 0.2, ease: "power2.inOut" }, pulseTime);
+      tl.to(checks[p], { scale: 1.0, duration: 0.2, ease: "power2.out" }, pulseTime + 0.2);
+    }
+  }
+
+  root.querySelectorAll("[data-anim-role]").forEach(function (el) {
+    el.removeAttribute("data-anim-role");
+  });
+};
+</script>

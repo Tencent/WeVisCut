@@ -1,0 +1,14 @@
+{
+  "headline": "各编程语言流行度指数",
+  "series": [
+    { "label": "Python", "value": 28.11 },
+    { "label": "Java", "value": 15.52 },
+    { "label": "JS", "value": 8.57 },
+    { "label": "C#", "value": 7.29 },
+    { "label": "C/C++", "value": 6.73 },
+    { "label": "Go", "value": 4.66 },
+    { "label": "Rust", "value": 2.87 }
+  ],
+  "unit": "%",
+  "source_note": "数据来源：TIOBE 2025"
+}

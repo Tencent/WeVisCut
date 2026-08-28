@@ -1,0 +1,59 @@
+{
+  "_comment": "Layer 2 运动登记（纯通用入场动画）。运动层只定义「元素怎么出现在屏幕上」，不操作 DOM、不读数据、不做内容变换。专属动画（countup/typewriter/flash/dataviz 等）已内嵌到各自结构层的 structure-script 中。",
+  "motions": [
+    {
+      "id": "scale_pop_hold", "owner_prompt": "01", "energy": "mid",
+      "desc": "弹出式入场：元素 scale+back.out 弹现，配 opacity 渐显",
+      "style": "弹出",
+      "targets": ["eyebrow", "title", "subtitle", "stat", "unit", "card", "list-item", "media", "caption", "badge", "cta", "accent-line"]
+    },
+    {
+      "id": "slide_in_hold", "owner_prompt": "05", "energy": "low",
+      "desc": "滑入式入场：元素从侧向/下方滑入并停住",
+      "style": "滑入",
+      "targets": ["eyebrow", "title", "subtitle", "stat", "unit", "card", "list-item", "media", "caption", "badge", "cta", "accent-line"]
+    },
+    {
+      "id": "mask_reveal", "owner_prompt": "02", "energy": "mid",
+      "desc": "擦出式入场：clip-path 从左到右擦出元素",
+      "style": "擦出",
+      "targets": ["eyebrow", "title", "subtitle", "stat", "unit", "card", "list-item", "media", "caption", "badge", "cta", "accent-line"]
+    },
+    {
+      "id": "card_stack_sequence", "owner_prompt": "04", "energy": "mid",
+      "desc": "堆叠式入场：元素依次堆叠/接力出现，stagger 节奏感",
+      "style": "堆叠",
+      "targets": ["eyebrow", "title", "subtitle", "stat", "unit", "card", "list-item", "media", "caption", "badge", "cta", "accent-line"]
+    },
+    {
+      "id": "parallax_pan", "owner_prompt": "07", "energy": "low",
+      "desc": "视差入场：bg 慢速水平位移 + 内容分层淡入，营造空间纵深（无 bg 时仅分层淡入）",
+      "style": "视差",
+      "targets": ["bg", "eyebrow", "title", "subtitle", "stat", "unit", "card", "list-item", "media", "caption", "badge", "cta", "accent-line"]
+    }
+  ],
+  "bundled_structure_animations": {
+    "_comment": "以下动画已内嵌到结构层的 <script data-hf=\"structure-script\"> 中。结构自身的动画通过 window.__hf_structure_init 注册，由 assembler 自动注入，在通用运动之前执行。结构脚本会 removeAttribute('data-anim-role') 避免与通用运动冲突。",
+    "stat_highlight": "stat 数字 0→N countup 滚动（含千分位/小数处理）",
+    "social_overlay": "caption 逐字打字机 + media Ken Burns 慢缩",
+    "problem_solution": "card[0] 入场 → 3s 快闪 → card[1] 强切（含 eyebrow 闪烁）",
+    "bar_chart": "bar 从底部升起 + value 渐显 + label stagger",
+    "line_chart": "折线 stroke-dashoffset 画出 + 面积填充 + 数据点弹现",
+    "donut_pie": "环形图扇区依次扫出 + 中心 countup + 图例 stagger",
+    "flow_steps": "节点依次弹入 + 连线生长 + 箭头弹现",
+    "cycle_loop": "节点沿圆周出现 + 弧线生长 + 箭头弹现"
+  },
+  "contract": {
+    "register": "window.__hf_motions['<id>'] = function(tl, ctx){...}",
+    "ctx": ["gsap", "root", "duration", "isFinal"],
+    "rules": [
+      "仅 data-anim-role 选择器",
+      "空集合安全跳过（结构脚本 removeAttribute 后不会重复动画）",
+      "入场+保持，无退场",
+      "确定性，无 random/Date.now",
+      "无 repeat:-1",
+      "纯入场方式：不操作 DOM、不读数据、不做内容变换",
+      "每个运动须覆盖全部 12 叙事角色"
+    ]
+  }
+}

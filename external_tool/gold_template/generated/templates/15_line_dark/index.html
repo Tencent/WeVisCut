@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "图表标题", "default": "中国互联网用户增长"}, {"id": "series", "type": "string", "label": "数据系列", "default": "[{\"x\": \"2019\", \"y\": 8.5}, {\"x\": \"2020\", \"y\": 9.4}, {\"x\": \"2021\", \"y\": 10.3}, {\"x\": \"2022\", \"y\": 10.7}, {\"x\": \"2023\", \"y\": 10.9}, {\"x\": \"2024\", \"y\": 11.2}]"}, {"id": "x_label", "type": "string", "label": "X轴标签", "default": "年份"}, {"id": "y_label", "type": "string", "label": "Y轴标签", "default": "亿人"}, {"id": "source_note", "type": "string", "label": "数据来源", "default": "数据来源：CNNIC 2024"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (dark_tech) ===== */
+      :root {
+        --bg: #060d1a;
+        --bg-2: #0a1525;
+        --surface: rgba(20,38,60,.55);
+        --surface-2: rgba(20,38,60,.82);
+        --ink-1: #eef6fb;
+        --ink-2: #b9d3e6;
+        --ink-3: #7d96ad;
+        --accent: #7fc7d9;
+        --accent-2: #f5b14a;
+        --danger: #ff7a7a;
+        --success: #6ee7b7;
+        --line: rgba(127,199,217,.18);
+        --line-strong: rgba(127,199,217,.42);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 22px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+        --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+        --grid-color: rgba(127,199,217,.05);
+        --stage-bg: rgba(10,21,37,.5);
+        --radius-stage: 48px;
+        --stage-blur: 10px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          var(--bg);
+        mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (line_chart) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 60px 80px 50px;
+        gap: 18px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .chart-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 64px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1000px;
+      }
+
+      [data-hf="structure-dom"] .chart-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .chart-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      [data-hf="structure-dom"] .chart-svg .grid-line {
+        stroke: var(--line);
+        stroke-width: 1;
+      }
+
+      [data-hf="structure-dom"] .chart-svg .baseline {
+        stroke: var(--line-strong);
+        stroke-width: 2;
+      }
+
+      [data-hf="structure-dom"] .chart-svg .line-path {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      [data-hf="structure-dom"] .chart-svg .area-path {
+        fill: var(--accent);
+        opacity: 0.15;
+        stroke: none;
+      }
+
+      [data-hf="structure-dom"] .chart-svg .data-point {
+        fill: var(--accent);
+        stroke: var(--bg);
+        stroke-width: 3;
+      }
+
+      [data-hf="structure-dom"] .chart-svg .end-value {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 28px;
+        fill: var(--accent);
+        text-anchor: end;
+      }
+
+      [data-hf="structure-dom"] .chart-labels {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 40px;
+      }
+
+      [data-hf="structure-dom"] .chart-x-item {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-2);
+        text-align: center;
+      }
+
+      [data-hf="structure-dom"] .chart-axis-labels {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      [data-hf="structure-dom"] .axis-label {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 20px;
+        color: var(--ink-3);
+      }
+
+      [data-hf="structure-dom"] .chart-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      [data-hf="structure-dom"] .chart-source {
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 18px;
+        color: var(--ink-3);
+      }
+
+      [data-hf="structure-dom"] .chart-divider {
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="chart-title" data-anim-role="title" data-slot="headline">年度用户增长趋势</h2>
+
+            <div class="chart-body">
+              <svg class="chart-svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMid meet">
+                <!-- grid lines -->
+                <g data-anim-role="chart-axis">
+                  <line class="grid-line" x1="100" y1="40" x2="1540" y2="40"/>
+                  <line class="grid-line" x1="100" y1="190" x2="1540" y2="190"/>
+                  <line class="grid-line" x1="100" y1="340" x2="1540" y2="340"/>
+                  <line class="grid-line" x1="100" y1="490" x2="1540" y2="490"/>
+                  <line class="baseline" x1="100" y1="640" x2="1540" y2="640"/>
+                </g>
+
+                <!-- area fill under the line -->
+                <path class="area-path" data-anim-role="chart-area"
+                      d="M 100 540 L 388 407 L 676 265 L 964 323 L 1252 173 L 1540 40 L 1540 640 L 100 640 Z"/>
+
+                <!-- the line itself -->
+                <polyline class="line-path" data-anim-role="chart-line"
+                          points="100,540 388,407 676,265 964,323 1252,173 1540,40"/>
+
+                <!-- data points -->
+                <circle class="data-point" data-anim-role="chart-point" cx="100"  cy="540" r="7"/>
+                <circle class="data-point" data-anim-role="chart-point" cx="388"  cy="407" r="7"/>
+                <circle class="data-point" data-anim-role="chart-point" cx="676"  cy="265" r="7"/>
+                <circle class="data-point" data-anim-role="chart-point" cx="964"  cy="323" r="7"/>
+                <circle class="data-point" data-anim-role="chart-point" cx="1252" cy="173" r="7"/>
+                <circle class="data-point" data-anim-role="chart-point" cx="1540" cy="40"  r="7"/>
+
+                <!-- end-point value -->
+                <text class="end-value" data-anim-role="chart-value" x="1520" y="28">72</text>
+              </svg>
+            </div>
+
+            <div class="chart-labels" data-anim-role="chart-label">
+              <span class="chart-x-item">1月</span>
+              <span class="chart-x-item">3月</span>
+              <span class="chart-x-item">5月</span>
+              <span class="chart-x-item">7月</span>
+              <span class="chart-x-item">9月</span>
+              <span class="chart-x-item">12月</span>
+            </div>
+
+            <div class="chart-axis-labels">
+              <span class="axis-label" data-slot="x_label">月份</span>
+              <span class="axis-label" data-slot="y_label">万人</span>
+            </div>
+
+            <div class="chart-footer">
+              <span class="chart-source" data-slot="source_note">数据来源：内部统计 2024</span>
+              <div class="chart-divider"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.35" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+    </div>
+    <!-- ===== Structure self-animation (line_chart) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("chart-axis").length) {
+          tl.from($("chart-axis"), { opacity: 0, duration: 0.2, ease: "power1.out" }, 0.2);
+        }
+
+        var svg = root.querySelector(".chart-svg");
+        var labelsContainer = root.querySelector('[data-anim-role="chart-label"]');
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var seriesRaw = V.series || null;
+        var series = null;
+        if (seriesRaw) {
+          try { series = typeof seriesRaw === "string" ? JSON.parse(seriesRaw) : seriesRaw; } catch (e) { series = null; }
+        }
+
+        if (series && Array.isArray(series) && series.length > 1 && svg) {
+          var oldLine = svg.querySelector('[data-anim-role="chart-line"]');
+          var oldArea = svg.querySelector('[data-anim-role="chart-area"]');
+          var oldPoints = svg.querySelectorAll('[data-anim-role="chart-point"]');
+          var oldValue = svg.querySelector('[data-anim-role="chart-value"]');
+          if (oldLine) oldLine.remove();
+          if (oldArea) oldArea.remove();
+          for (var r = 0; r < oldPoints.length; r++) oldPoints[r].remove();
+          if (oldValue) oldValue.remove();
+
+          var padL = 100, padR = 60, padT = 40, padB = 60;
+          var cW = 1600 - padL - padR, cH = 700 - padT - padB;
+          var n = series.length;
+          var maxY = 0;
+          for (var i = 0; i < n; i++) { if (series[i].y > maxY) maxY = series[i].y; }
+          if (maxY === 0) maxY = 1;
+          var pts = [];
+          for (var j = 0; j < n; j++) {
+            var px = padL + (j / (n - 1)) * cW;
+            var py = padT + cH - (series[j].y / maxY) * cH;
+            pts.push({ x: Math.round(px), y: Math.round(py) });
+          }
+          var ns = "http://www.w3.org/2000/svg";
+          var lineStr = pts.map(function (p) { return p.x + "," + p.y; }).join(" ");
+          var areaD = "M " + pts.map(function (p) { return p.x + " " + p.y; }).join(" L ") +
+                      " L " + pts[n - 1].x + " 640 L " + pts[0].x + " 640 Z";
+          var areaEl = document.createElementNS(ns, "path");
+          areaEl.setAttribute("class", "area-path");
+          areaEl.setAttribute("data-anim-role", "chart-area");
+          areaEl.setAttribute("d", areaD);
+          svg.appendChild(areaEl);
+          var lineEl = document.createElementNS(ns, "polyline");
+          lineEl.setAttribute("class", "line-path");
+          lineEl.setAttribute("data-anim-role", "chart-line");
+          lineEl.setAttribute("points", lineStr);
+          svg.appendChild(lineEl);
+          for (var k = 0; k < n; k++) {
+            var c = document.createElementNS(ns, "circle");
+            c.setAttribute("class", "data-point");
+            c.setAttribute("data-anim-role", "chart-point");
+            c.setAttribute("cx", String(pts[k].x));
+            c.setAttribute("cy", String(pts[k].y));
+            c.setAttribute("r", "7");
+            svg.appendChild(c);
+          }
+          var valEl = document.createElementNS(ns, "text");
+          valEl.setAttribute("class", "end-value");
+          valEl.setAttribute("data-anim-role", "chart-value");
+          valEl.setAttribute("x", String(pts[n - 1].x - 20));
+          valEl.setAttribute("y", String(pts[n - 1].y - 16));
+          valEl.textContent = String(series[n - 1].y);
+          svg.appendChild(valEl);
+          if (labelsContainer) {
+            labelsContainer.innerHTML = "";
+            for (var m = 0; m < n; m++) {
+              var span = document.createElement("span");
+              span.className = "chart-x-item";
+              span.textContent = series[m].x;
+              labelsContainer.appendChild(span);
+            }
+          }
+        }
+
+        var linePath = root.querySelector('[data-anim-role="chart-line"]');
+        if (linePath) {
+          var totalLen;
+          try { totalLen = linePath.getTotalLength(); } catch (e) { totalLen = 2000; }
+          gsap.set(linePath, { strokeDasharray: totalLen, strokeDashoffset: totalLen });
+          tl.to(linePath, { strokeDashoffset: 0, duration: 1.4, ease: "power2.inOut" }, 0.4);
+        }
+        if ($("chart-area").length) {
+          gsap.set($("chart-area"), { opacity: 0 });
+          tl.to($("chart-area"), { opacity: 0.15, duration: 0.6, ease: "expo.out" }, 1.8);
+        }
+        var points = $("chart-point");
+        if (points.length) {
+          gsap.set(points, { scale: 0, transformOrigin: "center center" });
+          tl.to(points, { scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.1 }, 0.7);
+        }
+        if ($("chart-value").length) {
+          tl.from($("chart-value"), { opacity: 0, y: 8, duration: 0.4, ease: "power2.out" }, 1.8);
+        }
+        if ($("chart-label").length) {
+          tl.from($("chart-label"), { opacity: 0, duration: 0.3, ease: "power1.out" }, 0.6);
+        }
+      };
+    </script>
+    <!-- ===== Layer 2: motion (slide_in_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["slide_in_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 24, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 20, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { x: -40, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.40);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.60);
+        }
+        if ($("card").length) {
+          var cards = $("card");
+          for (var i = 0; i < cards.length; i++) {
+            var xOff = (i % 2 === 0) ? -60 : 60;
+            tl.from(cards[i], { x: xOff, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.35 + i * 0.12);
+          }
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 14, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.75);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.80);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.55);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["slide_in_hold"]) {
+              window.__hf_motions["slide_in_hold"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

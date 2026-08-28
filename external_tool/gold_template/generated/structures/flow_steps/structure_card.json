@@ -1,0 +1,22 @@
+{
+  "structure_id": "flow_steps",
+  "family": "diagram",
+  "use_for": ["流程步骤", "方法论", "科学方法"],
+  "spotlight_level": "mid",
+  "duration_range": [6.0, 9.0],
+  "anim_roles": ["title", "node", "edge", "node-label", "marker", "accent-line"],
+  "slots": ["headline", "nodes", "edges"],
+  "data_slots": ["nodes", "edges"],
+  "data_contract": {
+    "nodes": {
+      "shape": "[{id: string, label: string}]",
+      "min_items": 2,
+      "max_items": 8
+    },
+    "edges": {
+      "shape": "[{from: string, to: string}]",
+      "min_items": 1,
+      "max_items": 7
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+ "user_payload": {
+  "role": "generator",
+  "task": "将用户输入的一段口播稿，通过 AICutPipeline 工具链做成完整长视频。",
+  "stage_task": "plan_shots",
+  "input_prior_version": "custom_tool_priors_v2",
+  "instruction": "只为当前 target_segment/chunk 批量生成多个连续镜头；保持原文顺序、shot_id 连续、visual_query 不重复，并衔接前序 chunk。",
+  "input_script": "在电影《太阳照常升起》里，有这么一个片段，疯妈不明所以的砸毁了家里面的瓶瓶罐罐，死晚淘气，男主李东方从最初的诧异、愤怒到癫狂，也有样学样的砸了起来，但他是否明白疯妈的意思，是否能体会到疯妈的用意呢，本期视频来讲讲破四旧，这是了解文革历史绕不开的话题。在以主流意识形态叙述的文革史当中，一个精英的损失似乎能赚到更多的眼泪和",
+  "memory": {
+   "intent": "解析文革期间破四旧运动中造反派与保守派的不同动机、行动及历史影响",
+   "music_style": "中慢速历史纪录片纯音乐，钢琴与弦乐，沉稳严肃",
+   "segments": [
+    {
+     "segment_id": "seg_01",
+     "structure_label": "引子",
+     "title": "电影片段引出历史话题",
+     "summary": "通过电影《太阳照常升起》砸物片段，类比引出破四旧历史话题",
+     "key_points": [
+      "电影疯妈砸物片段",
+      "男主模仿砸物行为",
+      "引出破四旧主题"
+     ],
+     "planner_strategy": "电影片段混剪，配合砸碎物品的音效，画面色调由暖转冷"
+    },
+    {
+     "segment_id": "seg_02",
+     "structure_label": "概述",
+     "title": "概念起源与定义模糊",
+     "summary": "阐述破四旧概念来源、定义及执行层面的模糊性与复杂性",
+     "key_points": [
+      "概念源于陈伯达社论",
+      "新旧思想文化风俗习惯",
+      "中央无法明确划分"
+     ],
+     "planner_strategy": "历史文献资料展示，社论报纸特写，配合地图动画展示执行层面"
+    },
+    {
+     "segment_id": "seg_03",
+     "structure_label": "核心章节",
+     "title": "造反派在服饰",
+     "summary": "介绍造反派在服饰、改名及宣传方面的形式主义行动",
+     "key_points": [
+      "整改资本主义服饰",
+      "街道商店改名",
+      "红海洋运动与徽章"
+     ],
+     "planner_strategy": "历史照片展示旧街道改名前后对比，红卫兵佩戴徽章的特写镜头"
+    }
+   ],
+   "target_segment": {
+    "segment_id": "seg_01",
+    "structure_label": "引子",
+    "title": "电影片段引出历史话题",
+    "summary": "通过电影《太阳照常升起》砸物片段，类比引出破四旧历史话题",
+    "key_points": [
+     "电影疯妈砸物片段",
+     "男主模仿砸物行为",
+     "引出破四旧主题"
+    ],
+    "raw_span": "在电影《太阳照常升起》里，有这么一个片段，疯妈不明所以的砸毁了家里面的瓶瓶罐罐，死晚淘气，男主李东方从最初的诧异、愤怒到癫狂，也有样学样的砸了起来",
+    "planner_strategy": "电影片段混剪，配合砸碎物品的音效，画面色调由暖转冷",
+    "narration_script": "在电影《太阳照常升起》里，有这么一个片段，疯妈不明所以的砸毁了家里面的瓶瓶罐罐，死晚淘气，男主李东方从最初的诧异、愤怒到癫狂，也有样学样的砸了起来"
+   },
+   "prev_segment": {},
+   "next_segment": {
+    "segment_id": "seg_02",
+    "structure_label": "概述",
+    "title": "概念起源与定义模糊",
+    "summary": "阐述破四旧概念来源、定义及执行层面的模糊性与复杂性",
+    "key_points": [
+     "概念源于陈伯达社论",
+     "新旧思想文化风俗习惯",
+     "中央无法明确划分"
+    ],
+    "raw_span": "在以主流意识形态叙述的文革史当中，一个精英的损失似乎能赚到更多的眼泪和分开，但我们必须要认识到事物发展的基本逻辑和深层意义，我希望即使是想对这段历史进行批判谴责",
+    "planner_strategy": "历史文献资料展示，社论报纸特写，配合地图动画展示执行层面",
+    "narration_script": "在以主流意识形态叙述的文革史当中，一个精英的损失似乎能赚到更多的眼泪和分开，但我们必须要认识到事物发展的基本逻辑和深层意义，我希望即使是想对这段历史进行批判谴责"
+   },
+   "coverage_units": [
+    {
+     "unit_id": "u01",
+     "char_start": 0,
+     "char_end": 73,
+     "text": "在电影《太阳照常升起》里，有这么一个片段，疯妈不明所以的砸毁了家里面的瓶瓶罐罐，死晚淘气，男主李东方从最初的诧异、愤怒到癫狂，也有样学样的砸了起来"
+    }
+   ],
+   "planned_prefix_summary": {
+    "planned_shot_count": 0,
+    "covered_vocal_tail": "",
+    "last_shot_id": "",
+    "spotlight_count": 0
+   },
+   "previous_chunk_tail_shots": [],
+   "previous_segment_tail_shots": [],
+   "visual_query_history": []
+  },
+  "constraints": {
+   "num_segments": 7,
+   "num_video_shots": 19,
+   "mode": "video_shots",
+   "segment_id": "seg_01",
+   "chunk_index": 1,
+   "num_chunks_for_segment": 1,
+   "expected_num_shots": 1,
+   "total_segment_shots": 1,
+   "model_call_granularity": "one_call_per_segment_or_chunk",
+   "note": "只输出当前 target_segment/chunk 的 shots，不输出其他章节，不逐镜头调用模型。",
+   "shot_id_policy": {
+    "first_shot_id": "1",
+    "last_shot_id": "1",
+    "preserve_continuous_order": true,
+    "do_not_renumber_previous_shots": true
+   },
+   "coverage_policy": {
+    "coverage_source": "memory.target_segment.raw_span 或 narration_script",
+    "cover_units_in_order": true,
+    "each_shot_should_map_to_one_or_more_adjacent_units": true,
+    "avoid_skipping_key_points": true,
+    "avoid_repeating_same_sentence_unit": true
+   },
+   "continuity_policy": {
+    "continue_from_previous_chunk_tail": true,
+    "connect_to_prev_and_next_segment_summary": true,
+    "avoid_topic_jump": true,
+    "keep_vocal_script_natural_and_consecutive": true
+   },
+   "visual_query_policy": {
+    "query_should_be_concrete_and_searchable": true,
+    "avoid_repeated_visual_query_from_history": true,
+    "match_vocal_script_semantics": true
+   },
+   "spotlight_policy": {
+    "use_spotlight_for_key_concept_turning_point_or_summary": true,
+    "avoid_all_shots_becoming_spotlight": true
+   },
+   "alignment_policy": {
+    "shots_tile_segment_narration_exactly": true,
+    "last_chunk_last_shot_is_segment_end": true,
+    "last_segment_last_shot_is_article_end": true,
+    "do_not_leave_uncovered_tail": true
+   }
+  },
+  "output_schema": {
+   "stage_task": "plan_shots",
+   "segment_id": "seg_01",
+   "chapter_title": "string",
+   "chunk_index": "integer",
+   "num_chunks_for_segment": "integer",
+   "shots": [
+    {
+     "shot_id": "string",
+     "segment_id": "seg_01",
+     "chapter_title": "string",
+     "vocal_script": "string",
+     "visual_query": "string",
+     "visual_direction": "string",
+     "intent": "string",
+     "design_rationale": "string",
+     "is_spotlight": "boolean"
+    }
+   ],
+   "num_shots": "integer",
+   "total_segment_shots": "integer"
+  }
+ },
+ "constraints_echo": {
+  "num_segments": 7,
+  "num_video_shots": 19,
+  "mode": "video_shots",
+  "segment_id": "seg_01",
+  "chunk_index": 1,
+  "num_chunks_for_segment": 1,
+  "expected_num_shots": 1,
+  "total_segment_shots": 1,
+  "model_call_granularity": "one_call_per_segment_or_chunk",
+  "note": "只输出当前 target_segment/chunk 的 shots，不输出其他章节，不逐镜头调用模型。"
+ }
+}

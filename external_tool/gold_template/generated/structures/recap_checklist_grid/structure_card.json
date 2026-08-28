@@ -1,0 +1,23 @@
+{
+  "structure_id": "recap_checklist_grid",
+  "family": "narrative",
+  "use_for": ["回顾总结", "知识网格", "要点复盘", "网格打勾"],
+  "spotlight_level": "high",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["eyebrow", "title", "list-item"],
+  "slots": ["eyebrow", "headline", "items"],
+  "data_slots": ["items"],
+  "data_contract": {
+    "items": {
+      "shape": "[string]",
+      "min_items": 2,
+      "max_items": 6
+    }
+  },
+  "sfx": [
+    {"at": 1.0, "sfx": "tick"},
+    {"at": 2.2, "sfx": "tick"},
+    {"at": 3.4, "sfx": "tick"},
+    {"at": 4.5, "sfx": "chime"}
+  ]
+}

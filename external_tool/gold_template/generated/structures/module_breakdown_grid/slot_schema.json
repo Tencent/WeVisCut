@@ -1,0 +1,20 @@
+{
+  "structure_id": "module_breakdown_grid",
+  "family": "diagram",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {"type": "string", "label": "标题", "default": "一个 Agent 的核心模块", "max_chars": 16},
+    "center_label": {"type": "string", "label": "中心模块名", "default": "Agent", "max_chars": 8},
+    "modules": {
+      "type": "json",
+      "label": "子模块列表",
+      "default": [
+        {"label": "感知"},
+        {"label": "记忆"},
+        {"label": "规划"},
+        {"label": "执行"},
+        {"label": "反思"}
+      ]
+    }
+  }
+}

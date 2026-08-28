@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "对比标题", "default": "两种检索方案对比"}, {"id": "columns", "type": "string", "label": "方法列名", "default": "[\"传统 RAG\", \"混合检索\"]"}, {"id": "rows", "type": "string", "label": "维度行数据", "default": "[{\"dim\": \"准确率\", \"values\": [\"78%\", \"92%\"]}, {\"dim\": \"响应延迟\", \"values\": [\"320ms\", \"140ms\"]}, {\"dim\": \"部署成本\", \"values\": [\"高\", \"中\"]}]"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (minimal_academic) ===== */
+      :root {
+        --bg: #fbfbf9;
+        --bg-2: #f3f3ee;
+        --surface: #ffffff;
+        --surface-2: #ffffff;
+        --ink-1: #1a2238;
+        --ink-2: #454f6b;
+        --ink-3: #8b93a7;
+        --accent: #2f5d8a;
+        --accent-2: #b08328;
+        --danger: #9b2c2c;
+        --success: #2f7a55;
+        --line: rgba(26,34,56,.10);
+        --line-strong: rgba(26,34,56,.24);
+        --font-display: "Noto Serif SC", Georgia, serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 700;
+        --weight-body: 400;
+        --radius-card: 4px;
+        --radius-pill: 999px;
+        --shadow-soft: none;
+        --shadow-glow: none;
+        --grid-color: rgba(26,34,56,.05);
+        --stage-bg: rgba(255,255,255,.5);
+        --radius-stage: 22px;
+        --stage-blur: 0px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (method_comparison) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 60px 80px 50px;
+        gap: 28px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .cmp-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 64px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1200px;
+      }
+
+      [data-hf="structure-dom"] .cmp-table {
+        flex: 1;
+        display: grid;
+        grid-template-columns: minmax(180px, 1.3fr) 1fr 1fr;
+        align-content: stretch;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .cmp-corner {
+        border-radius: var(--radius-card);
+      }
+
+      [data-hf="structure-dom"] .cmp-col-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 30px;
+        color: var(--ink-1);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 16px 12px;
+        text-align: center;
+      }
+
+      [data-hf="structure-dom"] .cmp-row-label {
+        display: flex;
+        align-items: center;
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 26px;
+        color: var(--ink-2);
+        padding: 14px 22px;
+      }
+
+      [data-hf="structure-dom"] .cmp-cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 30px;
+        color: var(--ink-1);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 14px 12px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        max-width: 100%;
+        line-height: 1.3;
+      }
+
+      [data-hf="structure-dom"] .cmp-col-header.is-winner {
+        color: var(--bg);
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: var(--shadow-glow);
+      }
+
+      [data-hf="structure-dom"] .cmp-cell.is-winner {
+        color: var(--ink-1);
+        background: var(--accent);
+        border-color: var(--accent);
+        font-weight: var(--weight-display);
+      }
+
+      [data-hf="structure-dom"] .cmp-footer {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      [data-hf="structure-dom"] .cmp-divider {
+        flex: 1;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="cmp-title" data-anim-role="title" data-slot="headline">两种方案的硬指标对比</h2>
+
+            <div class="cmp-table" style="grid-template-columns: minmax(180px, 1.3fr) 1fr 1fr;">
+              <div class="cmp-corner"></div>
+              <div class="cmp-col-header" data-anim-role="col-header">Baseline</div>
+              <div class="cmp-col-header is-winner" data-anim-role="col-header">Ours</div>
+
+              <div class="cmp-row-label" data-anim-role="row-label">准确率</div>
+              <div class="cmp-cell" data-anim-role="cell">82%</div>
+              <div class="cmp-cell is-winner" data-anim-role="cell">94%</div>
+
+              <div class="cmp-row-label" data-anim-role="row-label">延迟</div>
+              <div class="cmp-cell" data-anim-role="cell">120ms</div>
+              <div class="cmp-cell is-winner" data-anim-role="cell">45ms</div>
+
+              <div class="cmp-row-label" data-anim-role="row-label">成本</div>
+              <div class="cmp-cell" data-anim-role="cell">高</div>
+              <div class="cmp-cell is-winner" data-anim-role="cell">低</div>
+            </div>
+
+            <div class="cmp-footer">
+              <div class="cmp-divider" data-anim-role="accent-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.35" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+      <audio id="sfx-1" data-start="0.4" data-duration="0.3" data-track-index="103" src="sfx/tick.mp3" data-volume="0.25"></audio>
+      <audio id="sfx-2" data-start="1.8" data-duration="0.6" data-track-index="104" src="sfx/pop.mp3" data-volume="0.3"></audio>
+    </div>
+    <!-- ===== Structure self-animation (method_comparison) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        var table = root.querySelector(".cmp-table");
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        function parse(raw) {
+          if (raw == null) return null;
+          if (typeof raw !== "string") return raw;
+          try { return JSON.parse(raw); } catch (e) { return null; }
+        }
+        var columns = parse(V.columns);
+        var rows = parse(V.rows);
+
+        if (table && Array.isArray(columns) && columns.length >= 1 && Array.isArray(rows) && rows.length >= 1) {
+          var m = columns.length;
+          var winnerIdx = m - 1;
+          table.innerHTML = "";
+          table.style.gridTemplateColumns = "minmax(180px, 1.3fr) repeat(" + m + ", 1fr)";
+
+          var corner = document.createElement("div");
+          corner.className = "cmp-corner";
+          table.appendChild(corner);
+          for (var c = 0; c < m; c++) {
+            var h = document.createElement("div");
+            h.className = "cmp-col-header" + (c === winnerIdx ? " is-winner" : "");
+            h.setAttribute("data-anim-role", "col-header");
+            h.textContent = String(columns[c]);
+            table.appendChild(h);
+          }
+          for (var r = 0; r < rows.length; r++) {
+            var rl = document.createElement("div");
+            rl.className = "cmp-row-label";
+            rl.setAttribute("data-anim-role", "row-label");
+            rl.textContent = String(rows[r].dim != null ? rows[r].dim : "");
+            table.appendChild(rl);
+            var vals = Array.isArray(rows[r].values) ? rows[r].values : [];
+            for (var k = 0; k < m; k++) {
+              var cell = document.createElement("div");
+              cell.className = "cmp-cell" + (k === winnerIdx ? " is-winner" : "");
+              cell.setAttribute("data-anim-role", "cell");
+              cell.textContent = (vals[k] != null) ? String(vals[k]) : "—";
+              table.appendChild(cell);
+            }
+          }
+        }
+
+        var headers = $("col-header");
+        if (headers.length) {
+          tl.from(headers, { y: -24, opacity: 0, duration: 0.45, ease: "power3.out", stagger: 0.1 }, 0.2);
+        }
+
+        var allRowLabels = $("row-label");
+        var allCells = $("cell");
+        if (allRowLabels.length) {
+          var winners = [];
+          for (var ri = 0; ri < allRowLabels.length; ri++) {
+            var at = 0.55 + ri * 0.18;
+            tl.from(allRowLabels[ri], { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, at);
+          }
+          for (var ci = 0; ci < allCells.length; ci++) {
+            var rowOf = Math.floor(ci / (allCells.length / allRowLabels.length || 1));
+            tl.from(allCells[ci], { y: 12, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.6 + rowOf * 0.18 + (ci % Math.max(1, (allCells.length / allRowLabels.length))) * 0.06);
+            if (allCells[ci].classList.contains("is-winner")) winners.push(allCells[ci]);
+          }
+          if (winners.length) {
+            tl.to(winners, { scale: 1.05, duration: 0.22, ease: "power2.out", transformOrigin: "center center", stagger: 0.05 }, 0.6 + allRowLabels.length * 0.18 + 0.2);
+            tl.to(winners, { scale: 1.0, duration: 0.3, ease: "power2.inOut", stagger: 0.05 }, 0.6 + allRowLabels.length * 0.18 + 0.42);
+          }
+        } else if (allCells.length) {
+          tl.from(allCells, { y: 12, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.06 }, 0.55);
+        }
+
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.4);
+        }
+
+        var done = ["col-header", "row-label", "cell", "accent-line"];
+        for (var d = 0; d < done.length; d++) {
+          var els = $(done[d]);
+          for (var i = 0; i < els.length; i++) els[i].removeAttribute("data-anim-role");
+        }
+      };
+    </script>
+    <!-- ===== Layer 2: motion (slide_in_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["slide_in_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 24, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 20, opacity: 0, duration: 0.5, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { x: -40, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.40);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { x: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.60);
+        }
+        if ($("card").length) {
+          var cards = $("card");
+          for (var i = 0; i < cards.length; i++) {
+            var xOff = (i % 2 === 0) ? -60 : 60;
+            tl.from(cards[i], { x: xOff, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.35 + i * 0.12);
+          }
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 14, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.12 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { x: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.30);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.75);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.80);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.85);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.55);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["slide_in_hold"]) {
+              window.__hf_motions["slide_in_hold"](tl, { gsap: gsap, root: root, duration: 7.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

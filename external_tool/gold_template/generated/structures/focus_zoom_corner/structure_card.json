@@ -1,0 +1,14 @@
+{
+  "structure_id": "focus_zoom_corner",
+  "family": "diagram",
+  "bound": true,
+  "use_for": ["局部放大", "细节聚焦", "由总到分"],
+  "spotlight_level": "mid",
+  "duration_range": [5.5, 8.5],
+  "anim_roles": ["title", "overview", "zoom-frame", "callout", "accent-line"],
+  "slots": ["headline", "overview_caption", "zoom_label", "zoom_desc"],
+  "sfx_cues": [
+    {"at": 1.2, "sfx": "whoosh", "comment": "放大细节推入"},
+    {"at": 2.0, "sfx": "click", "comment": "旁注落位"}
+  ]
+}

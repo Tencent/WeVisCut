@@ -1,0 +1,28 @@
+{
+  "structure_id": "branching_flow",
+  "family": "diagram",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "一个底座，三种能力",
+      "max_chars": 16
+    },
+    "root_label": {
+      "type": "string",
+      "label": "主干名称",
+      "default": "统一大模型",
+      "max_chars": 10
+    },
+    "branches": {
+      "type": "json",
+      "label": "分支节点",
+      "default": [
+        { "label": "文本理解" },
+        { "label": "图像识别" },
+        { "label": "语音交互" }
+      ]
+    }
+  }
+}

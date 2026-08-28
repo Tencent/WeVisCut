@@ -1,0 +1,31 @@
+{
+  "structure_id": "historical_moment",
+  "family": "narrative",
+  "duration_default": 5.5,
+  "slots": {
+    "era_tag": {
+      "type": "string",
+      "label": "时代标签",
+      "default": "科学革命",
+      "max_chars": 10
+    },
+    "year": {
+      "type": "string",
+      "label": "年份",
+      "default": "1905",
+      "max_chars": 8
+    },
+    "person_name": {
+      "type": "string",
+      "label": "人物名",
+      "default": "阿尔伯特·爱因斯坦",
+      "max_chars": 16
+    },
+    "event_desc": {
+      "type": "string",
+      "label": "事件描述",
+      "default": "发表狭义相对论、光电效应论文，被称为「奇迹年」",
+      "max_chars": 36
+    }
+  }
+}

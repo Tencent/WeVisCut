@@ -1,0 +1,13 @@
+{
+  "structure_id": "problem_hook_split",
+  "family": "narrative",
+  "use_for": ["思维误区", "认知偏差", "反直觉问题"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "title", "list-item", "accent-line"],
+  "slots": ["eyebrow", "question_text", "tag1", "tag2", "tag3"],
+  "sfx_cues": [
+    {"at": 0.6, "sfx": "tick", "comment": "右栏痛点逐条出现"},
+    {"at": 1.4, "sfx": "pop", "comment": "末个痛点强调"}
+  ]
+}

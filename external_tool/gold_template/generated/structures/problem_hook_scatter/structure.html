@@ -1,0 +1,87 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 120px;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 30px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.1em;
+}
+
+[data-hf="structure-dom"] .question-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 88px;
+  line-height: 1.16;
+  color: var(--ink-1);
+  max-width: 900px;
+}
+
+[data-hf="structure-dom"] .question-title .accent {
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .pain-card {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 32px;
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 28px;
+  color: var(--ink-1);
+}
+
+[data-hf="structure-dom"] .pain-card::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--danger);
+  flex: none;
+}
+
+[data-hf="structure-dom"] .pain-card.p1 { top: 90px; left: 80px; }
+[data-hf="structure-dom"] .pain-card.p2 { top: 120px; right: 80px; }
+[data-hf="structure-dom"] .pain-card.p3 { bottom: 110px; left: 50%; transform: translateX(-50%); }
+
+[data-hf="structure-dom"] .divider-line {
+  width: 140px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">现状观察</div>
+  <h1 class="question-title" data-anim-role="title" data-slot="question_text">为什么<span class="accent">90%</span>的项目都卡在这一步？</h1>
+  <div class="divider-line" data-anim-role="accent-line"></div>
+  <span class="pain-card p1" data-anim-role="list-item" data-slot="tag1">成本失控</span>
+  <span class="pain-card p2" data-anim-role="list-item" data-slot="tag2">交付延期</span>
+  <span class="pain-card p3" data-anim-role="list-item" data-slot="tag3">质量波动</span>
+</div>

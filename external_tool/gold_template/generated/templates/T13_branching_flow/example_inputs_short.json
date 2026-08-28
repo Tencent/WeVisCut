@@ -1,0 +1,8 @@
+{
+  "headline": "一分为二的选择",
+  "root_label": "用户请求",
+  "branches": [
+    { "label": "走缓存命中" },
+    { "label": "回源计算" }
+  ]
+}

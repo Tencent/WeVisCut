@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "eyebrow", "type": "string", "label": "顶部标签", "default": "误区纠正"}, {"id": "wrong_text", "type": "string", "label": "错误说法", "default": "人类只使用了大脑的10%"}, {"id": "right_text", "type": "string", "label": "正确事实", "default": "大脑各区域全天候都在活动"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (dark_tech) ===== */
+      :root {
+        --bg: #060d1a;
+        --bg-2: #0a1525;
+        --surface: rgba(20,38,60,.55);
+        --surface-2: rgba(20,38,60,.82);
+        --ink-1: #eef6fb;
+        --ink-2: #b9d3e6;
+        --ink-3: #7d96ad;
+        --accent: #7fc7d9;
+        --accent-2: #f5b14a;
+        --danger: #ff7a7a;
+        --success: #6ee7b7;
+        --line: rgba(127,199,217,.18);
+        --line-strong: rgba(127,199,217,.42);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 22px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+        --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+        --grid-color: rgba(127,199,217,.05);
+        --stage-bg: rgba(10,21,37,.5);
+        --radius-stage: 48px;
+        --stage-blur: 10px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          var(--bg);
+        mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (myth_busting_wipe) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 80px 100px;
+        gap: 24px;
+        box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      [data-hf="structure-dom"] .eyebrow-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 28px;
+        border-radius: var(--radius-pill);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-2);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        z-index: 2;
+      }
+
+      [data-hf="structure-dom"] .mb-panel {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+        padding: 100px 100px;
+      }
+
+      [data-hf="structure-dom"] .mb-right {
+        transform: translateY(100%);
+      }
+
+      [data-hf="structure-dom"] .mb-icon {
+        font-size: 96px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      [data-hf="structure-dom"] .mb-icon-wrong {
+        color: var(--danger);
+      }
+
+      [data-hf="structure-dom"] .mb-icon-right {
+        color: var(--success);
+      }
+
+      [data-hf="structure-dom"] .mb-text {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 52px;
+        line-height: 1.3;
+        color: var(--ink-1);
+        max-width: 900px;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="6.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="6.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">误区纠正</div>
+            <div class="mb-panel mb-wrong">
+              <span class="mb-icon mb-icon-wrong" data-anim-role="decoration">✗</span>
+              <p class="mb-text" data-anim-role="title" data-slot="wrong_text">人类只使用了大脑的10%</p>
+            </div>
+            <div class="mb-panel mb-right">
+              <span class="mb-icon mb-icon-right" data-anim-role="decoration">✓</span>
+              <p class="mb-text" data-anim-role="body" data-slot="right_text">大脑各区域全天候都在活动</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="0.6" data-track-index="102" src="sfx/pop.mp3" data-volume="0.3"></audio>
+    </div>
+    <!-- ===== Structure self-animation (myth_busting_wipe) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var wrongPanel = root.querySelector('.mb-wrong');
+        var rightPanel = root.querySelector('.mb-right');
+        var wrongIcon = wrongPanel.querySelector('.mb-icon');
+        var wrongText = wrongPanel.querySelector('.mb-text');
+        var rightIcon = rightPanel.querySelector('.mb-icon');
+        var rightText = rightPanel.querySelector('.mb-text');
+
+        tl.from(wrongIcon, { scale: 0, duration: 0.5, ease: "back.out(1.7)" }, 0);
+        tl.from(wrongText, { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 0.2);
+
+        tl.to(wrongPanel, { clipPath: "inset(0 100% 0 0)", duration: 0.6, ease: "power2.inOut" }, 3);
+        tl.to(rightPanel, { y: 0, duration: 0.6, ease: "power2.out" }, 3.2);
+
+        tl.from(rightIcon, { scale: 0, duration: 0.5, ease: "back.out(1.7)" }, 3.8);
+        tl.from(rightText, { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 4.0);
+
+        var allEls = root.querySelectorAll('[data-anim-role]');
+        for (var i = 0; i < allEls.length; i++) allEls[i].removeAttribute('data-anim-role');
+      };
+    </script>
+    <!-- ===== Layer 2: motion (scale_pop_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["scale_pop_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.15);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { scale: 0.82, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 24, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.62);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { scale: 0.75, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { scale: 0.7, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.65);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { scale: 0.92, opacity: 0, duration: 0.55, ease: "back.out(1.3)", stagger: 0.15 }, 0.40);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.10 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { scale: 0.94, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.35);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.80);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.85);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.90);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { scale: 0.9, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 1.0);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["scale_pop_hold"]) {
+              window.__hf_motions["scale_pop_hold"](tl, { gsap: gsap, root: root, duration: 6.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

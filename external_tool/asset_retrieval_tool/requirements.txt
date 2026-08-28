@@ -1,0 +1,16 @@
+# asset_retrieval_tool — runtime dependencies
+#
+# 核心检索（search_video_segments / search_bgm / download_bgm_results）
+# 只用 Python 标准库，无第三方依赖。
+#
+# 视频落盘（download_video_results）需要 yt-dlp：B站/YouTube 的页面 URL
+# 不是直链，必须抽取 DASH 流；音视频分离流的合并还需要系统级 FFmpeg。
+yt-dlp>=2025.1.1
+
+# 测试
+pytest>=7.0
+pytest-cov>=4.0
+
+# 系统级依赖（不由 pip 管理）：
+#   macOS:  brew install ffmpeg
+#   Ubuntu: apt install ffmpeg

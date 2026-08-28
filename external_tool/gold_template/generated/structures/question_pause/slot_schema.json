@@ -1,0 +1,25 @@
+{
+  "structure_id": "question_pause",
+  "family": "narrative",
+  "duration_default": 5.0,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "眉标",
+      "default": "想一想",
+      "max_chars": 10
+    },
+    "question_text": {
+      "type": "string",
+      "label": "问题文本",
+      "default": "如果没有月球，地球会怎样？",
+      "max_chars": 24
+    },
+    "guide_text": {
+      "type": "string",
+      "label": "引导文案",
+      "default": "暂停三秒，想想你的答案",
+      "max_chars": 20
+    }
+  }
+}

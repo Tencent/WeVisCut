@@ -1,0 +1,42 @@
+{
+  "structure_id": "donut_pie",
+  "family": "dataviz",
+  "duration_default": 6.5,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "图表标题",
+      "default": "中国电力结构占比",
+      "max_chars": 18
+    },
+    "series": {
+      "type": "json",
+      "label": "数据系列",
+      "default": [
+        { "label": "火电", "value": 52 },
+        { "label": "水电", "value": 18 },
+        { "label": "风光", "value": 22 },
+        { "label": "核电", "value": 8 }
+      ]
+    },
+    "center_value": {
+      "type": "string",
+      "label": "环心数值",
+      "default": "52%",
+      "max_chars": 6
+    },
+    "center_label": {
+      "type": "string",
+      "label": "环心标签",
+      "default": "火电占比",
+      "max_chars": 10
+    },
+    "source_note": {
+      "type": "string",
+      "label": "数据来源",
+      "default": "数据来源：国家能源局 2024",
+      "max_chars": 24
+    }
+  },
+  "data_slots": ["series"]
+}

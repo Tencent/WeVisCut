@@ -1,0 +1,6 @@
+{
+  "visual_id": "clean_saas",
+  "keywords": ["白底", "靛蓝强调", "柔和阴影", "现代 SaaS", "清爽"],
+  "use_for": ["财经商业解释", "产品/工具讲解", "通用科普"],
+  "bg_recipe": "外层 .bg-stage: 白到极浅蓝径向渐变 + 局部柔光斑；内层 .stage-panel 半透明白玻璃，圆边 40px"
+}

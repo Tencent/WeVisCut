@@ -1,0 +1,11 @@
+{
+  "headline": "人体免疫系统",
+  "center_label": "免疫响应",
+  "modules": [
+    {"label": "巨噬细胞"},
+    {"label": "T细胞"},
+    {"label": "B细胞"},
+    {"label": "自然杀伤细胞"},
+    {"label": "树突状细胞"}
+  ]
+}

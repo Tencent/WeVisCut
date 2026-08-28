@@ -1,0 +1,17 @@
+{
+  "structure_id": "bar_chart",
+  "family": "dataviz",
+  "use_for": ["柱状图", "数量对比", "排名可视化"],
+  "spotlight_level": "high",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["title", "chart-axis", "chart-bar", "chart-value", "chart-label", "accent-line"],
+  "slots": ["headline", "series", "unit", "source_note"],
+  "data_slots": ["series"],
+  "data_contract": {
+    "series": {
+      "shape": "[{label: string, value: number}]",
+      "min_items": 2,
+      "max_items": 8
+    }
+  }
+}

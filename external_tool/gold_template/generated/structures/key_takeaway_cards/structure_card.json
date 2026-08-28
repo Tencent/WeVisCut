@@ -1,0 +1,15 @@
+{
+  "structure_id": "key_takeaway_cards",
+  "family": "narrative",
+  "variant_of": "key_takeaway",
+  "variant_label": "结论+散布卡",
+  "use_for": ["要点总结", "核心收获", "知识回顾"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["title", "list-item", "accent-line"],
+  "slots": ["headline", "takeaway1", "takeaway2", "takeaway3"],
+  "sfx_cues": [
+    { "at": 0.5, "sfx": "tick", "comment": "卡片逐张落位" },
+    { "at": 1.6, "sfx": "chime", "comment": "结论落定" }
+  ]
+}

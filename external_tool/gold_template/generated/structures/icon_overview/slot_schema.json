@@ -1,0 +1,14 @@
+{
+  "structure_id": "icon_overview",
+  "family": "diagram",
+  "duration_default": 5.5,
+  "slots": {
+    "headline": {"type": "string", "label": "概要标题", "default": "三个关键指标", "max_chars": 18},
+    "icon1_value": {"type": "string", "label": "图标1数值", "default": "10×", "max_chars": 8},
+    "icon1_label": {"type": "string", "label": "图标1说明", "default": "推理加速", "max_chars": 12},
+    "icon2_value": {"type": "string", "label": "图标2数值", "default": "92%", "max_chars": 8},
+    "icon2_label": {"type": "string", "label": "图标2说明", "default": "召回准确率", "max_chars": 12},
+    "icon3_value": {"type": "string", "label": "图标3数值", "default": "1/5", "max_chars": 8},
+    "icon3_label": {"type": "string", "label": "图标3说明", "default": "部署成本", "max_chars": 12}
+  }
+}

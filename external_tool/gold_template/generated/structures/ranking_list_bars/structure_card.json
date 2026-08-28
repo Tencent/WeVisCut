@@ -1,0 +1,10 @@
+{
+  "structure_id": "ranking_list_bars",
+  "family": "data",
+  "use_for": ["Top-N排名", "水平条形图", "数据对比"],
+  "spotlight_level": "high",
+  "duration_range": [6.0, 10.0],
+  "anim_roles": ["eyebrow", "title", "list-item"],
+  "slots": ["eyebrow", "headline", "items"],
+  "sfx": [{"at": 1.0, "sfx": "tick"}, {"at": 2.2, "sfx": "tick"}, {"at": 3.4, "sfx": "tick"}, {"at": 4.6, "sfx": "tick"}, {"at": 5.8, "sfx": "sparkle"}]
+}

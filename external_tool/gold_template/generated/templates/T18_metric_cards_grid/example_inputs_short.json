@@ -1,0 +1,7 @@
+{
+  "headline": "两项关键指标",
+  "metrics": [
+    { "value": 58, "unit": "%", "label": "转化提升" },
+    { "value": 12.6, "unit": "万", "label": "新增订单" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "headline": "推荐系统的四个模块",
+  "center_label": "推荐",
+  "modules": [
+    {"label": "召回"},
+    {"label": "粗排"},
+    {"label": "精排"},
+    {"label": "重排"}
+  ]
+}

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gold Template · Viewer</title>
+  <link rel="stylesheet" href="viewer.css?v=20260603c" />
+</head>
+<body>
+  <header>
+    <h1>Gold Template · Viewer</h1>
+    <span class="tag">三层自由重组 · 实时预览</span>
+    <span class="spacer"></span>
+    <span class="combo-id" id="comboId">—</span>
+  </header>
+
+  <main>
+    <section class="controls">
+      <div class="field">
+        <label for="selStructure">结构 Structure（Layer 1）</label>
+        <select id="selStructure"></select>
+        <span class="hint" id="hintStructure"></span>
+      </div>
+      <div class="field">
+        <label for="selMotion">运动 Motion（Layer 2）</label>
+        <select id="selMotion"></select>
+        <span class="hint" id="hintMotion"></span>
+      </div>
+      <div class="field">
+        <label for="selVisual">视觉 Visual（Layer 3）</label>
+        <select id="selVisual"></select>
+        <span class="hint" id="hintVisual"></span>
+      </div>
+      <div class="compat-warn" id="compatWarn" style="display:none"></div>
+      <input type="hidden" id="inpDuration" value="6.5" />
+      <div class="field">
+        <label for="selBgMode">背景 Background</label>
+        <select id="selBgMode">
+          <option value="css">CSS/纯色背景</option>
+          <option value="video" selected>视频背景（循环）</option>
+        </select>
+      </div>
+      <div class="field bg-video-field" id="bgVideoField">
+        <label for="inpBgVideo">视频路径</label>
+        <input type="text" id="inpBgVideo" value="footage/scene_demo.mp4" />
+      </div>
+      <input type="hidden" id="inpBgClipLen" value="6.533" />
+      <div class="row timing-row">
+        <div class="field half">
+          <label for="inpDecorStart">动画开始</label>
+          <input type="number" id="inpDecorStart" min="0" max="30" step="0.1" value="0" />
+        </div>
+        <div class="field half">
+          <label for="inpDecorDuration">动画时长</label>
+          <input type="number" id="inpDecorDuration" min="0.5" max="30" step="0.1" value="6.5" />
+        </div>
+      </div>
+    </section>
+
+    <section class="stage-wrap">
+      <div class="preview-area" id="previewArea">
+        <div class="empty-hint" id="emptyHint">
+          选择「结构 × 运动 × 视觉」后<br/>自动合成预览
+        </div>
+        <div class="frame-box" id="frameBox" style="display:none">
+          <iframe id="previewFrame" title="preview"></iframe>
+        </div>
+      </div>
+      <div class="transport">
+        <button class="sm" id="btnPlay">⏸ 暂停</button>
+        <button class="sm" id="btnReplay">↻ 重播</button>
+        <button class="sm" id="btnMute">🔇 静音</button>
+        <span class="status" id="status">就绪</span>
+      </div>
+      <div class="sfxbar" id="sfxbar">
+        <span class="title">音效 SFX</span>
+        <span class="none" id="sfxNone">当前运动无 sfx_cues</span>
+      </div>
+    </section>
+
+    <section class="slots-panel">
+      <div class="slots-header">
+        <label>槽位 Slots</label>
+        <button class="sm ghost" id="btnResetSlots">重置默认</button>
+      </div>
+      <div id="slotFields"></div>
+    </section>
+  </main>
+
+  <audio id="auditor" preload="auto"></audio>
+  <script src="viewer.js?v=20260603c"></script>
+</body>
+</html>

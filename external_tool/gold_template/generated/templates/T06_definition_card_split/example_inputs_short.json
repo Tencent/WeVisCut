@@ -1,0 +1,8 @@
+{
+  "eyebrow": "概念",
+  "term": "缓存",
+  "definition": "把高频访问的数据暂存到更快的介质中",
+  "keyword1": "命中率",
+  "keyword2": "失效",
+  "keyword3": "局部性"
+}

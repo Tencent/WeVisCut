@@ -1,0 +1,30 @@
+{
+  "structure_id": "cycle_loop",
+  "family": "diagram",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "水循环过程",
+      "max_chars": 18
+    },
+    "nodes": {
+      "type": "json",
+      "label": "节点",
+      "default": [
+        { "label": "蒸发" },
+        { "label": "成云" },
+        { "label": "降水" },
+        { "label": "汇流" }
+      ]
+    },
+    "loop_note": {
+      "type": "string",
+      "label": "说明",
+      "default": "自然界最基本的物质循环",
+      "max_chars": 24
+    }
+  },
+  "data_slots": ["nodes"]
+}

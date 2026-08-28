@@ -1,0 +1,70 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Node ──
+node_modules/
+npm-debug.log*
+
+# ── Credentials: never commit ──
+# Bilibili cookies are account credentials; API keys are keys.
+config.json
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Model weights ──
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# ── Generated output ──
+workspace/
+/tmp/
+*.log
+
+# ── Downloaded external tools (see docs/external_tools.md) ──
+# Use `dir/*` rather than `dir/`: git does not descend into an excluded
+# directory, so a `!dir/README.md` negation only works with the former.
+external_tool/node/*
+!external_tool/node/README.md
+external_tool/ffmpeg/*
+!external_tool/ffmpeg/README.md
+external_tool/hyperframes/cli/
+external_tool/hyperframes/runtime/
+external_tool/hyperframes/chrome/
+external_tool/hyperframes/vendor/
+external_tool/mmfinder/*
+!external_tool/mmfinder/README.md
+external_tool/gold_template/fonts/*
+!external_tool/gold_template/fonts/README.md
+external_tool/gold_template/renders/
+external_tool/asset_retrieval_tool/test_results/downloaded/
+
+# ── Editor / OS ──
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# ── Backups ──
+*.bak
+*.bak.*
+*.orig

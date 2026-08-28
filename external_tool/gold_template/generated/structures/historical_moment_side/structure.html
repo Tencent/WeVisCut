@@ -1,0 +1,85 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  width: 100%;
+  height: 100%;
+  padding: 80px 100px;
+  gap: 60px;
+  box-sizing: border-box;
+  align-items: center;
+  position: relative;
+}
+
+[data-hf="structure-dom"] .hms-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+[data-hf="structure-dom"] .hms-era {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-hf="structure-dom"] .hms-year {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 140px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .hms-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+[data-hf="structure-dom"] .hms-person {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 48px;
+  line-height: 1.2;
+  color: var(--ink-1);
+}
+
+[data-hf="structure-dom"] .hms-line {
+  width: 80px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+
+[data-hf="structure-dom"] .hms-event {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 28px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 700px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="hms-left">
+    <span class="hms-era" data-anim-role="eyebrow" data-slot="era_tag">科学革命</span>
+    <span class="hms-year" data-anim-role="title" data-slot="year">1905</span>
+  </div>
+  <div class="hms-right">
+    <h2 class="hms-person" data-anim-role="subtitle" data-slot="person_name">阿尔伯特·爱因斯坦</h2>
+    <div class="hms-line" data-anim-role="accent-line"></div>
+    <p class="hms-event" data-anim-role="body" data-slot="event_desc">发表狭义相对论、光电效应论文，被称为"奇迹年"</p>
+  </div>
+</div>

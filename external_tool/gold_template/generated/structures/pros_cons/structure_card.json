@@ -1,0 +1,10 @@
+{
+  "structure_id": "pros_cons",
+  "family": "narrative",
+  "use_for": ["利弊对比", "优劣分析", "双面论证"],
+  "spotlight_level": "medium",
+  "duration_range": [5.0, 8.0],
+  "anim_roles": ["eyebrow", "title", "list-item"],
+  "slots": ["eyebrow", "headline", "pro1", "pro2", "pro3", "con1", "con2", "con3"],
+  "sfx": [{"at": 0.5, "sfx": "tick"}, {"at": 1.5, "sfx": "tick"}]
+}

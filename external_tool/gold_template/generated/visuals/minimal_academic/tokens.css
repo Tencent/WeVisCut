@@ -1,0 +1,52 @@
+:root {
+  --bg: #fbfbf9;
+  --bg-2: #f3f3ee;
+  --surface: #ffffff;
+  --surface-2: #ffffff;
+  --ink-1: #1a2238;
+  --ink-2: #454f6b;
+  --ink-3: #8b93a7;
+  --accent: #2f5d8a;
+  --accent-2: #b08328;
+  --danger: #9b2c2c;
+  --success: #2f7a55;
+  --line: rgba(26,34,56,.10);
+  --line-strong: rgba(26,34,56,.24);
+  --font-display: "Noto Serif SC", Georgia, serif;
+  --font-body: "Noto Sans SC", system-ui, sans-serif;
+  --font-caption: "Noto Sans SC", system-ui, sans-serif;
+  --weight-display: 700;
+  --weight-body: 400;
+  --radius-card: 4px;
+  --radius-pill: 999px;
+  --shadow-soft: none;
+  --shadow-glow: none;
+  --grid-color: rgba(26,34,56,.05);
+  --stage-bg: rgba(255,255,255,.5);
+  --radius-stage: 22px;
+  --stage-blur: 0px;
+}
+
+.stage {
+  font-family: var(--font-body);
+  color: var(--ink-1);
+  background: var(--bg);
+}
+
+.bg-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  border-bottom: 1px solid var(--line);
+}
+
+.caption-bar .caption-text {
+  font-family: var(--font-caption);
+  color: var(--ink-1);
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 8px 20px;
+}

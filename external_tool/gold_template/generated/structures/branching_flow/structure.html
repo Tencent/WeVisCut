@@ -1,0 +1,201 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 52px 80px 48px;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .bf-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 60px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .bf-area {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .bf-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+[data-hf="structure-dom"] .bf-edge {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+[data-hf="structure-dom"] .bf-root {
+  position: absolute;
+  left: 4%;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 24%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 26px 30px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 3px solid var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+[data-hf="structure-dom"] .bf-root-label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 34px;
+  line-height: 1.25;
+  color: var(--ink-1);
+}
+
+[data-hf="structure-dom"] .bf-branch {
+  position: absolute;
+  left: 71%;
+  transform: translateY(-50%);
+  max-width: 25%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 26px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .bf-dot {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent-2);
+}
+
+[data-hf="structure-dom"] .bf-branch-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--ink-1);
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="bf-title" data-anim-role="title" data-slot="headline">一个底座，三种能力</h2>
+
+  <div class="bf-area">
+    <svg class="bf-edges" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path class="bf-edge" data-anim-role="edge" pathLength="1" vector-effect="non-scaling-stroke" d="M27 50 C 50 50, 48 12, 71 12"></path>
+      <path class="bf-edge" data-anim-role="edge" pathLength="1" vector-effect="non-scaling-stroke" d="M27 50 C 50 50, 48 50, 71 50"></path>
+      <path class="bf-edge" data-anim-role="edge" pathLength="1" vector-effect="non-scaling-stroke" d="M27 50 C 50 50, 48 88, 71 88"></path>
+    </svg>
+
+    <div class="bf-root" data-anim-role="node">
+      <span class="bf-root-label" data-anim-role="node-label" data-slot="root_label">统一大模型</span>
+    </div>
+
+    <div class="bf-branch" data-anim-role="node" style="top: 12%">
+      <span class="bf-dot" data-anim-role="marker"></span>
+      <span class="bf-branch-label" data-anim-role="node-label">文本理解</span>
+    </div>
+    <div class="bf-branch" data-anim-role="node" style="top: 50%">
+      <span class="bf-dot" data-anim-role="marker"></span>
+      <span class="bf-branch-label" data-anim-role="node-label">图像识别</span>
+    </div>
+    <div class="bf-branch" data-anim-role="node" style="top: 88%">
+      <span class="bf-dot" data-anim-role="marker"></span>
+      <span class="bf-branch-label" data-anim-role="node-label">语音交互</span>
+    </div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  var raw = V.branches || null;
+  var branches = null;
+  try { branches = typeof raw === "string" ? JSON.parse(raw) : raw; } catch (e) { branches = null; }
+
+  var area = root.querySelector(".bf-area");
+  var svg = root.querySelector(".bf-edges");
+  function posFor(i, n) {
+    if (n <= 1) return 50;
+    return 12 + (88 - 12) * (i / (n - 1));
+  }
+
+  if (branches && Array.isArray(branches) && branches.length > 0 && area && svg) {
+    var olds = area.querySelectorAll(".bf-branch");
+    for (var o = 0; o < olds.length; o++) olds[o].parentNode.removeChild(olds[o]);
+    svg.innerHTML = "";
+    var n = branches.length;
+    for (var i = 0; i < n; i++) {
+      var p = posFor(i, n);
+      var path = document.createElementNS(SVGNS, "path");
+      path.setAttribute("class", "bf-edge");
+      path.setAttribute("data-anim-role", "edge");
+      path.setAttribute("pathLength", "1");
+      path.setAttribute("vector-effect", "non-scaling-stroke");
+      path.setAttribute("d", "M27 50 C 50 50, 48 " + p + ", 71 " + p);
+      svg.appendChild(path);
+
+      var node = document.createElement("div");
+      node.className = "bf-branch";
+      node.setAttribute("data-anim-role", "node");
+      node.style.top = p + "%";
+      var dot = document.createElement("span");
+      dot.className = "bf-dot";
+      dot.setAttribute("data-anim-role", "marker");
+      var label = document.createElement("span");
+      label.className = "bf-branch-label";
+      label.setAttribute("data-anim-role", "node-label");
+      label.textContent = branches[i].label != null ? branches[i].label : "";
+      node.appendChild(dot);
+      node.appendChild(label);
+      area.appendChild(node);
+    }
+  }
+
+  var rootNode = root.querySelector(".bf-root");
+  if (rootNode) {
+    tl.from(rootNode, { scale: 0.8, opacity: 0, duration: 0.55, ease: "back.out(1.4)" }, 0.1);
+  }
+
+  var edges = root.querySelectorAll(".bf-edge");
+  var branchNodes = root.querySelectorAll(".bf-branch");
+  for (var b = 0; b < branchNodes.length; b++) {
+    var t = 0.55 + b * 0.15;
+    if (b < edges.length) {
+      gsap.set(edges[b], { strokeDasharray: 1 });
+      tl.from(edges[b], { strokeDashoffset: 1, duration: 0.5, ease: "power2.out" }, t);
+    }
+    var nodeLabel = branchNodes[b].querySelector(".bf-branch-label");
+    var nodeDot = branchNodes[b].querySelector(".bf-dot");
+    tl.from(branchNodes[b], { scale: 0.7, opacity: 0, duration: 0.4, ease: "back.out(1.6)" }, t + 0.32);
+    if (nodeDot) tl.from(nodeDot, { scale: 0, opacity: 0, duration: 0.25, ease: "back.out(1.6)" }, t + 0.34);
+    if (nodeLabel) tl.from(nodeLabel, { opacity: 0, x: 10, duration: 0.3, ease: "power2.out" }, t + 0.42);
+  }
+
+  function strip(role) { var els = $(role); for (var k = 0; k < els.length; k++) els[k].removeAttribute("data-anim-role"); }
+  strip("node"); strip("edge"); strip("node-label"); strip("marker");
+};
+</script>

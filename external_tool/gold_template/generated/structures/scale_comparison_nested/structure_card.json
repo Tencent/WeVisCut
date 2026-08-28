@@ -1,0 +1,10 @@
+{
+  "structure_id": "scale_comparison_nested",
+  "family": "narrative",
+  "use_for": ["大小对比", "尺度感知", "包含关系"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "title", "decoration", "list-item", "body"],
+  "slots": ["eyebrow", "headline", "big_emoji", "big_label", "small_emoji", "small_label", "ratio_text"],
+  "sfx": [{"at": 0.5, "sfx": "rise"}, {"at": 1.8, "sfx": "pop"}, {"at": 2.8, "sfx": "sparkle"}]
+}

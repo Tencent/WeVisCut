@@ -1,0 +1,69 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 90px 110px;
+  gap: 28px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .chapter-no {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 460px;
+  line-height: 0.85;
+  color: var(--accent);
+  opacity: 0.16;
+  font-variant-numeric: tabular-nums;
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-hf="structure-dom"] .chapter-title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 88px;
+  line-height: 1.14;
+  color: var(--ink-1);
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .divider-line {
+  position: relative;
+  z-index: 1;
+  width: 150px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+[data-hf="structure-dom"] .chapter-sub {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 34px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 880px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="chapter-no" data-anim-role="badge" data-slot="chapter_no">02</div>
+  <h1 class="chapter-title" data-anim-role="title" data-slot="chapter_title">方法拆解</h1>
+  <div class="divider-line" data-anim-role="accent-line"></div>
+  <p class="chapter-sub" data-anim-role="subtitle" data-slot="chapter_sub">从原理到可复用的三步流程</p>
+</div>

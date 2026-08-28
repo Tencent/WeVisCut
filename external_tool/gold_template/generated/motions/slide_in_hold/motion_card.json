@@ -1,0 +1,9 @@
+{
+  "motion_id": "slide_in_hold",
+  "energy": "mid",
+  "desc": "最稳通用入场：标题渐显，卡片分别从左右滑入，竖线从中心展开，兼容所有常见角色",
+  "targets": ["eyebrow", "title", "subtitle", "card", "list-item", "stat", "unit", "accent-line"],
+  "sfx_cues": [
+    { "at": 0.35, "sfx": "whoosh", "comment": "卡片滑入" }
+  ]
+}

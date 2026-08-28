@@ -1,0 +1,98 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 80px 100px;
+  gap: 26px;
+  box-sizing: border-box;
+  text-align: center;
+  counter-reset: agenda;
+}
+
+[data-hf="structure-dom"] .section-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 70px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  max-width: 1100px;
+}
+
+[data-hf="structure-dom"] .divider-line {
+  width: 130px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+[data-hf="structure-dom"] .agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+  width: 100%;
+  max-width: 1320px;
+}
+
+[data-hf="structure-dom"] .agenda-card {
+  counter-increment: agenda;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 30px 30px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+}
+
+[data-hf="structure-dom"] .agenda-card:has(.item-text:empty) {
+  display: none;
+}
+
+[data-hf="structure-dom"] .item-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 28px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .item-num::before {
+  content: counter(agenda, decimal-leading-zero);
+}
+
+[data-hf="structure-dom"] .item-text {
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 32px;
+  line-height: 1.35;
+  color: var(--ink-1);
+  max-width: 340px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h1 class="section-title" data-anim-role="title" data-slot="headline">本期我们会讲三件事</h1>
+  <div class="divider-line" data-anim-role="accent-line"></div>
+  <div class="agenda-grid">
+    <div class="agenda-card" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item1">问题从哪里来</span></div>
+    <div class="agenda-card" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item2">核心方法拆解</span></div>
+    <div class="agenda-card" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item3">真实案例验证</span></div>
+    <div class="agenda-card" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item4">落地清单</span></div>
+    <div class="agenda-card" data-anim-role="list-item"><span class="item-num"></span><span class="item-text" data-slot="item5"></span></div>
+  </div>
+</div>

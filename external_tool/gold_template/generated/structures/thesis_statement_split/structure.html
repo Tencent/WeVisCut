@@ -1,0 +1,84 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  align-items: center;
+  gap: 72px;
+  width: 100%;
+  height: 100%;
+  padding: 90px 100px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  text-align: left;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 30px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.12em;
+}
+
+[data-hf="structure-dom"] .thesis-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 84px;
+  line-height: 1.16;
+  color: var(--ink-1);
+  max-width: 800px;
+}
+
+[data-hf="structure-dom"] .thesis-title .accent {
+  color: var(--accent);
+}
+
+[data-hf="structure-dom"] .right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 26px;
+  padding-left: 56px;
+  border-left: 3px solid var(--line-strong);
+  text-align: left;
+}
+
+[data-hf="structure-dom"] .divider-line {
+  width: 110px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+[data-hf="structure-dom"] .explain-line {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 32px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 480px;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="left-col">
+    <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">核心观点</div>
+    <h1 class="thesis-title" data-anim-role="title" data-slot="thesis_text">真正的效率来自<span class="accent">减少决策</span>，而非增加工具</h1>
+  </div>
+  <div class="right-col">
+    <div class="divider-line" data-anim-role="accent-line"></div>
+    <p class="explain-line" data-anim-role="subtitle" data-slot="explain_text">我们用三个月验证了这个反直觉的结论</p>
+  </div>
+</div>

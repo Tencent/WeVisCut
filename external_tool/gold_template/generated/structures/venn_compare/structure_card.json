@@ -1,0 +1,14 @@
+{
+  "structure_id": "venn_compare",
+  "display_name": "集合交叠",
+  "family": "diagram",
+  "category": "C4",
+  "bound": true,
+  "use_for": ["集合关系", "概念交叠", "异同对比"],
+  "spotlight_level": "mid",
+  "duration_range": [5.0, 7.5],
+  "anim_roles": ["bg", "title", "cluster", "node-label", "accent-line"],
+  "slots": ["headline", "left_label", "right_label", "overlap_label"],
+  "exaggerated_render": false,
+  "sfx_cues": []
+}

@@ -1,0 +1,1782 @@
+{
+  "config": {
+    "name": "AICut Studio",
+    "locale": "zh",
+    "tracks": [
+      {
+        "key": "segments",
+        "label": "分段"
+      },
+      {
+        "key": "shots",
+        "label": "镜头"
+      },
+      {
+        "key": "narration",
+        "label": "旁白"
+      },
+      {
+        "key": "subtitle",
+        "label": "字幕"
+      },
+      {
+        "key": "footage",
+        "label": "素材"
+      },
+      {
+        "key": "spotlight",
+        "label": "装饰"
+      },
+      {
+        "key": "bgm",
+        "label": "配乐"
+      },
+      {
+        "key": "render",
+        "label": "渲染"
+      }
+    ],
+    "features": {
+      "editor": true,
+      "chat_edit": true,
+      "manual_ops": {
+        "edit_subtitle": true,
+        "edit_narration": true,
+        "replace_footage": true,
+        "edit_spotlight_slots": true,
+        "swap_template": true,
+        "reorder_shots": true,
+        "delete_shot": true,
+        "adjust_bgm": true
+      },
+      "services": {
+        "tts": true,
+        "visual_retrieval": true,
+        "bgm": true,
+        "hyperframes": true
+      }
+    },
+    "editor": {
+      "ops": [
+        "delete_shot",
+        "reorder_shots",
+        "replace_footage",
+        "set_bgm",
+        "set_narration",
+        "set_spotlight_slots",
+        "set_subtitle",
+        "swap_template"
+      ],
+      "op_labels": {
+        "set_narration": "改旁白（重新配音）",
+        "set_subtitle": "改字幕（不重新配音）",
+        "set_spotlight_slots": "改模板文字",
+        "swap_template": "换模板",
+        "replace_footage": "换素材",
+        "reorder_shots": "调整镜头顺序",
+        "delete_shot": "删除镜头",
+        "set_bgm": "换配乐 / 调音量"
+      },
+      "op_risk": {
+        "set_narration": "low",
+        "set_subtitle": "low",
+        "set_spotlight_slots": "low",
+        "swap_template": "high",
+        "replace_footage": "low",
+        "reorder_shots": "high",
+        "delete_shot": "high",
+        "set_bgm": "low"
+      },
+      "require_confirm_for": [
+        "delete_shot",
+        "swap_template",
+        "reorder_shots"
+      ],
+      "auto_restitch": true
+    },
+    "agent": {
+      "max_steps": 48,
+      "fully_autonomous": true
+    },
+    "warnings": []
+  },
+  "status": {
+    "model": {
+      "loaded": false,
+      "load_error": "",
+      "skipped": true,
+      "active_profile": "sft_v6_merged",
+      "available_profiles": [
+        "rl_merged_vllm",
+        "sft_v6_merged",
+        "sft_v5_merged",
+        "lora_transformers"
+      ],
+      "base_model": "/srv/wedirector/trained_model/aicut_unified_v6_qwen3_5_9b_merged_step800",
+      "adapter": "",
+      "backend": "vllm",
+      "device": "cuda:0"
+    },
+    "active_runs": 0,
+    "agent_mode": "long_horizon",
+    "autonomy": {
+      "fully_autonomous": true,
+      "force_valid_tool": false,
+      "force_terminal_stitch": false,
+      "force_stage_order": false,
+      "report_invalid_as_observation": true
+    }
+  },
+  "projects": {
+    "projects": [
+      {
+        "project_id": "aicut_fixture_0001",
+        "project_dir": "/srv/wedirector/Studio_260811/projects/aicut_fixture_0001",
+        "title": "为什么大模型的上下文窗口越来越长？这期讲清楚三件事。",
+        "shot_count": 4,
+        "final_video_path": "/tmp/aicut/final.mp4",
+        "has_video": true,
+        "modified": "2026-08-12T10:33:37.601997",
+        "modified_ts": 1786502017.601997
+      }
+    ]
+  },
+  "project": {
+    "project_id": "aicut_fixture_0001",
+    "project_dir": "/srv/wedirector/Studio_260811/projects/aicut_fixture_0001",
+    "progress": {
+      "track_order": [
+        "segments",
+        "shots",
+        "narration",
+        "subtitle",
+        "footage",
+        "spotlight",
+        "bgm",
+        "render"
+      ],
+      "labels": {
+        "segments": "分段",
+        "shots": "镜头",
+        "narration": "旁白",
+        "subtitle": "字幕",
+        "footage": "素材",
+        "spotlight": "装饰",
+        "bgm": "配乐",
+        "render": "渲染"
+      },
+      "clips": {
+        "segments": [
+          {
+            "segment_id": "SEG01",
+            "title": "开场",
+            "summary": "引入话题",
+            "start": 0.0,
+            "end": 9.5,
+            "duration": 9.5,
+            "shot_count": 2,
+            "shot_ids": [
+              "S01",
+              "S02"
+            ],
+            "ready": true
+          },
+          {
+            "segment_id": "SEG02",
+            "title": "展开",
+            "summary": "给出论据",
+            "start": 9.5,
+            "end": 21.0,
+            "duration": 11.5,
+            "shot_count": 2,
+            "shot_ids": [
+              "S03",
+              "S04"
+            ],
+            "ready": true
+          }
+        ],
+        "shots": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.5,
+            "duration": 4.5,
+            "title": "S01",
+            "is_spotlight": false,
+            "visual_query": "画面1"
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.5,
+            "end": 9.5,
+            "duration": 5.0,
+            "title": "S02",
+            "is_spotlight": true,
+            "visual_query": "画面2"
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.5,
+            "end": 15.0,
+            "duration": 5.5,
+            "title": "S03",
+            "is_spotlight": false,
+            "visual_query": "画面3"
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 15.0,
+            "end": 21.0,
+            "duration": 6.0,
+            "title": "S04",
+            "is_spotlight": true,
+            "visual_query": "画面4"
+          }
+        ],
+        "narration": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.5,
+            "duration": 4.5,
+            "text": "第1句口播文本，用于测试定位与改写。",
+            "audio_path": "/tmp/aicut/S01.wav",
+            "ready": true
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.5,
+            "end": 9.5,
+            "duration": 5.0,
+            "text": "第2句口播文本，用于测试定位与改写。",
+            "audio_path": "/tmp/aicut/S02.wav",
+            "ready": true
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.5,
+            "end": 15.0,
+            "duration": 5.5,
+            "text": "第3句口播文本，用于测试定位与改写。",
+            "audio_path": "",
+            "ready": false
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 15.0,
+            "end": 21.0,
+            "duration": 6.0,
+            "text": "第4句口播文本，用于测试定位与改写。",
+            "audio_path": "/tmp/aicut/S04.wav",
+            "ready": true
+          }
+        ],
+        "subtitle": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.5,
+            "duration": 4.5,
+            "text": "第1句口播文本，用于测试定位与改写。",
+            "ready": true
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.5,
+            "end": 9.5,
+            "duration": 5.0,
+            "text": "第2句口播文本，用于测试定位与改写。",
+            "ready": true
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.5,
+            "end": 15.0,
+            "duration": 5.5,
+            "text": "第3句口播文本，用于测试定位与改写。",
+            "ready": true
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 15.0,
+            "end": 21.0,
+            "duration": 6.0,
+            "text": "第4句口播文本，用于测试定位与改写。",
+            "ready": true
+          }
+        ],
+        "footage": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.5,
+            "duration": 4.5,
+            "clip_path": "/tmp/aicut/S01.mp4",
+            "ready": true,
+            "source": "retrieval"
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.5,
+            "end": 9.5,
+            "duration": 5.0,
+            "clip_path": "/tmp/aicut/S02.mp4",
+            "ready": true,
+            "source": "retrieval"
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.5,
+            "end": 15.0,
+            "duration": 5.5,
+            "clip_path": "/tmp/aicut/S03.mp4",
+            "ready": true,
+            "source": "retrieval"
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 15.0,
+            "end": 21.0,
+            "duration": 6.0,
+            "clip_path": "/tmp/aicut/S04.mp4",
+            "ready": true,
+            "source": "retrieval"
+          }
+        ],
+        "spotlight": [
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.5,
+            "end": 9.5,
+            "duration": 5.0,
+            "ready": true,
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid",
+            "template_id": "",
+            "slots": {
+              "title": "标题2",
+              "subtitle": "副标题2"
+            }
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 15.0,
+            "end": 21.0,
+            "duration": 6.0,
+            "ready": true,
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid",
+            "template_id": "",
+            "slots": {
+              "title": "标题4",
+              "subtitle": "副标题4"
+            }
+          }
+        ],
+        "bgm": [
+          {
+            "track_id": "BGM01",
+            "name": "calm_tech",
+            "start": 0.0,
+            "end": 0.0,
+            "duration": 0.0,
+            "path": "/tmp/aicut/bgm.mp3",
+            "ready": true
+          }
+        ],
+        "render": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.5,
+            "duration": 4.5,
+            "rendered_path": "/tmp/aicut/S01_rendered.mp4",
+            "ready": true
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.5,
+            "end": 9.5,
+            "duration": 5.0,
+            "rendered_path": "/tmp/aicut/S02_rendered.mp4",
+            "ready": true
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.5,
+            "end": 15.0,
+            "duration": 5.5,
+            "rendered_path": "",
+            "ready": false
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 15.0,
+            "end": 21.0,
+            "duration": 6.0,
+            "rendered_path": "/tmp/aicut/S04_rendered.mp4",
+            "ready": true
+          }
+        ]
+      },
+      "stats": {
+        "segments": {
+          "total": 2,
+          "done": 2,
+          "pct": 100
+        },
+        "shots": {
+          "total": 4,
+          "done": 4,
+          "pct": 100
+        },
+        "narration": {
+          "total": 4,
+          "done": 3,
+          "pct": 75
+        },
+        "subtitle": {
+          "total": 4,
+          "done": 4,
+          "pct": 100
+        },
+        "footage": {
+          "total": 4,
+          "done": 4,
+          "pct": 100
+        },
+        "spotlight": {
+          "total": 2,
+          "done": 2,
+          "pct": 100
+        },
+        "bgm": {
+          "total": 1,
+          "done": 1,
+          "pct": 100
+        },
+        "render": {
+          "total": 4,
+          "done": 3,
+          "pct": 75
+        }
+      },
+      "total_duration": 21.0,
+      "overall_pct": 100,
+      "music_style": "calm tech",
+      "final_video_path": "/tmp/aicut/final.mp4",
+      "stitch": {
+        "status": "success",
+        "concat_status": "ok",
+        "ready_shot_count": 3,
+        "shot_count": 4,
+        "validation_errors": []
+      }
+    },
+    "digest": {
+      "project_id": "aicut_fixture_0001",
+      "total_shots": 4,
+      "total_duration_sec": 21.0,
+      "segments": [
+        {
+          "segment_id": "SEG01",
+          "title": "开场",
+          "summary": "引入话题"
+        },
+        {
+          "segment_id": "SEG02",
+          "title": "展开",
+          "summary": "给出论据"
+        }
+      ],
+      "music_style": "calm tech",
+      "bgm_tracks": [
+        "calm_tech"
+      ],
+      "shots": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "text": "第1句口播文本，用于测试定位与改写。",
+          "is_spotlight": false
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "text": "第2句口播文本，用于测试定位与改写。",
+          "is_spotlight": true,
+          "template": {
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid"
+          },
+          "slots": {
+            "title": "标题2",
+            "subtitle": "副标题2"
+          }
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "text": "第3句口播文本，用于测试定位与改写。",
+          "is_spotlight": false
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "text": "第4句口播文本，用于测试定位与改写。",
+          "is_spotlight": true,
+          "template": {
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid"
+          },
+          "slots": {
+            "title": "标题4",
+            "subtitle": "副标题4"
+          }
+        }
+      ],
+      "shots_truncated": false
+    },
+    "final_video_path": "/tmp/aicut/final.mp4",
+    "dirty": {},
+    "bgm_dirty": false,
+    "pending_steps": [],
+    "versions": [],
+    "edit_history": []
+  },
+  "project_after_edit": {
+    "dry_run": false,
+    "results": [
+      {
+        "op": "set_narration",
+        "ok": true,
+        "message": "S01 旁白已更新，将重新配音",
+        "shot_id": "S01",
+        "details": {
+          "old": "第1句口播文本，用于测试定位与改写。",
+          "new": "改写后的第一句，冲击力更强。"
+        }
+      }
+    ],
+    "ok": true,
+    "project_id": "aicut_fixture_0001",
+    "project_dir": "/srv/wedirector/Studio_260811/projects/aicut_fixture_0001",
+    "progress": {
+      "track_order": [
+        "segments",
+        "shots",
+        "narration",
+        "subtitle",
+        "footage",
+        "spotlight",
+        "bgm",
+        "render"
+      ],
+      "labels": {
+        "segments": "分段",
+        "shots": "镜头",
+        "narration": "旁白",
+        "subtitle": "字幕",
+        "footage": "素材",
+        "spotlight": "装饰",
+        "bgm": "配乐",
+        "render": "渲染"
+      },
+      "clips": {
+        "segments": [
+          {
+            "segment_id": "SEG01",
+            "title": "开场",
+            "summary": "引入话题",
+            "start": 0.0,
+            "end": 9.0,
+            "duration": 9.0,
+            "shot_count": 2,
+            "shot_ids": [
+              "S01",
+              "S02"
+            ],
+            "ready": true
+          },
+          {
+            "segment_id": "SEG02",
+            "title": "展开",
+            "summary": "给出论据",
+            "start": 9.0,
+            "end": 20.5,
+            "duration": 11.5,
+            "shot_count": 2,
+            "shot_ids": [
+              "S03",
+              "S04"
+            ],
+            "ready": true
+          }
+        ],
+        "shots": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.0,
+            "duration": 4.0,
+            "title": "S01",
+            "is_spotlight": false,
+            "visual_query": "画面1"
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.0,
+            "end": 9.0,
+            "duration": 5.0,
+            "title": "S02",
+            "is_spotlight": true,
+            "visual_query": "画面2"
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.0,
+            "end": 14.5,
+            "duration": 5.5,
+            "title": "S03",
+            "is_spotlight": false,
+            "visual_query": "画面3"
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 14.5,
+            "end": 20.5,
+            "duration": 6.0,
+            "title": "S04",
+            "is_spotlight": true,
+            "visual_query": "画面4"
+          }
+        ],
+        "narration": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.0,
+            "duration": 4.0,
+            "text": "改写后的第一句，冲击力更强。",
+            "audio_path": "",
+            "ready": false
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.0,
+            "end": 9.0,
+            "duration": 5.0,
+            "text": "第2句口播文本，用于测试定位与改写。",
+            "audio_path": "/tmp/aicut/S02.wav",
+            "ready": true
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.0,
+            "end": 14.5,
+            "duration": 5.5,
+            "text": "第3句口播文本，用于测试定位与改写。",
+            "audio_path": "",
+            "ready": false
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 14.5,
+            "end": 20.5,
+            "duration": 6.0,
+            "text": "第4句口播文本，用于测试定位与改写。",
+            "audio_path": "/tmp/aicut/S04.wav",
+            "ready": true
+          }
+        ],
+        "subtitle": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.0,
+            "duration": 4.0,
+            "text": "改写后的第一句，冲击力更强。",
+            "ready": true
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.0,
+            "end": 9.0,
+            "duration": 5.0,
+            "text": "第2句口播文本，用于测试定位与改写。",
+            "ready": true
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.0,
+            "end": 14.5,
+            "duration": 5.5,
+            "text": "第3句口播文本，用于测试定位与改写。",
+            "ready": true
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 14.5,
+            "end": 20.5,
+            "duration": 6.0,
+            "text": "第4句口播文本，用于测试定位与改写。",
+            "ready": true
+          }
+        ],
+        "footage": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.0,
+            "duration": 4.0,
+            "clip_path": "/tmp/aicut/S01.mp4",
+            "ready": true,
+            "source": "retrieval"
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.0,
+            "end": 9.0,
+            "duration": 5.0,
+            "clip_path": "/tmp/aicut/S02.mp4",
+            "ready": true,
+            "source": "retrieval"
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.0,
+            "end": 14.5,
+            "duration": 5.5,
+            "clip_path": "/tmp/aicut/S03.mp4",
+            "ready": true,
+            "source": "retrieval"
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 14.5,
+            "end": 20.5,
+            "duration": 6.0,
+            "clip_path": "/tmp/aicut/S04.mp4",
+            "ready": true,
+            "source": "retrieval"
+          }
+        ],
+        "spotlight": [
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.0,
+            "end": 9.0,
+            "duration": 5.0,
+            "ready": true,
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid",
+            "template_id": "",
+            "slots": {
+              "title": "标题2",
+              "subtitle": "副标题2"
+            }
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 14.5,
+            "end": 20.5,
+            "duration": 6.0,
+            "ready": true,
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid",
+            "template_id": "",
+            "slots": {
+              "title": "标题4",
+              "subtitle": "副标题4"
+            }
+          }
+        ],
+        "bgm": [
+          {
+            "track_id": "BGM01",
+            "name": "calm_tech",
+            "start": 0.0,
+            "end": 0.0,
+            "duration": 0.0,
+            "path": "/tmp/aicut/bgm.mp3",
+            "ready": true
+          }
+        ],
+        "render": [
+          {
+            "shot_id": "S01",
+            "segment_id": "SEG01",
+            "start": 0.0,
+            "end": 4.0,
+            "duration": 4.0,
+            "rendered_path": "/tmp/aicut/S01_rendered.mp4",
+            "ready": true
+          },
+          {
+            "shot_id": "S02",
+            "segment_id": "SEG01",
+            "start": 4.0,
+            "end": 9.0,
+            "duration": 5.0,
+            "rendered_path": "/tmp/aicut/S02_rendered.mp4",
+            "ready": true
+          },
+          {
+            "shot_id": "S03",
+            "segment_id": "SEG02",
+            "start": 9.0,
+            "end": 14.5,
+            "duration": 5.5,
+            "rendered_path": "",
+            "ready": false
+          },
+          {
+            "shot_id": "S04",
+            "segment_id": "SEG02",
+            "start": 14.5,
+            "end": 20.5,
+            "duration": 6.0,
+            "rendered_path": "/tmp/aicut/S04_rendered.mp4",
+            "ready": true
+          }
+        ]
+      },
+      "stats": {
+        "segments": {
+          "total": 2,
+          "done": 2,
+          "pct": 100
+        },
+        "shots": {
+          "total": 4,
+          "done": 4,
+          "pct": 100
+        },
+        "narration": {
+          "total": 4,
+          "done": 2,
+          "pct": 50
+        },
+        "subtitle": {
+          "total": 4,
+          "done": 4,
+          "pct": 100
+        },
+        "footage": {
+          "total": 4,
+          "done": 4,
+          "pct": 100
+        },
+        "spotlight": {
+          "total": 2,
+          "done": 2,
+          "pct": 100
+        },
+        "bgm": {
+          "total": 1,
+          "done": 1,
+          "pct": 100
+        },
+        "render": {
+          "total": 4,
+          "done": 3,
+          "pct": 75
+        }
+      },
+      "total_duration": 20.5,
+      "overall_pct": 100,
+      "music_style": "calm tech",
+      "final_video_path": "/tmp/aicut/final.mp4",
+      "stitch": {
+        "status": "success",
+        "concat_status": "ok",
+        "ready_shot_count": 3,
+        "shot_count": 4,
+        "validation_errors": []
+      }
+    },
+    "digest": {
+      "project_id": "aicut_fixture_0001",
+      "total_shots": 4,
+      "total_duration_sec": 20.5,
+      "segments": [
+        {
+          "segment_id": "SEG01",
+          "title": "开场",
+          "summary": "引入话题"
+        },
+        {
+          "segment_id": "SEG02",
+          "title": "展开",
+          "summary": "给出论据"
+        }
+      ],
+      "music_style": "calm tech",
+      "bgm_tracks": [
+        "calm_tech"
+      ],
+      "shots": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.0,
+          "text": "改写后的第一句，冲击力更强。",
+          "is_spotlight": false
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.0,
+          "end": 9.0,
+          "text": "第2句口播文本，用于测试定位与改写。",
+          "is_spotlight": true,
+          "template": {
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid"
+          },
+          "slots": {
+            "title": "标题2",
+            "subtitle": "副标题2"
+          }
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.0,
+          "end": 14.5,
+          "text": "第3句口播文本，用于测试定位与改写。",
+          "is_spotlight": false
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 14.5,
+          "end": 20.5,
+          "text": "第4句口播文本，用于测试定位与改写。",
+          "is_spotlight": true,
+          "template": {
+            "structure_id": "S_center_stack",
+            "motion_id": "M_slide_in",
+            "visual_id": "V_dark_grid"
+          },
+          "slots": {
+            "title": "标题4",
+            "subtitle": "副标题4"
+          }
+        }
+      ],
+      "shots_truncated": false
+    },
+    "final_video_path": "/tmp/aicut/final.mp4",
+    "dirty": {
+      "S01": [
+        "render",
+        "tts"
+      ]
+    },
+    "bgm_dirty": false,
+    "pending_steps": [
+      {
+        "tool": "Tool_BatchVisualAudio",
+        "label": "重新生成配音/素材（1 镜）"
+      },
+      {
+        "tool": "Tool_BatchTimelineCompose",
+        "label": "重新渲染镜头（1 镜）"
+      }
+    ],
+    "versions": [
+      {
+        "name": "20260812_103431_manual_edit.json",
+        "size": 2391,
+        "modified": "2026-08-12T10:33:37.601997"
+      }
+    ],
+    "edit_history": [
+      {
+        "at": "2026-08-12T10:34:30.420137",
+        "ops": [
+          {
+            "op": "set_narration",
+            "ok": true,
+            "message": "S01 旁白已更新，将重新配音",
+            "shot_id": "S01",
+            "details": {
+              "old": "第1句口播文本，用于测试定位与改写。",
+              "new": "改写后的第一句，冲击力更强。"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "runs": {
+    "runs": []
+  },
+  "progress_partial": {
+    "track_order": [
+      "segments",
+      "shots",
+      "narration",
+      "subtitle",
+      "footage",
+      "spotlight",
+      "bgm",
+      "render"
+    ],
+    "labels": {
+      "segments": "分段",
+      "shots": "镜头",
+      "narration": "旁白",
+      "subtitle": "字幕",
+      "footage": "素材",
+      "spotlight": "装饰",
+      "bgm": "配乐",
+      "render": "渲染"
+    },
+    "clips": {
+      "segments": [
+        {
+          "segment_id": "SEG01",
+          "title": "开场",
+          "summary": "引入话题",
+          "start": 0.0,
+          "end": 9.5,
+          "duration": 9.5,
+          "shot_count": 2,
+          "shot_ids": [
+            "S01",
+            "S02"
+          ],
+          "ready": true
+        },
+        {
+          "segment_id": "SEG02",
+          "title": "展开",
+          "summary": "给出论据",
+          "start": 9.5,
+          "end": 21.0,
+          "duration": 11.5,
+          "shot_count": 2,
+          "shot_ids": [
+            "S03",
+            "S04"
+          ],
+          "ready": true
+        }
+      ],
+      "shots": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "title": "S01",
+          "is_spotlight": false,
+          "visual_query": "画面1"
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "title": "S02",
+          "is_spotlight": true,
+          "visual_query": "画面2"
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "title": "S03",
+          "is_spotlight": false,
+          "visual_query": "画面3"
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "title": "S04",
+          "is_spotlight": true,
+          "visual_query": "画面4"
+        }
+      ],
+      "narration": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "text": "第1句口播文本，用于测试定位与改写。",
+          "audio_path": "/tmp/aicut/S01.wav",
+          "ready": true
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "text": "第2句口播文本，用于测试定位与改写。",
+          "audio_path": "/tmp/aicut/S02.wav",
+          "ready": true
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "text": "第3句口播文本，用于测试定位与改写。",
+          "audio_path": "",
+          "ready": false
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "text": "第4句口播文本，用于测试定位与改写。",
+          "audio_path": "/tmp/aicut/S04.wav",
+          "ready": true
+        }
+      ],
+      "subtitle": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "text": "第1句口播文本，用于测试定位与改写。",
+          "ready": true
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "text": "第2句口播文本，用于测试定位与改写。",
+          "ready": true
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "text": "第3句口播文本，用于测试定位与改写。",
+          "ready": true
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "text": "第4句口播文本，用于测试定位与改写。",
+          "ready": true
+        }
+      ],
+      "footage": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "clip_path": "",
+          "ready": false,
+          "source": "retrieval"
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "clip_path": "",
+          "ready": false,
+          "source": "retrieval"
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "clip_path": "",
+          "ready": false,
+          "source": "retrieval"
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "clip_path": "",
+          "ready": false,
+          "source": "retrieval"
+        }
+      ],
+      "spotlight": [
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "ready": true,
+          "structure_id": "S_center_stack",
+          "motion_id": "M_slide_in",
+          "visual_id": "V_dark_grid",
+          "template_id": "",
+          "slots": {
+            "title": "标题2",
+            "subtitle": "副标题2"
+          }
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "ready": true,
+          "structure_id": "S_center_stack",
+          "motion_id": "M_slide_in",
+          "visual_id": "V_dark_grid",
+          "template_id": "",
+          "slots": {
+            "title": "标题4",
+            "subtitle": "副标题4"
+          }
+        }
+      ],
+      "bgm": [
+        {
+          "track_id": "BGM01",
+          "name": "calm_tech",
+          "start": 0.0,
+          "end": 0.0,
+          "duration": 0.0,
+          "path": "/tmp/aicut/bgm.mp3",
+          "ready": true
+        }
+      ],
+      "render": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "rendered_path": "",
+          "ready": false
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "rendered_path": "",
+          "ready": false
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "rendered_path": "",
+          "ready": false
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "rendered_path": "",
+          "ready": false
+        }
+      ]
+    },
+    "stats": {
+      "segments": {
+        "total": 2,
+        "done": 2,
+        "pct": 100
+      },
+      "shots": {
+        "total": 4,
+        "done": 4,
+        "pct": 100
+      },
+      "narration": {
+        "total": 4,
+        "done": 3,
+        "pct": 75
+      },
+      "subtitle": {
+        "total": 4,
+        "done": 4,
+        "pct": 100
+      },
+      "footage": {
+        "total": 4,
+        "done": 0,
+        "pct": 0
+      },
+      "spotlight": {
+        "total": 2,
+        "done": 2,
+        "pct": 100
+      },
+      "bgm": {
+        "total": 1,
+        "done": 1,
+        "pct": 100
+      },
+      "render": {
+        "total": 4,
+        "done": 0,
+        "pct": 0
+      }
+    },
+    "total_duration": 21.0,
+    "overall_pct": 46,
+    "music_style": "calm tech",
+    "final_video_path": "",
+    "stitch": {
+      "status": "",
+      "concat_status": "",
+      "ready_shot_count": 0,
+      "shot_count": 0,
+      "validation_errors": []
+    }
+  },
+  "progress_final": {
+    "track_order": [
+      "segments",
+      "shots",
+      "narration",
+      "subtitle",
+      "footage",
+      "spotlight",
+      "bgm",
+      "render"
+    ],
+    "labels": {
+      "segments": "分段",
+      "shots": "镜头",
+      "narration": "旁白",
+      "subtitle": "字幕",
+      "footage": "素材",
+      "spotlight": "装饰",
+      "bgm": "配乐",
+      "render": "渲染"
+    },
+    "clips": {
+      "segments": [
+        {
+          "segment_id": "SEG01",
+          "title": "开场",
+          "summary": "引入话题",
+          "start": 0.0,
+          "end": 9.5,
+          "duration": 9.5,
+          "shot_count": 2,
+          "shot_ids": [
+            "S01",
+            "S02"
+          ],
+          "ready": true
+        },
+        {
+          "segment_id": "SEG02",
+          "title": "展开",
+          "summary": "给出论据",
+          "start": 9.5,
+          "end": 21.0,
+          "duration": 11.5,
+          "shot_count": 2,
+          "shot_ids": [
+            "S03",
+            "S04"
+          ],
+          "ready": true
+        }
+      ],
+      "shots": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "title": "S01",
+          "is_spotlight": false,
+          "visual_query": "画面1"
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "title": "S02",
+          "is_spotlight": true,
+          "visual_query": "画面2"
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "title": "S03",
+          "is_spotlight": false,
+          "visual_query": "画面3"
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "title": "S04",
+          "is_spotlight": true,
+          "visual_query": "画面4"
+        }
+      ],
+      "narration": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "text": "第1句口播文本，用于测试定位与改写。",
+          "audio_path": "/tmp/aicut/S01.wav",
+          "ready": true
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "text": "第2句口播文本，用于测试定位与改写。",
+          "audio_path": "/tmp/aicut/S02.wav",
+          "ready": true
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "text": "第3句口播文本，用于测试定位与改写。",
+          "audio_path": "",
+          "ready": false
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "text": "第4句口播文本，用于测试定位与改写。",
+          "audio_path": "/tmp/aicut/S04.wav",
+          "ready": true
+        }
+      ],
+      "subtitle": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "text": "第1句口播文本，用于测试定位与改写。",
+          "ready": true
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "text": "第2句口播文本，用于测试定位与改写。",
+          "ready": true
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "text": "第3句口播文本，用于测试定位与改写。",
+          "ready": true
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "text": "第4句口播文本，用于测试定位与改写。",
+          "ready": true
+        }
+      ],
+      "footage": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "clip_path": "/tmp/aicut/S01.mp4",
+          "ready": true,
+          "source": "retrieval"
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "clip_path": "/tmp/aicut/S02.mp4",
+          "ready": true,
+          "source": "retrieval"
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "clip_path": "/tmp/aicut/S03.mp4",
+          "ready": true,
+          "source": "retrieval"
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "clip_path": "/tmp/aicut/S04.mp4",
+          "ready": true,
+          "source": "retrieval"
+        }
+      ],
+      "spotlight": [
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "ready": true,
+          "structure_id": "S_center_stack",
+          "motion_id": "M_slide_in",
+          "visual_id": "V_dark_grid",
+          "template_id": "",
+          "slots": {
+            "title": "标题2",
+            "subtitle": "副标题2"
+          }
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "ready": true,
+          "structure_id": "S_center_stack",
+          "motion_id": "M_slide_in",
+          "visual_id": "V_dark_grid",
+          "template_id": "",
+          "slots": {
+            "title": "标题4",
+            "subtitle": "副标题4"
+          }
+        }
+      ],
+      "bgm": [
+        {
+          "track_id": "BGM01",
+          "name": "calm_tech",
+          "start": 0.0,
+          "end": 0.0,
+          "duration": 0.0,
+          "path": "/tmp/aicut/bgm.mp3",
+          "ready": true
+        }
+      ],
+      "render": [
+        {
+          "shot_id": "S01",
+          "segment_id": "SEG01",
+          "start": 0.0,
+          "end": 4.5,
+          "duration": 4.5,
+          "rendered_path": "/tmp/aicut/S01_rendered.mp4",
+          "ready": true
+        },
+        {
+          "shot_id": "S02",
+          "segment_id": "SEG01",
+          "start": 4.5,
+          "end": 9.5,
+          "duration": 5.0,
+          "rendered_path": "/tmp/aicut/S02_rendered.mp4",
+          "ready": true
+        },
+        {
+          "shot_id": "S03",
+          "segment_id": "SEG02",
+          "start": 9.5,
+          "end": 15.0,
+          "duration": 5.5,
+          "rendered_path": "",
+          "ready": false
+        },
+        {
+          "shot_id": "S04",
+          "segment_id": "SEG02",
+          "start": 15.0,
+          "end": 21.0,
+          "duration": 6.0,
+          "rendered_path": "/tmp/aicut/S04_rendered.mp4",
+          "ready": true
+        }
+      ]
+    },
+    "stats": {
+      "segments": {
+        "total": 2,
+        "done": 2,
+        "pct": 100
+      },
+      "shots": {
+        "total": 4,
+        "done": 4,
+        "pct": 100
+      },
+      "narration": {
+        "total": 4,
+        "done": 3,
+        "pct": 75
+      },
+      "subtitle": {
+        "total": 4,
+        "done": 4,
+        "pct": 100
+      },
+      "footage": {
+        "total": 4,
+        "done": 4,
+        "pct": 100
+      },
+      "spotlight": {
+        "total": 2,
+        "done": 2,
+        "pct": 100
+      },
+      "bgm": {
+        "total": 1,
+        "done": 1,
+        "pct": 100
+      },
+      "render": {
+        "total": 4,
+        "done": 3,
+        "pct": 75
+      }
+    },
+    "total_duration": 21.0,
+    "overall_pct": 100,
+    "music_style": "calm tech",
+    "final_video_path": "/tmp/aicut/final.mp4",
+    "stitch": {
+      "status": "success",
+      "concat_status": "ok",
+      "ready_shot_count": 3,
+      "shot_count": 4,
+      "validation_errors": []
+    }
+  },
+  "project_dir": "/srv/wedirector/Studio_260811/projects/aicut_fixture_0001"
+}

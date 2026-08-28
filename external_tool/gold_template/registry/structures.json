@@ -1,0 +1,3062 @@
+{
+  "_comment": "Layer 1 结构登记（知识科普版）。零图片/视频，纯文字/图表/数字/流程图 + emoji/Lottie。每个 id 对应 structures/<id>/{structure.html, slot_schema.json}。family: narrative / dataviz / diagram。category: C1~C6（见 categories）。bound=true 表含 structure-script；exaggerated_render=true 表夸张渲染模式（无 stage-panel）。variant_of 指向父结构 id。generated=false 表尚未生成。",
+  "categories": [
+    {
+      "id": "C1",
+      "name": "开场与钩子",
+      "desc": "建立问题、提出主题、抛出钩子"
+    },
+    {
+      "id": "C2",
+      "name": "概念解释",
+      "desc": "解释概念/机制/模块/术语"
+    },
+    {
+      "id": "C3",
+      "name": "逻辑与关系",
+      "desc": "因果/流程/阶段/循环/时间线"
+    },
+    {
+      "id": "C4",
+      "name": "数据与论证",
+      "desc": "数据/证据/对比/排行"
+    },
+    {
+      "id": "C5",
+      "name": "叙事与过渡",
+      "desc": "引述/议程/章节转场/历史叙事"
+    },
+    {
+      "id": "C6",
+      "name": "总结与收束",
+      "desc": "要点回顾/开放问题"
+    }
+  ],
+  "structures": [
+    {
+      "id": "fun_fact",
+      "owner_prompt": "T29",
+      "template_code": "T29",
+      "category": "C1",
+      "display_name": "冷知识弹出",
+      "family": "narrative",
+      "exaggerated_render": true,
+      "use_for": [
+        "冷知识",
+        "趣味事实",
+        "惊人发现"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "subtitle",
+        "eyebrow"
+      ],
+      "slots": [
+        "eyebrow",
+        "emoji_icon",
+        "fact_text",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "hook_title_intro",
+      "owner_prompt": "01",
+      "template_code": "T01",
+      "category": "C1",
+      "display_name": "大标题开场",
+      "family": "narrative",
+      "use_for": [
+        "开头钩子",
+        "科普开场",
+        "知识引入"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "bg",
+        "eyebrow",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "subhead"
+      ]
+    },
+    {
+      "id": "problem_hook",
+      "owner_prompt": "T02",
+      "template_code": "T02",
+      "category": "C1",
+      "display_name": "问题抛出",
+      "family": "narrative",
+      "use_for": [
+        "思维误区",
+        "认知偏差",
+        "反直觉问题"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "bg",
+        "eyebrow",
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "tag1",
+        "tag2",
+        "tag3"
+      ]
+    },
+    {
+      "id": "question_hook",
+      "owner_prompt": "T28",
+      "template_code": "T28",
+      "category": "C1",
+      "display_name": "问答式钩子",
+      "family": "narrative",
+      "bound": true,
+      "exaggerated_render": true,
+      "use_for": [
+        "问答式开场",
+        "你知道吗",
+        "惊人事实引入"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "body",
+        "eyebrow"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "answer_hint"
+      ]
+    },
+    {
+      "id": "thesis_statement",
+      "owner_prompt": "T03",
+      "template_code": "T03",
+      "category": "C1",
+      "display_name": "核心观点页",
+      "family": "narrative",
+      "use_for": [
+        "核心论点",
+        "观点陈述",
+        "科普立论"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "bg",
+        "eyebrow",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "thesis_text",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "fun_fact_left",
+      "owner_prompt": "T29",
+      "category": "C1",
+      "display_name": "冷知识弹出 · 左图右文",
+      "family": "narrative",
+      "variant_of": "fun_fact",
+      "variant_label": "左图右文",
+      "exaggerated_render": true,
+      "use_for": [
+        "冷知识",
+        "趣味事实",
+        "惊人发现"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "subtitle",
+        "eyebrow"
+      ],
+      "slots": [
+        "eyebrow",
+        "emoji_icon",
+        "fact_text",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "fun_fact_stack",
+      "owner_prompt": "T29",
+      "category": "C1",
+      "display_name": "冷知识弹出 · 上下铺满",
+      "family": "narrative",
+      "variant_of": "fun_fact",
+      "variant_label": "上下铺满",
+      "exaggerated_render": true,
+      "use_for": [
+        "冷知识",
+        "趣味事实",
+        "惊人发现"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "subtitle",
+        "eyebrow"
+      ],
+      "slots": [
+        "eyebrow",
+        "emoji_icon",
+        "fact_text",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "problem_hook_scatter",
+      "owner_prompt": "T02",
+      "category": "C1",
+      "display_name": "问题抛出 · 散布布局",
+      "family": "narrative",
+      "variant_of": "problem_hook",
+      "variant_label": "散布布局",
+      "use_for": [
+        "思维误区",
+        "认知偏差",
+        "反直觉问题"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "tag1",
+        "tag2",
+        "tag3"
+      ]
+    },
+    {
+      "id": "problem_hook_split",
+      "owner_prompt": "T02",
+      "category": "C1",
+      "display_name": "问题抛出 · 左右分栏",
+      "family": "narrative",
+      "variant_of": "problem_hook",
+      "variant_label": "左右分栏",
+      "use_for": [
+        "思维误区",
+        "认知偏差",
+        "反直觉问题"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "tag1",
+        "tag2",
+        "tag3"
+      ]
+    },
+    {
+      "id": "question_hook_split",
+      "owner_prompt": "T28",
+      "category": "C1",
+      "display_name": "问答式钩子 · 左右分栏",
+      "family": "narrative",
+      "variant_of": "question_hook",
+      "variant_label": "左右分栏",
+      "bound": true,
+      "exaggerated_render": true,
+      "use_for": [
+        "问答式开场",
+        "你知道吗",
+        "惊人事实引入"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "body",
+        "eyebrow"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "answer_hint"
+      ]
+    },
+    {
+      "id": "question_hook_top",
+      "owner_prompt": "T28",
+      "category": "C1",
+      "display_name": "问答式钩子 · 上问下答",
+      "family": "narrative",
+      "variant_of": "question_hook",
+      "variant_label": "上问下答",
+      "bound": true,
+      "exaggerated_render": true,
+      "use_for": [
+        "问答式开场",
+        "你知道吗",
+        "惊人事实引入"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "body",
+        "eyebrow"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "answer_hint"
+      ]
+    },
+    {
+      "id": "thesis_statement_fullbleed",
+      "owner_prompt": "T03",
+      "category": "C1",
+      "display_name": "核心观点页 · 全屏铺满",
+      "family": "narrative",
+      "variant_of": "thesis_statement",
+      "variant_label": "全屏铺满",
+      "use_for": [
+        "核心论点",
+        "观点陈述",
+        "科普立论"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "thesis_text",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "thesis_statement_split",
+      "owner_prompt": "T03",
+      "category": "C1",
+      "display_name": "核心观点页 · 左右分栏",
+      "family": "narrative",
+      "variant_of": "thesis_statement",
+      "variant_label": "左右分栏",
+      "use_for": [
+        "核心论点",
+        "观点陈述",
+        "科普立论"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "thesis_text",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "analogy_card",
+      "owner_prompt": "T30",
+      "template_code": "T30",
+      "category": "C2",
+      "display_name": "类比卡",
+      "family": "narrative",
+      "use_for": [
+        "类比解释",
+        "概念通俗化",
+        "抽象→具象"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        6.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "body",
+        "accent-line",
+        "decoration",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "concept_name",
+        "concept_desc",
+        "analogy_emoji",
+        "analogy_text"
+      ]
+    },
+    {
+      "id": "definition_card",
+      "owner_prompt": "T06",
+      "template_code": "T06",
+      "category": "C2",
+      "display_name": "定义卡片",
+      "family": "narrative",
+      "use_for": [
+        "术语解释",
+        "概念定义",
+        "名词科普"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "bg",
+        "eyebrow",
+        "title",
+        "subtitle",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "term",
+        "definition",
+        "keyword1",
+        "keyword2",
+        "keyword3"
+      ]
+    },
+    {
+      "id": "emoji_concept",
+      "owner_prompt": "T31",
+      "template_code": "T31",
+      "category": "C2",
+      "display_name": "emoji 大概念",
+      "family": "narrative",
+      "exaggerated_render": true,
+      "use_for": [
+        "快节奏概念",
+        "emoji科普",
+        "单概念展示"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        3.5,
+        5.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "emoji_icon",
+        "concept_name",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "focus_zoom",
+      "owner_prompt": "T10",
+      "template_code": "T10",
+      "category": "C2",
+      "display_name": "局部放大解释",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "局部放大",
+        "细节聚焦",
+        "由总到分"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "overview",
+        "zoom-frame",
+        "callout",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "overview_caption",
+        "zoom_label",
+        "zoom_desc"
+      ]
+    },
+    {
+      "id": "icon_overview",
+      "owner_prompt": "19",
+      "category": "C2",
+      "display_name": "图标概要卡",
+      "bonus": true,
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "关键数字配图标",
+        "概要卡片",
+        "emoji图标展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "icon",
+        "stat",
+        "caption",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "icon1_value",
+        "icon1_label",
+        "icon2_value",
+        "icon2_label",
+        "icon3_value",
+        "icon3_label"
+      ]
+    },
+    {
+      "id": "layer_stack",
+      "owner_prompt": "T08",
+      "template_code": "T08",
+      "category": "C2",
+      "display_name": "分层结构",
+      "family": "diagram",
+      "use_for": [
+        "层次结构",
+        "分层模型",
+        "堆叠概念"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "layer1",
+        "layer2",
+        "layer3"
+      ]
+    },
+    {
+      "id": "module_breakdown",
+      "owner_prompt": "T09",
+      "template_code": "T09",
+      "category": "C2",
+      "display_name": "模块拆解",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "系统分解",
+        "模块拆解",
+        "组成部分"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "center_label",
+        "modules"
+      ],
+      "data_slots": [
+        "modules"
+      ],
+      "eligibility": "shot 描述一个中心 + 若干子模块的组成关系"
+    },
+    {
+      "id": "three_points",
+      "owner_prompt": "T07",
+      "template_code": "T07",
+      "category": "C2",
+      "display_name": "三点解释",
+      "family": "narrative",
+      "use_for": [
+        "多要点解释",
+        "概念分解",
+        "三个关键点"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "point1_title",
+        "point1_desc",
+        "point2_title",
+        "point2_desc",
+        "point3_title",
+        "point3_desc"
+      ]
+    },
+    {
+      "id": "analogy_card_arrow",
+      "owner_prompt": "T30",
+      "category": "C2",
+      "display_name": "类比卡 · 箭头引导",
+      "family": "narrative",
+      "variant_of": "analogy_card",
+      "variant_label": "箭头引导",
+      "use_for": [
+        "类比解释",
+        "概念通俗化",
+        "抽象→具象"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        6.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "body",
+        "accent-line",
+        "decoration",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "concept_name",
+        "concept_desc",
+        "analogy_emoji",
+        "analogy_text"
+      ]
+    },
+    {
+      "id": "analogy_card_vertical",
+      "owner_prompt": "T30",
+      "category": "C2",
+      "display_name": "类比卡 · 上下堆叠",
+      "family": "narrative",
+      "variant_of": "analogy_card",
+      "variant_label": "上下堆叠",
+      "use_for": [
+        "类比解释",
+        "概念通俗化",
+        "抽象→具象"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        6.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "body",
+        "accent-line",
+        "decoration",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "concept_name",
+        "concept_desc",
+        "analogy_emoji",
+        "analogy_text"
+      ]
+    },
+    {
+      "id": "definition_card_float",
+      "owner_prompt": "T06",
+      "category": "C2",
+      "display_name": "定义卡片 · 浮动卡片",
+      "family": "narrative",
+      "variant_of": "definition_card",
+      "variant_label": "浮动卡片",
+      "use_for": [
+        "术语解释",
+        "概念定义",
+        "名词科普"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "term",
+        "definition",
+        "keyword1",
+        "keyword2",
+        "keyword3"
+      ]
+    },
+    {
+      "id": "definition_card_split",
+      "owner_prompt": "T06",
+      "category": "C2",
+      "display_name": "定义卡片 · 左右分栏",
+      "family": "narrative",
+      "variant_of": "definition_card",
+      "variant_label": "左右分栏",
+      "use_for": [
+        "术语解释",
+        "概念定义",
+        "名词科普"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "term",
+        "definition",
+        "keyword1",
+        "keyword2",
+        "keyword3"
+      ]
+    },
+    {
+      "id": "emoji_concept_bottom",
+      "owner_prompt": "T31",
+      "category": "C2",
+      "display_name": "emoji 大概念 · 底部锚定",
+      "family": "narrative",
+      "variant_of": "emoji_concept",
+      "variant_label": "底部锚定",
+      "exaggerated_render": true,
+      "use_for": [
+        "快节奏概念",
+        "emoji科普",
+        "单概念展示"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        3.5,
+        5.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "emoji_icon",
+        "concept_name",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "emoji_concept_side",
+      "owner_prompt": "T31",
+      "category": "C2",
+      "display_name": "emoji 大概念 · 左图右文",
+      "family": "narrative",
+      "variant_of": "emoji_concept",
+      "variant_label": "左图右文",
+      "exaggerated_render": true,
+      "use_for": [
+        "快节奏概念",
+        "emoji科普",
+        "单概念展示"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        3.5,
+        5.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "emoji_icon",
+        "concept_name",
+        "explain_text"
+      ]
+    },
+    {
+      "id": "focus_zoom_corner",
+      "owner_prompt": "T10",
+      "category": "C2",
+      "display_name": "局部放大解释 · 角落总览",
+      "family": "diagram",
+      "variant_of": "focus_zoom",
+      "variant_label": "角落总览",
+      "use_for": [
+        "局部放大",
+        "细节聚焦",
+        "由总到分"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "title",
+        "overview",
+        "zoom-frame",
+        "callout",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "overview_caption",
+        "zoom_label",
+        "zoom_desc"
+      ],
+      "bound": true
+    },
+    {
+      "id": "icon_overview_grid",
+      "owner_prompt": "19",
+      "category": "C2",
+      "display_name": "图标概要卡 · 规整网格",
+      "family": "diagram",
+      "variant_of": "icon_overview",
+      "variant_label": "规整网格",
+      "use_for": [
+        "关键数字配图标",
+        "概要卡片",
+        "emoji图标展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "title",
+        "icon",
+        "stat",
+        "caption",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "icon1_value",
+        "icon1_label",
+        "icon2_value",
+        "icon2_label",
+        "icon3_value",
+        "icon3_label"
+      ],
+      "bonus": true,
+      "bound": true
+    },
+    {
+      "id": "layer_stack_exploded",
+      "owner_prompt": "T08",
+      "category": "C2",
+      "display_name": "分层结构 · 分解视图",
+      "family": "diagram",
+      "variant_of": "layer_stack",
+      "variant_label": "分解视图",
+      "use_for": [
+        "层次结构",
+        "分层模型",
+        "堆叠概念"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "layer1",
+        "layer2",
+        "layer3"
+      ]
+    },
+    {
+      "id": "layer_stack_iso",
+      "owner_prompt": "T08",
+      "category": "C2",
+      "display_name": "分层结构 · 等距视图",
+      "family": "diagram",
+      "variant_of": "layer_stack",
+      "variant_label": "等距视图",
+      "use_for": [
+        "层次结构",
+        "分层模型",
+        "堆叠概念"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "layer1",
+        "layer2",
+        "layer3"
+      ]
+    },
+    {
+      "id": "module_breakdown_grid",
+      "owner_prompt": "T09",
+      "category": "C2",
+      "display_name": "模块拆解 · 规整网格",
+      "family": "diagram",
+      "variant_of": "module_breakdown",
+      "variant_label": "规整网格",
+      "use_for": [
+        "系统分解",
+        "模块拆解",
+        "组成部分"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "center_label",
+        "modules"
+      ],
+      "bound": true,
+      "data_slots": [
+        "modules"
+      ]
+    },
+    {
+      "id": "three_points_diagonal",
+      "owner_prompt": "T07",
+      "category": "C2",
+      "display_name": "三点解释 · 对角错落",
+      "family": "narrative",
+      "variant_of": "three_points",
+      "variant_label": "对角错落",
+      "use_for": [
+        "多要点解释",
+        "概念分解",
+        "三个关键点"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "point1_title",
+        "point1_desc",
+        "point2_title",
+        "point2_desc",
+        "point3_title",
+        "point3_desc"
+      ]
+    },
+    {
+      "id": "three_points_stack",
+      "owner_prompt": "T07",
+      "category": "C2",
+      "display_name": "三点解释 · 堆叠层级",
+      "family": "narrative",
+      "variant_of": "three_points",
+      "variant_label": "堆叠层级",
+      "use_for": [
+        "多要点解释",
+        "概念分解",
+        "三个关键点"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "point1_title",
+        "point1_desc",
+        "point2_title",
+        "point2_desc",
+        "point3_title",
+        "point3_desc"
+      ]
+    },
+    {
+      "id": "branching_flow",
+      "owner_prompt": "T13",
+      "template_code": "T13",
+      "category": "C3",
+      "display_name": "分支流程",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "分支决策",
+        "分类",
+        "多结果展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "root_label",
+        "branches"
+      ],
+      "data_slots": [
+        "branches"
+      ],
+      "eligibility": "shot 描述一个主干分出多条分支"
+    },
+    {
+      "id": "cause_effect_chain",
+      "owner_prompt": "T32",
+      "template_code": "T32",
+      "category": "C3",
+      "display_name": "因果链",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "因果链",
+        "多米诺效应",
+        "连锁反应"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        8.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "decoration",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "nodes"
+      ],
+      "data_slots": [
+        "nodes"
+      ]
+    },
+    {
+      "id": "cycle_loop",
+      "owner_prompt": "18",
+      "template_code": "T14",
+      "category": "C3",
+      "display_name": "闭环流程",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "循环过程",
+        "闭环",
+        "自然循环"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "nodes",
+        "loop_note"
+      ],
+      "data_slots": [
+        "nodes"
+      ],
+      "eligibility": "shot 描述循环/周期/反馈"
+    },
+    {
+      "id": "flow_steps",
+      "owner_prompt": "17",
+      "template_code": "T11",
+      "category": "C3",
+      "display_name": "线性流程",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "流程步骤",
+        "方法论",
+        "科学方法"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "nodes",
+        "edges"
+      ],
+      "data_slots": [
+        "nodes",
+        "edges"
+      ],
+      "eligibility": "shot 含步骤/流程/导致等关系标记"
+    },
+    {
+      "id": "timeline_step",
+      "owner_prompt": "04",
+      "template_code": "T15",
+      "category": "C3",
+      "display_name": "时间线推进",
+      "family": "narrative",
+      "use_for": [
+        "时间线",
+        "历史发展",
+        "演进过程"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "card",
+        "accent-line",
+        "list-item"
+      ],
+      "slots": [
+        "headline",
+        "step1_title",
+        "step1_desc",
+        "step2_title",
+        "step2_desc",
+        "step3_title",
+        "step3_desc"
+      ]
+    },
+    {
+      "id": "vertical_flow",
+      "owner_prompt": "T12",
+      "template_code": "T12",
+      "category": "C3",
+      "display_name": "纵向阶段流",
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "纵向流程",
+        "阶段推进",
+        "自然过程"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "nodes"
+      ],
+      "data_slots": [
+        "nodes"
+      ],
+      "eligibility": "shot 描述自上而下的多阶段链路"
+    },
+    {
+      "id": "branching_flow_radial",
+      "owner_prompt": "T13",
+      "category": "C3",
+      "display_name": "分支流程 · 中心放射",
+      "family": "diagram",
+      "variant_of": "branching_flow",
+      "variant_label": "中心放射",
+      "use_for": [
+        "分支决策",
+        "分类",
+        "多结果展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "root_label",
+        "branches"
+      ],
+      "bound": true,
+      "data_slots": [
+        "branches"
+      ]
+    },
+    {
+      "id": "cause_effect_chain_vertical",
+      "owner_prompt": "T32",
+      "category": "C3",
+      "display_name": "因果链 · 纵向瀑布",
+      "family": "diagram",
+      "variant_of": "cause_effect_chain",
+      "variant_label": "纵向瀑布",
+      "bound": true,
+      "use_for": [
+        "因果链",
+        "多米诺效应",
+        "连锁反应"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        8.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "decoration",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "nodes"
+      ],
+      "data_slots": [
+        "nodes"
+      ]
+    },
+    {
+      "id": "cause_effect_chain_zigzag",
+      "owner_prompt": "T32",
+      "category": "C3",
+      "display_name": "因果链 · Z字蜿蜒",
+      "family": "diagram",
+      "variant_of": "cause_effect_chain",
+      "variant_label": "Z字蜿蜒",
+      "bound": true,
+      "use_for": [
+        "因果链",
+        "多米诺效应",
+        "连锁反应"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        8.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "decoration",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "nodes"
+      ],
+      "data_slots": [
+        "nodes"
+      ]
+    },
+    {
+      "id": "vertical_flow_zigzag",
+      "owner_prompt": "T12",
+      "category": "C3",
+      "display_name": "纵向阶段流 · 错列推进",
+      "family": "diagram",
+      "variant_of": "vertical_flow",
+      "variant_label": "错列推进",
+      "use_for": [
+        "纵向流程",
+        "阶段推进",
+        "自然过程"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        9.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "node",
+        "edge",
+        "node-label",
+        "marker"
+      ],
+      "slots": [
+        "headline",
+        "nodes"
+      ],
+      "bound": true,
+      "data_slots": [
+        "nodes"
+      ]
+    },
+    {
+      "id": "bar_chart",
+      "owner_prompt": "14",
+      "category": "C4",
+      "display_name": "柱状图",
+      "bonus": true,
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "柱状图",
+        "数量对比",
+        "排名可视化"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "chart-axis",
+        "chart-bar",
+        "chart-value",
+        "chart-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "series",
+        "unit",
+        "source_note"
+      ],
+      "data_slots": [
+        "series"
+      ],
+      "eligibility": "shot 含 ≥2 个可比数值"
+    },
+    {
+      "id": "case_gallery",
+      "owner_prompt": "T20",
+      "template_code": "T20",
+      "category": "C4",
+      "display_name": "案例宫格",
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "多案例展示",
+        "现象分类",
+        "证据宫格"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "cell",
+        "cell-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "cases"
+      ],
+      "data_slots": [
+        "cases"
+      ],
+      "eligibility": "shot 含多个可并列展示的案例/结果"
+    },
+    {
+      "id": "chart_callout",
+      "owner_prompt": "T19",
+      "template_code": "T19",
+      "category": "C4",
+      "display_name": "图表+标注",
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "数据趋势",
+        "图表标注",
+        "关键拐点"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "chart-axis",
+        "chart-line",
+        "chart-area",
+        "chart-point",
+        "chart-value",
+        "callout",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "series",
+        "callout_text",
+        "source_note"
+      ],
+      "data_slots": [
+        "series"
+      ],
+      "eligibility": "shot 描述一段趋势并需指出关键点"
+    },
+    {
+      "id": "comparison_split",
+      "owner_prompt": "05",
+      "template_code": "T16",
+      "category": "C4",
+      "display_name": "前后对比",
+      "family": "narrative",
+      "use_for": [
+        "正误对比",
+        "A vs B",
+        "二元对比"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "card",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "left_label",
+        "left_text",
+        "right_label",
+        "right_text"
+      ]
+    },
+    {
+      "id": "donut_pie",
+      "owner_prompt": "16",
+      "category": "C4",
+      "display_name": "环形占比",
+      "bonus": true,
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "饼图/环形图",
+        "占比分布",
+        "成分构成"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        7.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "chart-slice",
+        "chart-value",
+        "chart-label",
+        "chart-legend"
+      ],
+      "slots": [
+        "headline",
+        "series",
+        "center_value",
+        "center_label",
+        "source_note"
+      ],
+      "data_slots": [
+        "series"
+      ],
+      "eligibility": "shot 描述占比/份额/构成"
+    },
+    {
+      "id": "line_chart",
+      "owner_prompt": "15",
+      "category": "C4",
+      "display_name": "折线图",
+      "bonus": true,
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "折线图",
+        "趋势变化",
+        "时间序列"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "chart-axis",
+        "chart-line",
+        "chart-area",
+        "chart-point",
+        "chart-value",
+        "chart-label"
+      ],
+      "slots": [
+        "headline",
+        "series",
+        "x_label",
+        "y_label",
+        "source_note"
+      ],
+      "data_slots": [
+        "series"
+      ],
+      "eligibility": "shot 描述随时间/序列的连续变化"
+    },
+    {
+      "id": "method_comparison",
+      "owner_prompt": "T17",
+      "template_code": "T17",
+      "category": "C4",
+      "display_name": "对比表格",
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "多维度对比",
+        "理论方法对比",
+        "表格比较"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "col-header",
+        "cell",
+        "row-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "columns",
+        "rows"
+      ],
+      "data_slots": [
+        "columns",
+        "rows"
+      ],
+      "eligibility": "shot 描述 2~3 个方法在多个维度上的对比"
+    },
+    {
+      "id": "metric_cards",
+      "owner_prompt": "T18",
+      "template_code": "T18",
+      "category": "C4",
+      "display_name": "关键数字",
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "关键数字",
+        "惊人比例",
+        "核心指标"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "card",
+        "stat",
+        "unit",
+        "card-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "metrics"
+      ],
+      "data_slots": [
+        "metrics"
+      ],
+      "eligibility": "shot 含 2~4 个并列关键指标"
+    },
+    {
+      "id": "myth_busting",
+      "owner_prompt": "T33",
+      "template_code": "T33",
+      "category": "C4",
+      "display_name": "误区纠正",
+      "family": "narrative",
+      "bound": true,
+      "exaggerated_render": true,
+      "use_for": [
+        "误区纠正",
+        "辟谣",
+        "事实核查"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        7.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "body"
+      ],
+      "slots": [
+        "eyebrow",
+        "wrong_text",
+        "right_text"
+      ]
+    },
+    {
+      "id": "pros_cons",
+      "owner_prompt": "T36",
+      "template_code": "T36",
+      "category": "C4",
+      "display_name": "利弊分析",
+      "family": "narrative",
+      "use_for": [
+        "利弊分析",
+        "优劣对比",
+        "正反面"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "list-item"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "pro1",
+        "pro2",
+        "pro3",
+        "con1",
+        "con2",
+        "con3"
+      ]
+    },
+    {
+      "id": "ranking_list",
+      "owner_prompt": "T35",
+      "template_code": "T35",
+      "category": "C4",
+      "display_name": "排行榜",
+      "family": "dataviz",
+      "bound": true,
+      "use_for": [
+        "排行榜",
+        "Top N",
+        "排名展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        7.0,
+        10.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item",
+        "stat",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "items"
+      ],
+      "data_slots": [
+        "items"
+      ]
+    },
+    {
+      "id": "scale_comparison",
+      "owner_prompt": "T34",
+      "template_code": "T34",
+      "category": "C4",
+      "display_name": "尺度对比",
+      "family": "narrative",
+      "bound": true,
+      "use_for": [
+        "尺度对比",
+        "大小比较",
+        "量级感知"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "decoration",
+        "list-item",
+        "body"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "big_emoji",
+        "big_label",
+        "small_emoji",
+        "small_label",
+        "ratio_text"
+      ]
+    },
+    {
+      "id": "stat_highlight",
+      "owner_prompt": "03",
+      "category": "C4",
+      "display_name": "单数字高亮",
+      "bonus": true,
+      "family": "narrative",
+      "bound": true,
+      "use_for": [
+        "惊人数字",
+        "单数据高亮",
+        "科普数据"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.5
+      ],
+      "anim_roles": [
+        "bg",
+        "eyebrow",
+        "stat",
+        "unit",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "stat_value",
+        "unit",
+        "caption_text"
+      ]
+    },
+    {
+      "id": "venn_compare",
+      "owner_prompt": "T41",
+      "category": "C4",
+      "display_name": "集合交叠",
+      "bonus": true,
+      "family": "diagram",
+      "bound": true,
+      "use_for": [
+        "集合关系",
+        "概念交叠",
+        "异同对比"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "cluster",
+        "node-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "left_label",
+        "right_label",
+        "overlap_label"
+      ]
+    },
+    {
+      "id": "case_gallery_masonry",
+      "owner_prompt": "T20",
+      "category": "C4",
+      "display_name": "案例宫格 · 错落瀑布",
+      "family": "dataviz",
+      "variant_of": "case_gallery",
+      "variant_label": "错落瀑布",
+      "use_for": [
+        "多案例展示",
+        "现象分类",
+        "证据宫格"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "cell",
+        "cell-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "cases"
+      ],
+      "bound": true,
+      "data_slots": [
+        "cases"
+      ]
+    },
+    {
+      "id": "chart_callout_split",
+      "owner_prompt": "T19",
+      "category": "C4",
+      "display_name": "图表+标注 · 左右分栏",
+      "family": "dataviz",
+      "variant_of": "chart_callout",
+      "variant_label": "左右分栏",
+      "use_for": [
+        "数据趋势",
+        "图表标注",
+        "关键拐点"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "chart-axis",
+        "chart-line",
+        "chart-area",
+        "chart-point",
+        "chart-value",
+        "callout",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "series",
+        "callout_text",
+        "source_note"
+      ],
+      "bound": true,
+      "data_slots": [
+        "series"
+      ]
+    },
+    {
+      "id": "method_comparison_cards",
+      "owner_prompt": "T17",
+      "category": "C4",
+      "display_name": "对比表格 · 卡片式",
+      "family": "dataviz",
+      "variant_of": "method_comparison",
+      "variant_label": "卡片式",
+      "use_for": [
+        "多维度对比",
+        "理论方法对比",
+        "表格比较"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        8.5
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "col-header",
+        "cell",
+        "row-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "columns",
+        "rows"
+      ],
+      "bound": true,
+      "data_slots": [
+        "columns",
+        "rows"
+      ]
+    },
+    {
+      "id": "metric_cards_grid",
+      "owner_prompt": "T18",
+      "category": "C4",
+      "display_name": "关键数字 · 规整网格",
+      "family": "dataviz",
+      "variant_of": "metric_cards",
+      "variant_label": "规整网格",
+      "use_for": [
+        "关键数字",
+        "惊人比例",
+        "核心指标"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "card",
+        "stat",
+        "unit",
+        "card-label",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "metrics"
+      ],
+      "bound": true,
+      "data_slots": [
+        "metrics"
+      ]
+    },
+    {
+      "id": "myth_busting_split",
+      "owner_prompt": "T33",
+      "category": "C4",
+      "display_name": "误区纠正 · 左右对比",
+      "family": "narrative",
+      "variant_of": "myth_busting",
+      "variant_label": "左右对比",
+      "bound": true,
+      "exaggerated_render": true,
+      "use_for": [
+        "误区纠正",
+        "辟谣",
+        "事实核查"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        7.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "body"
+      ],
+      "slots": [
+        "eyebrow",
+        "wrong_text",
+        "right_text"
+      ]
+    },
+    {
+      "id": "myth_busting_wipe",
+      "owner_prompt": "T33",
+      "category": "C4",
+      "display_name": "误区纠正 · 擦除推入",
+      "family": "narrative",
+      "variant_of": "myth_busting",
+      "variant_label": "擦除推入",
+      "bound": true,
+      "exaggerated_render": true,
+      "use_for": [
+        "误区纠正",
+        "辟谣",
+        "事实核查"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        5.5,
+        7.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "body"
+      ],
+      "slots": [
+        "eyebrow",
+        "wrong_text",
+        "right_text"
+      ]
+    },
+    {
+      "id": "pros_cons_cards",
+      "owner_prompt": "T36",
+      "category": "C4",
+      "display_name": "利弊分析 · 卡片交替",
+      "family": "narrative",
+      "variant_of": "pros_cons",
+      "variant_label": "卡片交替",
+      "use_for": [
+        "利弊分析",
+        "优劣对比",
+        "正反面"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "list-item"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "pro1",
+        "pro2",
+        "pro3",
+        "con1",
+        "con2",
+        "con3"
+      ]
+    },
+    {
+      "id": "pros_cons_stack",
+      "owner_prompt": "T36",
+      "category": "C4",
+      "display_name": "利弊分析 · 上下堆叠",
+      "family": "narrative",
+      "variant_of": "pros_cons",
+      "variant_label": "上下堆叠",
+      "use_for": [
+        "利弊分析",
+        "优劣对比",
+        "正反面"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "list-item"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "pro1",
+        "pro2",
+        "pro3",
+        "con1",
+        "con2",
+        "con3"
+      ]
+    },
+    {
+      "id": "ranking_list_bars",
+      "owner_prompt": "T35",
+      "category": "C4",
+      "display_name": "排行榜 · 横向条形",
+      "family": "dataviz",
+      "variant_of": "ranking_list",
+      "variant_label": "横向条形",
+      "bound": true,
+      "use_for": [
+        "排行榜",
+        "Top N",
+        "排名展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        7.0,
+        10.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item",
+        "stat",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "items"
+      ],
+      "data_slots": [
+        "items"
+      ]
+    },
+    {
+      "id": "ranking_list_podium",
+      "owner_prompt": "T35",
+      "category": "C4",
+      "display_name": "排行榜 · 领奖台",
+      "family": "dataviz",
+      "variant_of": "ranking_list",
+      "variant_label": "领奖台",
+      "bound": true,
+      "use_for": [
+        "排行榜",
+        "Top N",
+        "排名展示"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        7.0,
+        10.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item",
+        "stat",
+        "accent-line"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "items"
+      ],
+      "data_slots": [
+        "items"
+      ]
+    },
+    {
+      "id": "scale_comparison_nested",
+      "owner_prompt": "T34",
+      "category": "C4",
+      "display_name": "尺度对比 · 嵌套对比",
+      "family": "narrative",
+      "variant_of": "scale_comparison",
+      "variant_label": "嵌套对比",
+      "bound": true,
+      "use_for": [
+        "尺度对比",
+        "大小比较",
+        "量级感知"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "decoration",
+        "list-item",
+        "body"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "big_emoji",
+        "big_label",
+        "small_emoji",
+        "small_label",
+        "ratio_text"
+      ]
+    },
+    {
+      "id": "scale_comparison_stack",
+      "owner_prompt": "T34",
+      "category": "C4",
+      "display_name": "尺度对比 · 上下堆叠",
+      "family": "narrative",
+      "variant_of": "scale_comparison",
+      "variant_label": "上下堆叠",
+      "bound": true,
+      "use_for": [
+        "尺度对比",
+        "大小比较",
+        "量级感知"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        7.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "decoration",
+        "list-item",
+        "body"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "big_emoji",
+        "big_label",
+        "small_emoji",
+        "small_label",
+        "ratio_text"
+      ]
+    },
+    {
+      "id": "agenda_roadmap",
+      "owner_prompt": "T04",
+      "template_code": "T04",
+      "category": "C5",
+      "display_name": "内容目录页",
+      "family": "narrative",
+      "use_for": [
+        "议程目录",
+        "内容提纲",
+        "本期大纲"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "item1",
+        "item2",
+        "item3",
+        "item4"
+      ]
+    },
+    {
+      "id": "chapter_transition",
+      "owner_prompt": "T05",
+      "template_code": "T05",
+      "category": "C5",
+      "display_name": "章节过渡页",
+      "family": "narrative",
+      "use_for": [
+        "章节过渡",
+        "段落切换",
+        "内容分段"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        3.5,
+        6.0
+      ],
+      "anim_roles": [
+        "bg",
+        "badge",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "chapter_no",
+        "chapter_title",
+        "chapter_sub"
+      ]
+    },
+    {
+      "id": "historical_moment",
+      "owner_prompt": "T37",
+      "template_code": "T37",
+      "category": "C5",
+      "display_name": "历史时刻卡",
+      "family": "narrative",
+      "use_for": [
+        "历史时刻",
+        "人物故事",
+        "时间节点"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        6.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "body",
+        "accent-line"
+      ],
+      "slots": [
+        "era_tag",
+        "year",
+        "person_name",
+        "event_desc"
+      ]
+    },
+    {
+      "id": "question_pause",
+      "owner_prompt": "T38",
+      "template_code": "T38",
+      "category": "C5",
+      "display_name": "互动提问",
+      "family": "narrative",
+      "exaggerated_render": true,
+      "use_for": [
+        "互动提问",
+        "思考暂停",
+        "观众互动"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "guide_text"
+      ]
+    },
+    {
+      "id": "quote_card",
+      "owner_prompt": "02",
+      "category": "C5",
+      "display_name": "金句卡片",
+      "bonus": true,
+      "family": "narrative",
+      "use_for": [
+        "名人名言",
+        "经典引述",
+        "思想名句"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.0,
+        6.5
+      ],
+      "anim_roles": [
+        "bg",
+        "eyebrow",
+        "title",
+        "accent-line",
+        "badge"
+      ],
+      "slots": [
+        "quote",
+        "speaker",
+        "source"
+      ]
+    },
+    {
+      "id": "agenda_roadmap_grid",
+      "owner_prompt": "T04",
+      "category": "C5",
+      "display_name": "内容目录页 · 规整网格",
+      "family": "narrative",
+      "variant_of": "agenda_roadmap",
+      "variant_label": "规整网格",
+      "use_for": [
+        "议程目录",
+        "内容提纲",
+        "本期大纲"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "item1",
+        "item2",
+        "item3",
+        "item4",
+        "item5"
+      ]
+    },
+    {
+      "id": "agenda_roadmap_timeline",
+      "owner_prompt": "T04",
+      "category": "C5",
+      "display_name": "内容目录页 · 时间线",
+      "family": "narrative",
+      "variant_of": "agenda_roadmap",
+      "variant_label": "时间线",
+      "use_for": [
+        "议程目录",
+        "内容提纲",
+        "本期大纲"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        5.0,
+        8.0
+      ],
+      "anim_roles": [
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "item1",
+        "item2",
+        "item3",
+        "item4",
+        "item5"
+      ]
+    },
+    {
+      "id": "chapter_transition_center",
+      "owner_prompt": "T05",
+      "category": "C5",
+      "display_name": "章节过渡页 · 居中聚焦",
+      "family": "narrative",
+      "variant_of": "chapter_transition",
+      "variant_label": "居中聚焦",
+      "use_for": [
+        "章节过渡",
+        "段落切换",
+        "内容分段"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        3.5,
+        6.0
+      ],
+      "anim_roles": [
+        "badge",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "chapter_no",
+        "chapter_title",
+        "chapter_sub"
+      ]
+    },
+    {
+      "id": "chapter_transition_side",
+      "owner_prompt": "T05",
+      "category": "C5",
+      "display_name": "章节过渡页 · 侧边竖排",
+      "family": "narrative",
+      "variant_of": "chapter_transition",
+      "variant_label": "侧边竖排",
+      "use_for": [
+        "章节过渡",
+        "段落切换",
+        "内容分段"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        3.5,
+        6.0
+      ],
+      "anim_roles": [
+        "badge",
+        "title",
+        "subtitle",
+        "accent-line"
+      ],
+      "slots": [
+        "chapter_no",
+        "chapter_title",
+        "chapter_sub"
+      ]
+    },
+    {
+      "id": "historical_moment_card",
+      "owner_prompt": "T37",
+      "category": "C5",
+      "display_name": "历史时刻卡 · 卡片叙事",
+      "family": "narrative",
+      "variant_of": "historical_moment",
+      "variant_label": "卡片叙事",
+      "use_for": [
+        "历史时刻",
+        "人物故事",
+        "时间节点"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        6.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "body",
+        "accent-line"
+      ],
+      "slots": [
+        "era_tag",
+        "year",
+        "person_name",
+        "event_desc"
+      ]
+    },
+    {
+      "id": "historical_moment_side",
+      "owner_prompt": "T37",
+      "category": "C5",
+      "display_name": "历史时刻卡 · 左年右事",
+      "family": "narrative",
+      "variant_of": "historical_moment",
+      "variant_label": "左年右事",
+      "use_for": [
+        "历史时刻",
+        "人物故事",
+        "时间节点"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        4.5,
+        6.5
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "subtitle",
+        "body",
+        "accent-line"
+      ],
+      "slots": [
+        "era_tag",
+        "year",
+        "person_name",
+        "event_desc"
+      ]
+    },
+    {
+      "id": "question_pause_corner",
+      "owner_prompt": "T38",
+      "category": "C5",
+      "display_name": "互动提问 · 角落问号",
+      "family": "narrative",
+      "variant_of": "question_pause",
+      "variant_label": "角落问号",
+      "exaggerated_render": true,
+      "use_for": [
+        "互动提问",
+        "思考暂停",
+        "观众互动"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "guide_text"
+      ]
+    },
+    {
+      "id": "key_takeaway",
+      "owner_prompt": "T24",
+      "template_code": "T24",
+      "category": "C6",
+      "display_name": "关键结论页",
+      "family": "narrative",
+      "use_for": [
+        "要点总结",
+        "核心收获",
+        "知识回顾"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "bg",
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "takeaway1",
+        "takeaway2",
+        "takeaway3"
+      ]
+    },
+    {
+      "id": "open_question",
+      "owner_prompt": "T40",
+      "template_code": "T40",
+      "category": "C6",
+      "display_name": "开放问题",
+      "family": "narrative",
+      "exaggerated_render": true,
+      "use_for": [
+        "开放问题",
+        "思想实验",
+        "互动收尾"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "guide_text"
+      ]
+    },
+    {
+      "id": "recap_checklist",
+      "owner_prompt": "T39",
+      "template_code": "T39",
+      "category": "C6",
+      "display_name": "要点回顾清单",
+      "family": "narrative",
+      "bound": true,
+      "use_for": [
+        "要点回顾",
+        "知识清单",
+        "总结列表"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        8.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "items"
+      ],
+      "data_slots": [
+        "items"
+      ]
+    },
+    {
+      "id": "key_takeaway_cards",
+      "owner_prompt": "T24",
+      "category": "C6",
+      "display_name": "关键结论页 · 卡片式",
+      "family": "narrative",
+      "variant_of": "key_takeaway",
+      "variant_label": "卡片式",
+      "use_for": [
+        "要点总结",
+        "核心收获",
+        "知识回顾"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "takeaway1",
+        "takeaway2",
+        "takeaway3"
+      ]
+    },
+    {
+      "id": "key_takeaway_center",
+      "owner_prompt": "T24",
+      "category": "C6",
+      "display_name": "关键结论页 · 居中聚焦",
+      "family": "narrative",
+      "variant_of": "key_takeaway",
+      "variant_label": "居中聚焦",
+      "use_for": [
+        "要点总结",
+        "核心收获",
+        "知识回顾"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.5,
+        7.0
+      ],
+      "anim_roles": [
+        "title",
+        "list-item",
+        "accent-line"
+      ],
+      "slots": [
+        "headline",
+        "takeaway1",
+        "takeaway2",
+        "takeaway3"
+      ]
+    },
+    {
+      "id": "open_question_bg",
+      "owner_prompt": "T40",
+      "category": "C6",
+      "display_name": "开放问题 · 背景水印",
+      "family": "narrative",
+      "variant_of": "open_question",
+      "variant_label": "背景水印",
+      "exaggerated_render": true,
+      "use_for": [
+        "开放问题",
+        "思想实验",
+        "互动收尾"
+      ],
+      "spotlight_level": "high",
+      "duration_range": [
+        4.0,
+        6.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "decoration",
+        "title",
+        "subtitle"
+      ],
+      "slots": [
+        "eyebrow",
+        "question_text",
+        "guide_text"
+      ]
+    },
+    {
+      "id": "recap_checklist_cards",
+      "owner_prompt": "T39",
+      "category": "C6",
+      "display_name": "要点回顾清单 · 卡片清单",
+      "family": "narrative",
+      "variant_of": "recap_checklist",
+      "variant_label": "卡片清单",
+      "bound": true,
+      "use_for": [
+        "要点回顾",
+        "知识清单",
+        "总结列表"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        8.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "items"
+      ],
+      "data_slots": [
+        "items"
+      ]
+    },
+    {
+      "id": "recap_checklist_grid",
+      "owner_prompt": "T39",
+      "category": "C6",
+      "display_name": "要点回顾清单 · 网格排列",
+      "family": "narrative",
+      "variant_of": "recap_checklist",
+      "variant_label": "网格排列",
+      "bound": true,
+      "use_for": [
+        "要点回顾",
+        "知识清单",
+        "总结列表"
+      ],
+      "spotlight_level": "mid",
+      "duration_range": [
+        6.0,
+        8.0
+      ],
+      "generated": false,
+      "anim_roles": [
+        "eyebrow",
+        "title",
+        "list-item"
+      ],
+      "slots": [
+        "eyebrow",
+        "headline",
+        "items"
+      ],
+      "data_slots": [
+        "items"
+      ]
+    }
+  ],
+  "recombination_cases": []
+}

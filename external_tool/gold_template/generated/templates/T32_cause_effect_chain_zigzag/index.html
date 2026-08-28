@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "eyebrow", "type": "string", "label": "眉标", "default": "因果链"}, {"id": "headline", "type": "string", "label": "标题", "default": "全球变暖的多米诺效应"}, {"id": "nodes", "type": "string", "label": "因果节点", "default": "[{\"emoji\": \"🏭\", \"label\": \"温室气体增加\"}, {\"emoji\": \"🌡️\", \"label\": \"全球变暖\"}, {\"emoji\": \"🧊\", \"label\": \"冰川融化\"}, {\"emoji\": \"🌊\", \"label\": \"海平面上升\"}]"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (dark_tech) ===== */
+      :root {
+        --bg: #060d1a;
+        --bg-2: #0a1525;
+        --surface: rgba(20,38,60,.55);
+        --surface-2: rgba(20,38,60,.82);
+        --ink-1: #eef6fb;
+        --ink-2: #b9d3e6;
+        --ink-3: #7d96ad;
+        --accent: #7fc7d9;
+        --accent-2: #f5b14a;
+        --danger: #ff7a7a;
+        --success: #6ee7b7;
+        --line: rgba(127,199,217,.18);
+        --line-strong: rgba(127,199,217,.42);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 22px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+        --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+        --grid-color: rgba(127,199,217,.05);
+        --stage-bg: rgba(10,21,37,.5);
+        --radius-stage: 48px;
+        --stage-blur: 10px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          var(--bg);
+        mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (cause_effect_chain_zigzag) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 56px 72px 48px;
+        gap: 24px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .ce-eyebrow {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 26px;
+        color: var(--accent);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      [data-hf="structure-dom"] .ce-headline {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 56px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 900px;
+      }
+
+      [data-hf="structure-dom"] .ce-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 12px;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      [data-hf="structure-dom"] .ce-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      [data-hf="structure-dom"] .ce-row.ce-row-even {
+        justify-content: flex-end;
+      }
+
+      [data-hf="structure-dom"] .ce-row.ce-row-odd {
+        justify-content: flex-start;
+      }
+
+      [data-hf="structure-dom"] .ce-node {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        opacity: 0.3;
+        flex-shrink: 0;
+        background: var(--surface);
+        border: 2px solid var(--line-strong);
+        border-radius: var(--radius-card);
+        padding: 14px 24px;
+      }
+
+      [data-hf="structure-dom"] .ce-emoji {
+        font-size: 44px;
+        line-height: 1;
+      }
+
+      [data-hf="structure-dom"] .ce-label {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 24px;
+        color: var(--ink-2);
+        max-width: 200px;
+        line-height: 1.3;
+      }
+
+      [data-hf="structure-dom"] .ce-arrow-down {
+        display: flex;
+        justify-content: center;
+        opacity: 0.3;
+        flex-shrink: 0;
+        padding: 0 60px;
+      }
+
+      [data-hf="structure-dom"] .ce-arrow-down.ce-arrow-right {
+        justify-content: flex-end;
+        padding-right: 120px;
+      }
+
+      [data-hf="structure-dom"] .ce-arrow-down.ce-arrow-left {
+        justify-content: flex-start;
+        padding-left: 120px;
+      }
+
+      [data-hf="structure-dom"] .ce-arrow-down svg {
+        display: block;
+      }
+
+      [data-hf="structure-dom"] .stage-panel {
+        position: absolute;
+        inset: 0;
+        background: var(--panel);
+        border-radius: var(--radius-card);
+        z-index: -1;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="7.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="7.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <div class="stage-panel" data-anim-role="panel"></div>
+
+            <span class="ce-eyebrow" data-anim-role="eyebrow" data-slot="eyebrow">因果链</span>
+            <h2 class="ce-headline" data-anim-role="title" data-slot="headline">全球变暖的多米诺效应</h2>
+
+            <div class="ce-container">
+              <div class="ce-row ce-row-odd">
+                <div class="ce-node" data-anim-role="list-item">
+                  <span class="ce-emoji" data-anim-role="decoration">🏭</span>
+                  <span class="ce-label">温室气体增加</span>
+                </div>
+              </div>
+
+              <div class="ce-arrow-down ce-arrow-right" data-anim-role="accent-line">
+                <svg width="48" height="32" viewBox="0 0 48 32" fill="none">
+                  <path d="M4 4 L44 4 L44 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" fill="none"/>
+                  <polygon points="36,20 44,32 52,20" fill="var(--accent)"/>
+                </svg>
+              </div>
+
+              <div class="ce-row ce-row-even">
+                <div class="ce-node" data-anim-role="list-item">
+                  <span class="ce-emoji" data-anim-role="decoration">🌡️</span>
+                  <span class="ce-label">全球变暖</span>
+                </div>
+              </div>
+
+              <div class="ce-arrow-down ce-arrow-left" data-anim-role="accent-line">
+                <svg width="48" height="32" viewBox="0 0 48 32" fill="none">
+                  <path d="M44 4 L4 4 L4 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" fill="none"/>
+                  <polygon points="-4,20 4,32 12,20" fill="var(--accent)"/>
+                </svg>
+              </div>
+
+              <div class="ce-row ce-row-odd">
+                <div class="ce-node" data-anim-role="list-item">
+                  <span class="ce-emoji" data-anim-role="decoration">🧊</span>
+                  <span class="ce-label">冰川融化</span>
+                </div>
+              </div>
+
+              <div class="ce-arrow-down ce-arrow-right" data-anim-role="accent-line">
+                <svg width="48" height="32" viewBox="0 0 48 32" fill="none">
+                  <path d="M4 4 L44 4 L44 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" fill="none"/>
+                  <polygon points="36,20 44,32 52,20" fill="var(--accent)"/>
+                </svg>
+              </div>
+
+              <div class="ce-row ce-row-even">
+                <div class="ce-node" data-anim-role="list-item">
+                  <span class="ce-emoji" data-anim-role="decoration">🌊</span>
+                  <span class="ce-label">海平面上升</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="1.2" data-track-index="102" src="sfx/whoosh.mp3" data-volume="0.35"></audio>
+    </div>
+    <!-- ===== Structure self-animation (cause_effect_chain_zigzag) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        var nodesRaw = V.nodes || null;
+        var nodesData = null;
+        try { nodesData = typeof nodesRaw === "string" ? JSON.parse(nodesRaw) : nodesRaw; } catch (e) { nodesData = null; }
+
+        if (nodesData && Array.isArray(nodesData) && nodesData.length > 0) {
+          var container = root.querySelector(".ce-container");
+          if (container) {
+            container.innerHTML = "";
+            for (var i = 0; i < nodesData.length; i++) {
+              var isOdd = (i % 2 === 0);
+              var rowEl = document.createElement("div");
+              rowEl.className = "ce-row " + (isOdd ? "ce-row-odd" : "ce-row-even");
+
+              var nodeEl = document.createElement("div");
+              nodeEl.className = "ce-node";
+              nodeEl.setAttribute("data-anim-role", "list-item");
+
+              var emojiEl = document.createElement("span");
+              emojiEl.className = "ce-emoji";
+              emojiEl.setAttribute("data-anim-role", "decoration");
+              emojiEl.textContent = nodesData[i].emoji || "🔗";
+              nodeEl.appendChild(emojiEl);
+
+              var labelEl = document.createElement("span");
+              labelEl.className = "ce-label";
+              labelEl.textContent = nodesData[i].label;
+              nodeEl.appendChild(labelEl);
+
+              rowEl.appendChild(nodeEl);
+              container.appendChild(rowEl);
+
+              if (i < nodesData.length - 1) {
+                var arrowDir = isOdd ? "ce-arrow-right" : "ce-arrow-left";
+                var arrowEl = document.createElement("div");
+                arrowEl.className = "ce-arrow-down " + arrowDir;
+                arrowEl.setAttribute("data-anim-role", "accent-line");
+                if (isOdd) {
+                  arrowEl.innerHTML = '<svg width="48" height="32" viewBox="0 0 48 32" fill="none">'
+                    + '<path d="M4 4 L44 4 L44 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" fill="none"/>'
+                    + '<polygon points="36,20 44,32 52,20" fill="var(--accent)"/></svg>';
+                } else {
+                  arrowEl.innerHTML = '<svg width="48" height="32" viewBox="0 0 48 32" fill="none">'
+                    + '<path d="M44 4 L4 4 L4 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" fill="none"/>'
+                    + '<polygon points="-4,20 4,32 12,20" fill="var(--accent)"/></svg>';
+                }
+                container.appendChild(arrowEl);
+              }
+            }
+          }
+        }
+
+        var title = $("title");
+        if (title.length) {
+          tl.from(title, { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, 0.2);
+          title[0].removeAttribute("data-anim-role");
+        }
+
+        var eyebrow = $("eyebrow");
+        if (eyebrow.length) {
+          tl.from(eyebrow, { opacity: 0, y: 20, duration: 0.4, ease: "power2.out" }, 0.1);
+          eyebrow[0].removeAttribute("data-anim-role");
+        }
+
+        var nodes = root.querySelectorAll(".ce-node");
+        var arrows = root.querySelectorAll(".ce-arrow-down");
+
+        var baseTime = 1.0;
+        var interval = 1.0;
+
+        for (var n = 0; n < nodes.length; n++) {
+          var node = nodes[n];
+          var emoji = node.querySelector(".ce-emoji");
+          var label = node.querySelector(".ce-label");
+          var t = baseTime + n * interval;
+          var isOdd = (n % 2 === 0);
+
+          tl.to(node, { opacity: 1, duration: 0.4, ease: "power2.out" }, t);
+          tl.from(node, { x: isOdd ? -40 : 40, duration: 0.5, ease: "power3.out" }, t);
+          if (emoji) tl.from(emoji, { scale: 0.5, duration: 0.4, ease: "back.out(1.7)" }, t);
+          if (label) tl.from(label, { opacity: 0, duration: 0.3, ease: "power2.out" }, t + 0.15);
+
+          if (n < arrows.length) {
+            tl.to(arrows[n], { opacity: 1, duration: 0.3, ease: "power2.out" }, t + 0.4);
+            tl.from(arrows[n], { scaleY: 0, transformOrigin: "top center", duration: 0.4, ease: "power2.out" }, t + 0.4);
+          }
+        }
+
+        if (nodes.length > 0) {
+          var lastNode = nodes[nodes.length - 1];
+          var endT = baseTime + (nodes.length - 1) * interval + 0.6;
+          tl.to(lastNode, { scale: 1.05, duration: 0.3, ease: "power2.inOut" }, endT);
+          tl.to(lastNode, { scale: 1.0, duration: 0.3, ease: "power2.out" }, endT + 0.3);
+        }
+
+        root.querySelectorAll("[data-anim-role]").forEach(function (el) {
+          el.removeAttribute("data-anim-role");
+        });
+      };
+    </script>
+    <!-- ===== Layer 2: motion (card_stack_sequence) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["card_stack_sequence"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.10);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { y: 30, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.15);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 18, opacity: 0, duration: 0.45, ease: "expo.out" }, 0.50);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)" }, 0.50);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { opacity: 0, duration: 0.35, ease: "power2.out" }, 0.75);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.7, ease: "expo.out", transformOrigin: "left center" }, 0.30);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { y: 40, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.3)", stagger: 0.22 }, 0.70);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.18 }, 1.10);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { y: 30, opacity: 0, scale: 0.96, duration: 0.5, ease: "back.out(1.2)" }, 0.55);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 1.20);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: -12, opacity: 0, duration: 0.35, ease: "power2.out" }, 1.30);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { y: 20, opacity: 0, scale: 0.96, duration: 0.45, ease: "back.out(1.2)" }, 1.40);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 7.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["card_stack_sequence"]) {
+              window.__hf_motions["card_stack_sequence"](tl, { gsap: gsap, root: root, duration: 7.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "structure_id": "recap_checklist_grid",
+  "family": "narrative",
+  "duration_default": 6.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "眉标",
+      "default": "本期回顾",
+      "max_chars": 10
+    },
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "记住这三点",
+      "max_chars": 16
+    },
+    "items": {
+      "type": "json",
+      "label": "清单条目",
+      "default": ["熵是混乱度的度量", "熵只增不减（热力学第二定律）", "这就是时间箭头的方向"]
+    }
+  },
+  "data_slots": ["items"],
+  "sfx": [
+    {"at": 1.0, "sfx": "tick"},
+    {"at": 2.2, "sfx": "tick"},
+    {"at": 3.4, "sfx": "tick"},
+    {"at": 4.5, "sfx": "chime"}
+  ]
+}

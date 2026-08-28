@@ -1,0 +1,14 @@
+{
+  "structure_id": "analogy_card_vertical",
+  "family": "narrative",
+  "use_for": ["类比", "对比理解", "概念解释", "抽象转具象"],
+  "spotlight_level": "medium",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "title", "body", "accent-line", "decoration", "subtitle"],
+  "slots": ["eyebrow", "concept_name", "concept_desc", "analogy_emoji", "analogy_text"],
+  "sfx_cues": [
+    {"at": 0.5, "sfx": "whoosh", "comment": "概念滑入"},
+    {"at": 1.2, "sfx": "click", "comment": "≈符号出现"},
+    {"at": 1.8, "sfx": "sparkle", "comment": "类比揭晓"}
+  ]
+}

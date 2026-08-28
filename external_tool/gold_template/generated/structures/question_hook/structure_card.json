@@ -1,0 +1,13 @@
+{
+  "structure_id": "question_hook",
+  "family": "narrative",
+  "use_for": ["疑问", "冷知识", "悬念", "互动"],
+  "spotlight_level": "high",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["eyebrow", "decoration", "title", "body"],
+  "slots": ["eyebrow", "question_text", "answer_hint"],
+  "sfx_cues": [
+    {"at": 0.3, "sfx": "pop", "comment": "❓弹出"},
+    {"at": 2.8, "sfx": "sparkle", "comment": "答案揭晓"}
+  ]
+}

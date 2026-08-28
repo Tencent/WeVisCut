@@ -1,0 +1,12 @@
+{
+  "headline": "一个 Agent 的六个核心模块",
+  "center_label": "Agent",
+  "modules": [
+    {"label": "感知"},
+    {"label": "记忆"},
+    {"label": "规划"},
+    {"label": "工具"},
+    {"label": "执行"},
+    {"label": "反思"}
+  ]
+}

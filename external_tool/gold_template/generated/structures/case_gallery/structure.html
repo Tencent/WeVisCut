@@ -1,0 +1,164 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 56px 80px 48px;
+  gap: 26px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .cg-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 62px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  max-width: 1200px;
+}
+
+[data-hf="structure-dom"] .cg-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: 26px;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .cg-cell {
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: flex-end;
+  min-height: 0;
+}
+
+[data-hf="structure-dom"] .cg-grid > .cg-cell:nth-child(4n+1) {
+  background: linear-gradient(135deg, transparent 0%, var(--accent) 120%), var(--surface-2);
+}
+[data-hf="structure-dom"] .cg-grid > .cg-cell:nth-child(4n+2) {
+  background: radial-gradient(ellipse 80% 90% at 30% 20%, var(--accent-2) 0%, transparent 70%), var(--surface-2);
+}
+[data-hf="structure-dom"] .cg-grid > .cg-cell:nth-child(4n+3) {
+  background: linear-gradient(140deg, var(--accent) 0%, transparent 70%), var(--surface-2);
+}
+[data-hf="structure-dom"] .cg-grid > .cg-cell:nth-child(4n+4) {
+  background: radial-gradient(ellipse 90% 80% at 70% 80%, var(--ink-3) 0%, transparent 75%), var(--surface-2);
+}
+
+[data-hf="structure-dom"] .cg-cell-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-weight: var(--weight-display);
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  padding: 14px 20px;
+  background: linear-gradient(0deg, var(--surface-2) 0%, transparent 100%);
+}
+
+[data-hf="structure-dom"] .cg-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+[data-hf="structure-dom"] .cg-divider {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="cg-title" data-anim-role="title" data-slot="headline">同一个模型，四种落地</h2>
+
+  <div class="cg-grid">
+    <div class="cg-cell" data-anim-role="cell">
+      <div class="cg-cell-label" data-anim-role="cell-label">电商详情页</div>
+    </div>
+    <div class="cg-cell" data-anim-role="cell">
+      <div class="cg-cell-label" data-anim-role="cell-label">教育课件</div>
+    </div>
+    <div class="cg-cell" data-anim-role="cell">
+      <div class="cg-cell-label" data-anim-role="cell-label">医疗报告</div>
+    </div>
+    <div class="cg-cell" data-anim-role="cell">
+      <div class="cg-cell-label" data-anim-role="cell-label">金融风控</div>
+    </div>
+  </div>
+
+  <div class="cg-footer">
+    <div class="cg-divider" data-anim-role="accent-line"></div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+  var grid = root.querySelector(".cg-grid");
+  var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+  function parse(raw) {
+    if (raw == null) return null;
+    if (typeof raw !== "string") return raw;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  var cases = parse(V.cases);
+
+  if (grid && Array.isArray(cases) && cases.length >= 1) {
+    grid.innerHTML = "";
+    var cols = cases.length <= 4 ? 2 : 3;
+    grid.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+    for (var i = 0; i < cases.length; i++) {
+      var cell = document.createElement("div");
+      cell.className = "cg-cell";
+      cell.setAttribute("data-anim-role", "cell");
+      var label = document.createElement("div");
+      label.className = "cg-cell-label";
+      label.setAttribute("data-anim-role", "cell-label");
+      label.textContent = String(cases[i].caption != null ? cases[i].caption : "");
+      cell.appendChild(label);
+      grid.appendChild(cell);
+    }
+  }
+
+  var cells = $("cell");
+  if (cells.length) {
+    gsap.set(cells, { transformOrigin: "center center" });
+    tl.from(cells, { scale: 0.9, opacity: 0, duration: 0.5, ease: "back.out(1.3)", stagger: 0.1 }, 0.2);
+  }
+  var labels = $("cell-label");
+  if (labels.length) {
+    tl.from(labels, { opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.1 }, 0.45);
+  }
+  if ($("accent-line").length) {
+    tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.35);
+  }
+  if (cells.length) {
+    var base = 0.3 + cells.length * 0.1 + 0.4;
+    for (var z = 0; z < cells.length; z++) {
+      var at = base + z * 0.32;
+      tl.to(cells[z], { scale: 1.04, duration: 0.2, ease: "power2.out" }, at);
+      tl.to(cells[z], { scale: 1.0, duration: 0.28, ease: "power2.inOut" }, at + 0.2);
+    }
+  }
+
+  var done = ["cell", "cell-label", "accent-line"];
+  for (var d = 0; d < done.length; d++) {
+    var els = $(done[d]);
+    for (var k = 0; k < els.length; k++) els[k].removeAttribute("data-anim-role");
+  }
+};
+</script>

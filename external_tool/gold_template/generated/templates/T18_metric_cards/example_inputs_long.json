@@ -1,0 +1,9 @@
+{
+  "headline": "一年内的四项突破",
+  "metrics": [
+    { "value": 96, "unit": "%", "label": "识别准确率" },
+    { "value": 3.5, "unit": "x", "label": "处理速度" },
+    { "value": 42, "unit": "%", "label": "成本下降" },
+    { "value": 4.8, "unit": "分", "label": "用户满意度" }
+  ]
+}

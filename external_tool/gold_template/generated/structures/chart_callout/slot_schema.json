@@ -1,0 +1,37 @@
+{
+  "structure_id": "chart_callout",
+  "family": "dataviz",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "图表标题",
+      "default": "五个月用户量翻了近 4 倍",
+      "max_chars": 18
+    },
+    "series": {
+      "type": "json",
+      "label": "折线数据点",
+      "default": [
+        { "label": "1月", "value": 20 },
+        { "label": "2月", "value": 28 },
+        { "label": "3月", "value": 35 },
+        { "label": "4月", "value": 52 },
+        { "label": "5月", "value": 78 }
+      ]
+    },
+    "callout_text": {
+      "type": "string",
+      "label": "关键点标注",
+      "default": "4 月起增速明显加快",
+      "max_chars": 22
+    },
+    "source_note": {
+      "type": "string",
+      "label": "数据来源",
+      "default": "数据来源：内部后台 2024",
+      "max_chars": 24
+    }
+  },
+  "data_slots": ["series"]
+}

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AICut Studio</title>
+<link rel="stylesheet" href="/static/css/studio.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">AICut</span>
+    <span class="brand-sub">Studio</span>
+  </div>
+  <div class="topbar-status">
+    <span class="pill" id="modelPill">
+      <span class="dot" id="modelDot"></span>
+      <span id="modelText">检查模型状态…</span>
+    </span>
+    <span class="pill pill-quiet" id="modePill">—</span>
+  </div>
+  <div class="topbar-right">
+    <span class="timer" id="runTimer" hidden>00:00</span>
+    <button class="btn btn-ghost" id="warningsBtn" hidden>配置提醒 <span id="warningsCount">0</span></button>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ─────────── left: input & runs ─────────── -->
+  <aside class="panel panel-left">
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>口播稿</h2>
+        <span class="counter" id="scriptCount">0 字</span>
+      </div>
+      <textarea id="scriptInput" class="script-input" spellcheck="false"
+        placeholder="粘贴口播稿，模型会自主完成分段、镜头规划、配音、素材检索、模板装饰、渲染与拼接。"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="startBtn" disabled>开始生成</button>
+        <button class="btn" id="pauseBtn" hidden>暂停</button>
+        <button class="btn btn-danger" id="cancelBtn" hidden>取消</button>
+      </div>
+      <p class="hint" id="startHint">等待模型加载完成…</p>
+    </div>
+
+    <div class="panel-section grow">
+      <div class="section-head">
+        <h2>历史</h2>
+        <button class="btn btn-ghost btn-sm" id="refreshRuns">刷新</button>
+      </div>
+      <div class="list" id="runList">
+        <p class="empty">暂无记录</p>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-head"><h2>成片工程</h2></div>
+      <div class="list" id="projectList">
+        <p class="empty">暂无成片</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─────────── center: preview + tracks ─────────── -->
+  <section class="stage">
+    <div class="stage-top">
+      <div class="player">
+        <video id="player" controls preload="metadata"></video>
+        <div class="player-empty" id="playerEmpty">
+          <p>成片生成后在此预览</p>
+        </div>
+      </div>
+
+      <div class="stage-meta">
+        <div class="progress-block">
+          <div class="progress-head">
+            <span class="progress-label" id="phaseLabel">待启动</span>
+            <span class="progress-pct" id="overallPct">0%</span>
+          </div>
+          <div class="bar"><div class="bar-fill" id="overallBar"></div></div>
+          <p class="progress-note" id="phaseNote">输入口播稿后点击「开始生成」</p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat"><span class="stat-k">总时长</span><span class="stat-v" id="statDuration">0:00</span></div>
+          <div class="stat"><span class="stat-k">镜头</span><span class="stat-v" id="statShots">0</span></div>
+          <div class="stat"><span class="stat-k">重点镜头</span><span class="stat-v" id="statSpotlight">0</span></div>
+          <div class="stat"><span class="stat-k">步数</span><span class="stat-v" id="statSteps">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- per-track progress rail -->
+    <div class="rail" id="trackRail"></div>
+
+    <!-- multi-track timeline -->
+    <div class="timeline-wrap">
+      <div class="timeline-head">
+        <h2>时间轴</h2>
+        <div class="timeline-tools">
+          <span class="zoom-label" id="zoomLabel">60 px/s</span>
+          <button class="btn btn-ghost btn-sm" id="zoomOut">−</button>
+          <button class="btn btn-ghost btn-sm" id="zoomIn">+</button>
+          <button class="btn btn-ghost btn-sm" id="zoomFit">适配</button>
+        </div>
+      </div>
+      <div class="timeline" id="timeline">
+        <div class="tl-labels" id="tlLabels"></div>
+        <div class="tl-scroll" id="tlScroll">
+          <div class="tl-canvas" id="tlCanvas">
+            <div class="tl-ruler" id="tlRuler"></div>
+            <div class="tl-tracks" id="tlTracks"></div>
+          </div>
+        </div>
+      </div>
+      <p class="empty" id="timelineEmpty">时间轴会随模型执行实时填充</p>
+    </div>
+
+    <div class="console" id="console">
+      <div class="console-head">
+        <button class="console-toggle" id="consoleToggle">
+          <span class="caret" id="consoleCaret">▸</span> 运行日志
+        </button>
+        <div class="console-tabs">
+          <button class="tab tab-sm active" data-log="console">日志</button>
+          <button class="tab tab-sm" data-log="raw">模型原始输出</button>
+        </div>
+        <span class="console-count" id="consoleCount">0</span>
+      </div>
+      <div class="console-body" id="consoleBody" hidden></div>
+    </div>
+  </section>
+
+  <!-- ─────────── right: agent / editor / chat ─────────── -->
+  <aside class="panel panel-right">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="agent">执行</button>
+      <button class="tab" data-tab="editor" id="tabEditor">编辑</button>
+      <button class="tab" data-tab="chat" id="tabChat">对话</button>
+    </div>
+
+    <!-- agent trace -->
+    <div class="tab-panel active" data-panel="agent">
+      <div class="autonomy-note" id="autonomyNote"></div>
+      <div class="trace" id="trace">
+        <p class="empty">等待启动</p>
+      </div>
+    </div>
+
+    <!-- manual editor -->
+    <div class="tab-panel" data-panel="editor">
+      <div class="editor-empty" id="editorEmpty">
+        <p>选择一个成片工程，然后点击时间轴上的片段进行编辑。</p>
+      </div>
+      <div class="editor-body" id="editorBody" hidden>
+        <div class="editor-head">
+          <span class="clip-id" id="editClipId">—</span>
+          <span class="clip-time" id="editClipTime"></span>
+        </div>
+
+        <div class="field" id="fieldNarration">
+          <label>旁白（改动会重新配音）</label>
+          <textarea id="editNarration" rows="3"></textarea>
+          <button class="btn btn-sm" data-op="set_narration">应用</button>
+        </div>
+
+        <div class="field" id="fieldSubtitle">
+          <label>字幕（不重新配音）</label>
+          <textarea id="editSubtitle" rows="2"></textarea>
+          <button class="btn btn-sm" data-op="set_subtitle">应用</button>
+        </div>
+
+        <div class="field" id="fieldFootage">
+          <label>画面素材</label>
+          <input type="text" id="editFootageQuery" placeholder="重新检索的画面描述">
+          <button class="btn btn-sm" data-op="replace_footage">重新检索</button>
+          <input type="text" id="editFootagePath" placeholder="或指定本地文件绝对路径">
+          <button class="btn btn-sm" data-op="replace_footage_path">使用该文件</button>
+        </div>
+
+        <div class="field" id="fieldSlots" hidden>
+          <label>模板文字</label>
+          <div id="editSlots"></div>
+          <button class="btn btn-sm" data-op="set_spotlight_slots">应用</button>
+        </div>
+
+        <div class="field" id="fieldTemplate" hidden>
+          <label>模板</label>
+          <div class="template-ids" id="editTemplateIds"></div>
+          <input type="text" id="editStructure" placeholder="structure_id">
+          <input type="text" id="editMotion" placeholder="motion_id">
+          <input type="text" id="editVisual" placeholder="visual_id">
+          <button class="btn btn-sm btn-warn" data-op="swap_template">切换模板</button>
+        </div>
+
+        <div class="field danger-zone" id="fieldDelete">
+          <button class="btn btn-sm btn-danger" data-op="delete_shot">删除该镜头</button>
+        </div>
+
+        <hr class="sep">
+
+        <div class="field">
+          <label>配乐</label>
+          <input type="text" id="editBgmQuery" placeholder="配乐风格描述">
+          <div class="slider-row">
+            <span>音量</span>
+            <input type="range" id="editBgmVolume" min="0" max="1" step="0.05" value="0.5">
+            <span id="editBgmVolumeVal">0.50</span>
+          </div>
+          <button class="btn btn-sm" data-op="set_bgm">应用配乐</button>
+        </div>
+
+        <hr class="sep">
+
+        <div class="pending" id="pendingBox" hidden>
+          <h3>待重新生成</h3>
+          <ul id="pendingList"></ul>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="regenBtn" disabled>重新渲染并拼接</button>
+        </div>
+
+        <div class="versions">
+          <div class="section-head"><h2>版本</h2></div>
+          <div class="list list-sm" id="versionList"><p class="empty">暂无历史版本</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- conversational editing -->
+    <div class="tab-panel" data-panel="chat">
+      <div class="chat-meta">
+        <span id="chatMemory">记忆 0 轮</span>
+        <button class="btn btn-ghost btn-sm" id="chatReset">重置对话</button>
+      </div>
+      <div class="chat-log" id="chatLog">
+        <div class="chat-intro">
+          <p>用一句话说明要改什么，例如：</p>
+          <ul>
+            <li>开头那句太平淡了，改得更有冲击力</li>
+            <li>0:15 的画面换成城市夜景</li>
+            <li>字幕里「人工智慧」是错别字</li>
+            <li>配乐太吵了，压一下</li>
+          </ul>
+        </div>
+      </div>
+      <div class="chat-input">
+        <textarea id="chatInput" rows="2" placeholder="说明你想怎么改…（Enter 发送，Shift+Enter 换行）"></textarea>
+        <button class="btn btn-primary btn-sm" id="chatSend">发送</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- confirmation dialog for high-risk chat edits -->
+<div class="modal" id="confirmModal" hidden>
+  <div class="modal-box">
+    <h3 id="confirmTitle">确认修改</h3>
+    <p id="confirmText"></p>
+    <pre class="op-preview" id="confirmOps"></pre>
+    <div class="btn-row right">
+      <button class="btn" id="confirmCancel">取消</button>
+      <button class="btn btn-primary" id="confirmOk">确认执行</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toasts"></div>
+
+<script src="/static/js/timeline.js"></script>
+<script src="/static/js/editor.js"></script>
+<script src="/static/js/chat.js"></script>
+<script src="/static/js/studio.js"></script>
+</body>
+</html>

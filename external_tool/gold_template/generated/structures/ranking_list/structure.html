@@ -1,0 +1,192 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 64px 100px;
+  gap: 28px;
+  box-sizing: border-box;
+}
+
+[data-hf="structure-dom"] .eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--font-caption);
+  font-weight: var(--weight-body);
+  font-size: 22px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-hf="structure-dom"] .rl-headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 52px;
+  line-height: 1.15;
+  color: var(--ink-1);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .rl-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 85%;
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+}
+
+[data-hf="structure-dom"] .rl-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+[data-hf="structure-dom"] .rl-item:first-child {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+[data-hf="structure-dom"] .rl-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .rl-emoji {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+[data-hf="structure-dom"] .rl-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 24px;
+  color: var(--ink-1);
+  flex: 1;
+}
+
+[data-hf="structure-dom"] .rl-bar-wrap {
+  flex: 1;
+  max-width: 200px;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .rl-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+[data-hf="structure-dom"] .rl-value {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 20px;
+  color: var(--accent);
+  flex-shrink: 0;
+  min-width: 80px;
+  text-align: right;
+}
+</style>
+
+<div data-hf="structure-dom">
+  <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">Top 5</div>
+  <h1 class="rl-headline" data-anim-role="title" data-slot="headline">全球最深的五个海沟</h1>
+  <div class="rl-container">
+    <div class="rl-item" data-anim-role="list-item">
+      <span class="rl-badge">1</span>
+      <span class="rl-emoji">🌊</span>
+      <span class="rl-label">马里亚纳海沟</span>
+      <div class="rl-bar-wrap"><div class="rl-bar" style="width:100%"></div></div>
+      <span class="rl-value">10994m</span>
+    </div>
+    <div class="rl-item" data-anim-role="list-item">
+      <span class="rl-badge">2</span>
+      <span class="rl-emoji">🌊</span>
+      <span class="rl-label">汤加海沟</span>
+      <div class="rl-bar-wrap"><div class="rl-bar" style="width:99%"></div></div>
+      <span class="rl-value">10882m</span>
+    </div>
+    <div class="rl-item" data-anim-role="list-item">
+      <span class="rl-badge">3</span>
+      <span class="rl-emoji">🌊</span>
+      <span class="rl-label">千岛海沟</span>
+      <div class="rl-bar-wrap"><div class="rl-bar" style="width:96%"></div></div>
+      <span class="rl-value">10542m</span>
+    </div>
+    <div class="rl-item" data-anim-role="list-item">
+      <span class="rl-badge">4</span>
+      <span class="rl-emoji">🌊</span>
+      <span class="rl-label">菲律宾海沟</span>
+      <div class="rl-bar-wrap"><div class="rl-bar" style="width:96%"></div></div>
+      <span class="rl-value">10540m</span>
+    </div>
+    <div class="rl-item" data-anim-role="list-item">
+      <span class="rl-badge">5</span>
+      <span class="rl-emoji">🌊</span>
+      <span class="rl-label">克马德克海沟</span>
+      <div class="rl-bar-wrap"><div class="rl-bar" style="width:91%"></div></div>
+      <span class="rl-value">10047m</span>
+    </div>
+  </div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var items = root.querySelectorAll('.rl-item');
+  var count = items.length;
+
+  for (var i = 0; i < count; i++) {
+    var idx = count - 1 - i;
+    var item = items[idx];
+    var badge = item.querySelector('.rl-badge');
+    var emoji = item.querySelector('.rl-emoji');
+    var label = item.querySelector('.rl-label');
+    var bar = item.querySelector('.rl-bar');
+    var offset = i * 1.2;
+
+    tl.from(badge, { scale: 0, duration: 0.3, ease: "back.out(1.7)" }, offset);
+    tl.from(emoji, { opacity: 0, duration: 0.25, ease: "power2.out" }, offset + 0.15);
+    tl.from(label, { x: -20, opacity: 0, duration: 0.3, ease: "power2.out" }, offset + 0.2);
+    if (bar) {
+      tl.from(bar, { width: 0, duration: 0.4, ease: "power2.out" }, offset + 0.3);
+    }
+  }
+
+  if (items[0]) {
+    tl.to(items[0], {
+      boxShadow: "0 0 30px color-mix(in srgb, var(--accent) 40%, transparent)",
+      duration: 0.4, ease: "power2.inOut", yoyo: true, repeat: 1
+    }, (count - 1) * 1.2 + 0.5);
+  }
+
+  var allEls = root.querySelectorAll('[data-anim-role]');
+  for (var i = 0; i < allEls.length; i++) allEls[i].removeAttribute('data-anim-role');
+};
+</script>

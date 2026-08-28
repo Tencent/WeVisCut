@@ -1,0 +1,36 @@
+{
+  "structure_id": "cause_effect_chain",
+  "family": "diagram",
+  "duration_default": 7.5,
+  "slots": {
+    "eyebrow": {
+      "type": "string",
+      "label": "眉标",
+      "default": "因果链",
+      "max_chars": 10
+    },
+    "headline": {
+      "type": "string",
+      "label": "标题",
+      "default": "全球变暖的多米诺效应",
+      "max_chars": 16
+    },
+    "nodes": {
+      "type": "json",
+      "label": "因果节点",
+      "default": [
+        { "emoji": "🏭", "label": "温室气体增加" },
+        { "emoji": "🌡️", "label": "全球变暖" },
+        { "emoji": "🧊", "label": "冰川融化" },
+        { "emoji": "🌊", "label": "海平面上升" }
+      ]
+    }
+  },
+  "data_slots": ["nodes"],
+  "sfx": [
+    { "at": 1.0, "sfx": "tick" },
+    { "at": 2.0, "sfx": "tick" },
+    { "at": 3.0, "sfx": "tick" },
+    { "at": 4.0, "sfx": "sparkle" }
+  ]
+}

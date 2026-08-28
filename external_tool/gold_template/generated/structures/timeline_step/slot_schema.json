@@ -1,0 +1,49 @@
+{
+  "structure_id": "timeline_step",
+  "family": "narrative",
+  "duration_default": 7.0,
+  "slots": {
+    "headline": {
+      "type": "string",
+      "label": "主标题",
+      "default": "维生素D缺乏的三个阶段，你在哪一步？",
+      "max_chars": 22
+    },
+    "step1_title": {
+      "type": "string",
+      "label": "阶段1标题",
+      "default": "第一阶段：隐性不足",
+      "max_chars": 12
+    },
+    "step1_desc": {
+      "type": "string",
+      "label": "阶段1描述",
+      "default": "血清25-OH-D低于30ng/ml，无明显症状但骨代谢已受影响",
+      "max_chars": 30
+    },
+    "step2_title": {
+      "type": "string",
+      "label": "阶段2标题",
+      "default": "第二阶段：功能缺乏",
+      "max_chars": 12
+    },
+    "step2_desc": {
+      "type": "string",
+      "label": "阶段2描述",
+      "default": "骨密度显著下降、肌力减退，疲劳感加重、免疫力降低",
+      "max_chars": 30
+    },
+    "step3_title": {
+      "type": "string",
+      "label": "阶段3标题",
+      "default": "第三阶段：临床缺乏",
+      "max_chars": 12
+    },
+    "step3_desc": {
+      "type": "string",
+      "label": "阶段3描述",
+      "default": "出现佝偻病或骨软化症，需即刻医学干预治疗",
+      "max_chars": 30
+    }
+  }
+}

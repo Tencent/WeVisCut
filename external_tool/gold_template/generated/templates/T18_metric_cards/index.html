@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "headline", "type": "string", "label": "标题", "default": "改版后的三个关键变化"}, {"id": "metrics", "type": "string", "label": "指标组", "default": "[{\"value\": 96, \"unit\": \"%\", \"label\": \"识别准确率\"}, {\"value\": 3.5, \"unit\": \"x\", \"label\": \"处理速度\"}, {\"value\": 42, \"unit\": \"%\", \"label\": \"成本下降\"}]"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (dark_tech) ===== */
+      :root {
+        --bg: #060d1a;
+        --bg-2: #0a1525;
+        --surface: rgba(20,38,60,.55);
+        --surface-2: rgba(20,38,60,.82);
+        --ink-1: #eef6fb;
+        --ink-2: #b9d3e6;
+        --ink-3: #7d96ad;
+        --accent: #7fc7d9;
+        --accent-2: #f5b14a;
+        --danger: #ff7a7a;
+        --success: #6ee7b7;
+        --line: rgba(127,199,217,.18);
+        --line-strong: rgba(127,199,217,.42);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 22px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 36px rgba(0,0,0,.45);
+        --shadow-glow: 0 0 36px rgba(127,199,217,.35);
+        --grid-color: rgba(127,199,217,.05);
+        --stage-bg: rgba(10,21,37,.5);
+        --radius-stage: 48px;
+        --stage-blur: 10px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 70% 60% at 30% 40%, rgba(127,199,217,.10) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 50% at 75% 65%, rgba(245,177,74,.06) 0%, transparent 60%),
+          repeating-linear-gradient(0deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          repeating-linear-gradient(90deg, transparent, transparent 79px, var(--grid-color) 79px, var(--grid-color) 80px),
+          var(--bg);
+        mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 50%, transparent 100%);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-caption);
+        color: var(--ink-1);
+        background: var(--surface);
+        border-radius: var(--radius-card);
+        padding: 8px 20px;
+      }
+      /* ===== Layer 1: structure css (metric_cards) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 70px 80px 56px;
+        gap: 40px;
+        box-sizing: border-box;
+      }
+
+      [data-hf="structure-dom"] .met-title {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 64px;
+        line-height: 1.2;
+        color: var(--ink-1);
+        max-width: 1200px;
+      }
+
+      [data-hf="structure-dom"] .met-row {
+        flex: 1;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        align-items: stretch;
+        gap: 32px;
+        min-height: 0;
+      }
+
+      [data-hf="structure-dom"] .met-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 32px 24px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      [data-hf="structure-dom"] .met-stat-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      [data-hf="structure-dom"] .met-stat {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 88px;
+        line-height: 1.0;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+
+      [data-hf="structure-dom"] .met-unit {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 44px;
+        line-height: 1.0;
+        color: var(--accent-2);
+      }
+
+      [data-hf="structure-dom"] .met-label {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 26px;
+        color: var(--ink-2);
+        text-align: center;
+        max-width: 280px;
+        line-height: 1.4;
+      }
+
+      [data-hf="structure-dom"] .met-footer {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      [data-hf="structure-dom"] .met-divider {
+        flex: 1;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="6.0" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="6.0" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <h2 class="met-title" data-anim-role="title" data-slot="headline">上线后的三个关键变化</h2>
+
+            <div class="met-row">
+              <div class="met-card" data-anim-role="card">
+                <div class="met-stat-row">
+                  <span class="met-stat" data-anim-role="stat">94</span>
+                  <span class="met-unit" data-anim-role="unit">%</span>
+                </div>
+                <div class="met-label" data-anim-role="card-label">准确率</div>
+              </div>
+              <div class="met-card" data-anim-role="card">
+                <div class="met-stat-row">
+                  <span class="met-stat" data-anim-role="stat">2.3</span>
+                  <span class="met-unit" data-anim-role="unit">x</span>
+                </div>
+                <div class="met-label" data-anim-role="card-label">速度提升</div>
+              </div>
+              <div class="met-card" data-anim-role="card">
+                <div class="met-stat-row">
+                  <span class="met-stat" data-anim-role="stat">60</span>
+                  <span class="met-unit" data-anim-role="unit">%</span>
+                </div>
+                <div class="met-label" data-anim-role="card-label">成本下降</div>
+              </div>
+            </div>
+
+            <div class="met-footer">
+              <div class="met-divider" data-anim-role="accent-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="0.6" data-track-index="102" src="sfx/pop.mp3" data-volume="0.3"></audio>
+      <audio id="sfx-1" data-start="0.2" data-duration="0.6" data-track-index="103" src="sfx/pop.mp3" data-volume="0.3"></audio>
+      <audio id="sfx-2" data-start="1.0" data-duration="1.4" data-track-index="104" src="sfx/rise.mp3" data-volume="0.35"></audio>
+    </div>
+    <!-- ===== Structure self-animation (metric_cards) ===== -->
+    <script>
+      window.__hf_structure_init = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        var wrap = root.querySelector(".met-row");
+        var V = window.__hyperframes ? window.__hyperframes.getVariables() : {};
+        function parse(raw) {
+          if (raw == null) return null;
+          if (typeof raw !== "string") return raw;
+          try { return JSON.parse(raw); } catch (e) { return null; }
+        }
+        var metrics = parse(V.metrics);
+
+        if (wrap && Array.isArray(metrics) && metrics.length >= 1) {
+          wrap.innerHTML = "";
+          for (var i = 0; i < metrics.length; i++) {
+            var card = document.createElement("div");
+            card.className = "met-card";
+            card.setAttribute("data-anim-role", "card");
+            var statRow = document.createElement("div");
+            statRow.className = "met-stat-row";
+            var stat = document.createElement("span");
+            stat.className = "met-stat";
+            stat.setAttribute("data-anim-role", "stat");
+            stat.textContent = String(metrics[i].value != null ? metrics[i].value : 0);
+            statRow.appendChild(stat);
+            if (metrics[i].unit != null && String(metrics[i].unit) !== "") {
+              var unit = document.createElement("span");
+              unit.className = "met-unit";
+              unit.setAttribute("data-anim-role", "unit");
+              unit.textContent = String(metrics[i].unit);
+              statRow.appendChild(unit);
+            }
+            var label = document.createElement("div");
+            label.className = "met-label";
+            label.setAttribute("data-anim-role", "card-label");
+            label.textContent = String(metrics[i].label != null ? metrics[i].label : "");
+            card.appendChild(statRow);
+            card.appendChild(label);
+            wrap.appendChild(card);
+          }
+        }
+
+        var cards = $("card");
+        if (cards.length) {
+          tl.from(cards, { scale: 0.85, opacity: 0, duration: 0.55, ease: "back.out(1.4)", transformOrigin: "center center", stagger: 0.15 }, 0.2);
+        }
+
+        var stats = $("stat");
+        for (var s = 0; s < stats.length; s++) {
+          (function (el, idx) {
+            var raw = String(el.textContent).replace(/,/g, "");
+            var finalVal = parseFloat(raw);
+            if (isNaN(finalVal)) { finalVal = 0; }
+            var decimals = (raw.indexOf(".") !== -1) ? raw.split(".")[1].length : 0;
+            var obj = { v: 0 };
+            var startAt = 0.5 + idx * 0.15;
+            el.textContent = "0" + (decimals ? "." + new Array(decimals + 1).join("0") : "");
+            tl.to(obj, {
+              v: finalVal, duration: 1.1, ease: "power2.out",
+              onUpdate: function () { el.textContent = obj.v.toFixed(decimals); }
+            }, startAt);
+            tl.to(el, { scale: 1.12, duration: 0.16, ease: "power2.out", transformOrigin: "center bottom" }, startAt + 1.1);
+            tl.to(el, { scale: 1.0, duration: 0.26, ease: "back.out(2)" }, startAt + 1.26);
+          })(stats[s], s);
+        }
+
+        var units = $("unit");
+        if (units.length) {
+          tl.from(units, { x: -10, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, 0.7);
+        }
+        var labels = $("card-label");
+        if (labels.length) {
+          tl.from(labels, { y: 12, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.15 }, 0.6);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.4);
+        }
+
+        var done = ["card", "stat", "unit", "card-label", "accent-line"];
+        for (var d = 0; d < done.length; d++) {
+          var els = $(done[d]);
+          for (var k = 0; k < els.length; k++) els[k].removeAttribute("data-anim-role");
+        }
+      };
+    </script>
+    <!-- ===== Layer 2: motion (scale_pop_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["scale_pop_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.15);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { scale: 0.82, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 24, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.62);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { scale: 0.75, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { scale: 0.7, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.65);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { scale: 0.92, opacity: 0, duration: 0.55, ease: "back.out(1.3)", stagger: 0.15 }, 0.40);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.10 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { scale: 0.94, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.35);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.80);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.85);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.90);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { scale: 0.9, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 1.0);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 6.0, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["scale_pop_hold"]) {
+              window.__hf_motions["scale_pop_hold"](tl, { gsap: gsap, root: root, duration: 6.0, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

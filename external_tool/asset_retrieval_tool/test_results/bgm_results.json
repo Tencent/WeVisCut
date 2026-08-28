@@ -1,0 +1,452 @@
+{
+  "stats": {
+    "wall_seconds": 44.59,
+    "avg_seconds": 23.81,
+    "max_seconds": 44.59,
+    "min_seconds": 2.76
+  },
+  "cases": [
+    {
+      "query": "upbeat background music",
+      "top_k": 5,
+      "min_duration": 60.0,
+      "elapsed_seconds": 21.52,
+      "returned": 5,
+      "pure_music_flagged": [],
+      "results": [
+        {
+          "rank": 1,
+          "source": "internet_archive",
+          "id": "DWK123/ProleteR_-_01_-_April_Showers.mp3",
+          "title": "ProleteR   01   April Showers",
+          "artist": "ProleteR",
+          "duration_sec": 269.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/DWK123",
+          "download_url": "https://archive.org/download/DWK123/ProleteR_-_01_-_April_Showers.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 2,
+          "source": "internet_archive",
+          "id": "DWK123/ProleteR_-_02_-_Downtown_Irony.mp3",
+          "title": "ProleteR   02   Downtown Irony",
+          "artist": "ProleteR",
+          "duration_sec": 261.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/DWK123",
+          "download_url": "https://archive.org/download/DWK123/ProleteR_-_02_-_Downtown_Irony.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 3,
+          "source": "internet_archive",
+          "id": "DWK123/ProleteR_-_03_-_Soul_Key.mp3",
+          "title": "ProleteR   03   Soul Key",
+          "artist": "ProleteR",
+          "duration_sec": 303.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/DWK123",
+          "download_url": "https://archive.org/download/DWK123/ProleteR_-_03_-_Soul_Key.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 4,
+          "source": "internet_archive",
+          "id": "DWK123/ProleteR_-_04_-_A_Million_Dollar.mp3",
+          "title": "ProleteR   04   A Million Dollar",
+          "artist": "ProleteR",
+          "duration_sec": 248.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/DWK123",
+          "download_url": "https://archive.org/download/DWK123/ProleteR_-_04_-_A_Million_Dollar.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 5,
+          "source": "internet_archive",
+          "id": "DWK123/ProleteR_-_05_-_U_Can_Get_It.mp3",
+          "title": "ProleteR   05   U Can Get It",
+          "artist": "ProleteR",
+          "duration_sec": 259.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/DWK123",
+          "download_url": "https://archive.org/download/DWK123/ProleteR_-_05_-_U_Can_Get_It.mp3",
+          "license": "CC"
+        }
+      ]
+    },
+    {
+      "query": "ambient chill electronic",
+      "top_k": 3,
+      "min_duration": 90.0,
+      "elapsed_seconds": 26.37,
+      "returned": 3,
+      "pure_music_flagged": [],
+      "results": [
+        {
+          "rank": 1,
+          "source": "internet_archive",
+          "id": "puMpL006_-_postunder_records_-_minimags_compilation_vol_1/afshar_-_birds_dont_fly_they_just_jump_really_high.mp3",
+          "title": "afshar   birds dont fly they just jump really high",
+          "artist": "Afshar",
+          "duration_sec": 257.79,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/puMpL006_-_postunder_records_-_minimags_compilation_vol_1",
+          "download_url": "https://archive.org/download/puMpL006_-_postunder_records_-_minimags_compilation_vol_1/afshar_-_birds_dont_fly_they_just_jump_really_high.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 2,
+          "source": "internet_archive",
+          "id": "puMpL006_-_postunder_records_-_minimags_compilation_vol_1/black_mizi_pro_duck_sun_-_ennio_morricone_-_once_upon_a_time.mp3",
+          "title": "black mizi pro duck sun   ennio morricone   once upon a time",
+          "artist": "Black Mizi Pro Duck Sun",
+          "duration_sec": 356.41,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/puMpL006_-_postunder_records_-_minimags_compilation_vol_1",
+          "download_url": "https://archive.org/download/puMpL006_-_postunder_records_-_minimags_compilation_vol_1/black_mizi_pro_duck_sun_-_ennio_morricone_-_once_upon_a_time.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 3,
+          "source": "internet_archive",
+          "id": "sute014/01_SubtractiveLAD_And_Bitcrush_-_Denouement.MP3",
+          "title": "01 SubtractiveLAD And Bitcrush   Denouement",
+          "artist": "SubtractiveLAD & Bitcrush",
+          "duration_sec": 256.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/sute014",
+          "download_url": "https://archive.org/download/sute014/01_SubtractiveLAD_And_Bitcrush_-_Denouement.MP3",
+          "license": "CC"
+        }
+      ]
+    },
+    {
+      "query": "cinematic orchestral dramatic",
+      "top_k": 5,
+      "min_duration": 60.0,
+      "elapsed_seconds": 2.76,
+      "returned": 5,
+      "pure_music_flagged": [],
+      "results": [
+        {
+          "rank": 1,
+          "source": "internet_archive",
+          "id": "apl030/apl030-01-tlon_-_may_we_be_us.mp3",
+          "title": "apl030 01 tlon   may we be us",
+          "artist": "tlon",
+          "duration_sec": 337.23,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/apl030",
+          "download_url": "https://archive.org/download/apl030/apl030-01-tlon_-_may_we_be_us.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 2,
+          "source": "internet_archive",
+          "id": "apl030/apl030-02-tlon_-_escaping_the_land.mp3",
+          "title": "apl030 02 tlon   escaping the land",
+          "artist": "tlon",
+          "duration_sec": 291.84,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/apl030",
+          "download_url": "https://archive.org/download/apl030/apl030-02-tlon_-_escaping_the_land.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 3,
+          "source": "internet_archive",
+          "id": "apl030/apl030-03-tlon_-_in_the_shadow_of_unexpectation.mp3",
+          "title": "apl030 03 tlon   in the shadow of unexpectation",
+          "artist": "tlon",
+          "duration_sec": 421.63,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/apl030",
+          "download_url": "https://archive.org/download/apl030/apl030-03-tlon_-_in_the_shadow_of_unexpectation.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 4,
+          "source": "internet_archive",
+          "id": "apl030/apl030-04-tlon_-_about_us.mp3",
+          "title": "apl030 04 tlon   about us",
+          "artist": "tlon",
+          "duration_sec": 464.29,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/apl030",
+          "download_url": "https://archive.org/download/apl030/apl030-04-tlon_-_about_us.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 5,
+          "source": "internet_archive",
+          "id": "apl030/apl030-05-tlon_-_do_we_belong_here.mp3",
+          "title": "apl030 05 tlon   do we belong here",
+          "artist": "tlon",
+          "duration_sec": 279.04,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/apl030",
+          "download_url": "https://archive.org/download/apl030/apl030-05-tlon_-_do_we_belong_here.mp3",
+          "license": "CC"
+        }
+      ]
+    },
+    {
+      "query": "jazz lofi beats",
+      "top_k": 3,
+      "min_duration": 30.0,
+      "elapsed_seconds": 44.59,
+      "returned": 3,
+      "pure_music_flagged": [],
+      "results": [
+        {
+          "rank": 1,
+          "source": "internet_archive",
+          "id": "phoke035/phoke35-_-01-_-kryptic_universe-_-jazzyllusions.mp3",
+          "title": "phoke35   01   kryptic universe   jazzyllusions",
+          "artist": "kryptic universe",
+          "duration_sec": 321.12,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/phoke035",
+          "download_url": "https://archive.org/download/phoke035/phoke35-_-01-_-kryptic_universe-_-jazzyllusions.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 2,
+          "source": "internet_archive",
+          "id": "phoke035/phoke35-_-02-_-kryptic_universe-_-fufanu_79.mp3",
+          "title": "phoke35   02   kryptic universe   fufanu 79",
+          "artist": "kryptic universe",
+          "duration_sec": 367.26,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/phoke035",
+          "download_url": "https://archive.org/download/phoke035/phoke35-_-02-_-kryptic_universe-_-fufanu_79.mp3",
+          "license": "CC"
+        },
+        {
+          "rank": 3,
+          "source": "internet_archive",
+          "id": "DWK232/BaaskaT_-_01_-_Flow.mp3",
+          "title": "BaaskaT   01   Flow",
+          "artist": "BaaskaT",
+          "duration_sec": 168.0,
+          "genre": "netlabel / CC",
+          "url": "https://archive.org/details/DWK232",
+          "download_url": "https://archive.org/download/DWK232/BaaskaT_-_01_-_Flow.mp3",
+          "license": "CC"
+        }
+      ]
+    }
+  ],
+  "downloaded": [
+    {
+      "rank": 1,
+      "source": "internet_archive",
+      "id": "DWK123/ProleteR_-_01_-_April_Showers.mp3",
+      "title": "ProleteR   01   April Showers",
+      "artist": "ProleteR",
+      "duration_sec": 269.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/DWK123",
+      "download_url": "https://archive.org/download/DWK123/ProleteR_-_01_-_April_Showers.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/ProleteR_ProleteR___01___April_Showers.mp3"
+    },
+    {
+      "rank": 2,
+      "source": "internet_archive",
+      "id": "DWK123/ProleteR_-_02_-_Downtown_Irony.mp3",
+      "title": "ProleteR   02   Downtown Irony",
+      "artist": "ProleteR",
+      "duration_sec": 261.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/DWK123",
+      "download_url": "https://archive.org/download/DWK123/ProleteR_-_02_-_Downtown_Irony.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/ProleteR_ProleteR___02___Downtown_Irony.mp3"
+    },
+    {
+      "rank": 3,
+      "source": "internet_archive",
+      "id": "DWK123/ProleteR_-_03_-_Soul_Key.mp3",
+      "title": "ProleteR   03   Soul Key",
+      "artist": "ProleteR",
+      "duration_sec": 303.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/DWK123",
+      "download_url": "https://archive.org/download/DWK123/ProleteR_-_03_-_Soul_Key.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/ProleteR_ProleteR___03___Soul_Key.mp3"
+    },
+    {
+      "rank": 4,
+      "source": "internet_archive",
+      "id": "DWK123/ProleteR_-_04_-_A_Million_Dollar.mp3",
+      "title": "ProleteR   04   A Million Dollar",
+      "artist": "ProleteR",
+      "duration_sec": 248.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/DWK123",
+      "download_url": "https://archive.org/download/DWK123/ProleteR_-_04_-_A_Million_Dollar.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/ProleteR_ProleteR___04___A_Million_Dollar.mp3"
+    },
+    {
+      "rank": 5,
+      "source": "internet_archive",
+      "id": "DWK123/ProleteR_-_05_-_U_Can_Get_It.mp3",
+      "title": "ProleteR   05   U Can Get It",
+      "artist": "ProleteR",
+      "duration_sec": 259.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/DWK123",
+      "download_url": "https://archive.org/download/DWK123/ProleteR_-_05_-_U_Can_Get_It.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/ProleteR_ProleteR___05___U_Can_Get_It.mp3"
+    },
+    {
+      "rank": 1,
+      "source": "internet_archive",
+      "id": "puMpL006_-_postunder_records_-_minimags_compilation_vol_1/afshar_-_birds_dont_fly_they_just_jump_really_high.mp3",
+      "title": "afshar   birds dont fly they just jump really high",
+      "artist": "Afshar",
+      "duration_sec": 257.79,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/puMpL006_-_postunder_records_-_minimags_compilation_vol_1",
+      "download_url": "https://archive.org/download/puMpL006_-_postunder_records_-_minimags_compilation_vol_1/afshar_-_birds_dont_fly_they_just_jump_really_high.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/Afshar_afshar___birds_dont_fly_they_just_jump_really_high.mp3"
+    },
+    {
+      "rank": 2,
+      "source": "internet_archive",
+      "id": "puMpL006_-_postunder_records_-_minimags_compilation_vol_1/black_mizi_pro_duck_sun_-_ennio_morricone_-_once_upon_a_time.mp3",
+      "title": "black mizi pro duck sun   ennio morricone   once upon a time",
+      "artist": "Black Mizi Pro Duck Sun",
+      "duration_sec": 356.41,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/puMpL006_-_postunder_records_-_minimags_compilation_vol_1",
+      "download_url": "https://archive.org/download/puMpL006_-_postunder_records_-_minimags_compilation_vol_1/black_mizi_pro_duck_sun_-_ennio_morricone_-_once_upon_a_time.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/Black_Mizi_Pro_Duck_Sun_black_mizi_pro_duck_sun___ennio_morricone___once_upon_a_time.mp3"
+    },
+    {
+      "rank": 3,
+      "source": "internet_archive",
+      "id": "sute014/01_SubtractiveLAD_And_Bitcrush_-_Denouement.MP3",
+      "title": "01 SubtractiveLAD And Bitcrush   Denouement",
+      "artist": "SubtractiveLAD & Bitcrush",
+      "duration_sec": 256.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/sute014",
+      "download_url": "https://archive.org/download/sute014/01_SubtractiveLAD_And_Bitcrush_-_Denouement.MP3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/SubtractiveLAD___Bitcrush_01_SubtractiveLAD_And_Bitcrush___Denouement.MP3"
+    },
+    {
+      "rank": 1,
+      "source": "internet_archive",
+      "id": "apl030/apl030-01-tlon_-_may_we_be_us.mp3",
+      "title": "apl030 01 tlon   may we be us",
+      "artist": "tlon",
+      "duration_sec": 337.23,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/apl030",
+      "download_url": "https://archive.org/download/apl030/apl030-01-tlon_-_may_we_be_us.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/tlon_apl030_01_tlon___may_we_be_us.mp3"
+    },
+    {
+      "rank": 2,
+      "source": "internet_archive",
+      "id": "apl030/apl030-02-tlon_-_escaping_the_land.mp3",
+      "title": "apl030 02 tlon   escaping the land",
+      "artist": "tlon",
+      "duration_sec": 291.84,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/apl030",
+      "download_url": "https://archive.org/download/apl030/apl030-02-tlon_-_escaping_the_land.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/tlon_apl030_02_tlon___escaping_the_land.mp3"
+    },
+    {
+      "rank": 3,
+      "source": "internet_archive",
+      "id": "apl030/apl030-03-tlon_-_in_the_shadow_of_unexpectation.mp3",
+      "title": "apl030 03 tlon   in the shadow of unexpectation",
+      "artist": "tlon",
+      "duration_sec": 421.63,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/apl030",
+      "download_url": "https://archive.org/download/apl030/apl030-03-tlon_-_in_the_shadow_of_unexpectation.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/tlon_apl030_03_tlon___in_the_shadow_of_unexpectation.mp3"
+    },
+    {
+      "rank": 4,
+      "source": "internet_archive",
+      "id": "apl030/apl030-04-tlon_-_about_us.mp3",
+      "title": "apl030 04 tlon   about us",
+      "artist": "tlon",
+      "duration_sec": 464.29,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/apl030",
+      "download_url": "https://archive.org/download/apl030/apl030-04-tlon_-_about_us.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/tlon_apl030_04_tlon___about_us.mp3"
+    },
+    {
+      "rank": 5,
+      "source": "internet_archive",
+      "id": "apl030/apl030-05-tlon_-_do_we_belong_here.mp3",
+      "title": "apl030 05 tlon   do we belong here",
+      "artist": "tlon",
+      "duration_sec": 279.04,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/apl030",
+      "download_url": "https://archive.org/download/apl030/apl030-05-tlon_-_do_we_belong_here.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/tlon_apl030_05_tlon___do_we_belong_here.mp3"
+    },
+    {
+      "rank": 1,
+      "source": "internet_archive",
+      "id": "phoke035/phoke35-_-01-_-kryptic_universe-_-jazzyllusions.mp3",
+      "title": "phoke35   01   kryptic universe   jazzyllusions",
+      "artist": "kryptic universe",
+      "duration_sec": 321.12,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/phoke035",
+      "download_url": "https://archive.org/download/phoke035/phoke35-_-01-_-kryptic_universe-_-jazzyllusions.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/kryptic_universe_phoke35___01___kryptic_universe___jazzyllusions.mp3"
+    },
+    {
+      "rank": 2,
+      "source": "internet_archive",
+      "id": "phoke035/phoke35-_-02-_-kryptic_universe-_-fufanu_79.mp3",
+      "title": "phoke35   02   kryptic universe   fufanu 79",
+      "artist": "kryptic universe",
+      "duration_sec": 367.26,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/phoke035",
+      "download_url": "https://archive.org/download/phoke035/phoke35-_-02-_-kryptic_universe-_-fufanu_79.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/kryptic_universe_phoke35___02___kryptic_universe___fufanu_79.mp3"
+    },
+    {
+      "rank": 3,
+      "source": "internet_archive",
+      "id": "DWK232/BaaskaT_-_01_-_Flow.mp3",
+      "title": "BaaskaT   01   Flow",
+      "artist": "BaaskaT",
+      "duration_sec": 168.0,
+      "genre": "netlabel / CC",
+      "url": "https://archive.org/details/DWK232",
+      "download_url": "https://archive.org/download/DWK232/BaaskaT_-_01_-_Flow.mp3",
+      "license": "CC",
+      "local_path": "/Users/chenyu/Desktop/ICLR2027/Code/asset_retrieval_tool/test_results/downloaded/bgm/BaaskaT_BaaskaT___01___Flow.mp3"
+    }
+  ]
+}

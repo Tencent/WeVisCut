@@ -1,0 +1,134 @@
+<style data-hf="structure-css">
+[data-hf="structure-dom"] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 56px 70px;
+  overflow: hidden;
+}
+
+[data-hf="structure-dom"] .io-title {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 60px;
+  line-height: 1.2;
+  color: var(--ink-1);
+  text-align: center;
+  max-width: 1000px;
+}
+
+[data-hf="structure-dom"] .io-card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 320px;
+  padding: 32px 28px;
+  border-radius: var(--radius-card);
+  background: var(--stage-bg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-hf="structure-dom"] .io-card.c1 { left: 8%; top: 34%; }
+[data-hf="structure-dom"] .io-card.c2 { left: 50%; top: 48%; transform: translateX(-50%); }
+[data-hf="structure-dom"] .io-card.c3 { right: 8%; top: 32%; }
+
+[data-hf="structure-dom"] .io-icon {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-hf="structure-dom"] .io-icon svg { width: 100%; height: 100%; display: block; }
+
+[data-hf="structure-dom"] .io-stat {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  font-size: 56px;
+  line-height: 1.1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-hf="structure-dom"] .io-card.c2 .io-stat { color: var(--accent-2); }
+[data-hf="structure-dom"] .io-card.c3 .io-stat { color: var(--success); }
+
+[data-hf="structure-dom"] .io-caption {
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
+  font-size: 24px;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+[data-hf="structure-dom"] .io-line {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+</style>
+
+<div data-hf="structure-dom">
+  <h2 class="io-title" data-anim-role="title" data-slot="headline">三个关键指标</h2>
+
+  <div class="io-card c1">
+    <span class="io-icon" data-anim-role="icon">
+      <svg viewBox="0 0 48 48" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round">
+        <circle cx="21" cy="21" r="13"></circle>
+        <line x1="31" y1="31" x2="41" y2="41"></line>
+      </svg>
+    </span>
+    <span class="io-stat" data-anim-role="stat" data-slot="icon1_value">10×</span>
+    <span class="io-caption" data-anim-role="caption" data-slot="icon1_label">推理加速</span>
+  </div>
+
+  <div class="io-card c2">
+    <span class="io-icon" data-anim-role="icon">
+      <svg viewBox="0 0 48 48" fill="none" stroke="var(--accent-2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M24 6c-8 0-13 5.5-13 13 0 5 2.6 8 5.5 10.5 1.5 1.3 2.5 2.5 2.5 4.5h10c0-2 1-3.2 2.5-4.5C37.4 27 40 24 40 19 40 11.5 32 6 24 6Z"></path>
+        <line x1="19" y1="40" x2="29" y2="40"></line>
+        <line x1="21" y1="44" x2="27" y2="44"></line>
+      </svg>
+    </span>
+    <span class="io-stat" data-anim-role="stat" data-slot="icon2_value">92%</span>
+    <span class="io-caption" data-anim-role="caption" data-slot="icon2_label">召回准确率</span>
+  </div>
+
+  <div class="io-card c3">
+    <span class="io-icon" data-anim-role="icon">
+      <svg viewBox="0 0 48 48" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="24" cy="24" r="7"></circle>
+        <path d="M24 5v6M24 37v6M5 24h6M37 24h6M11 11l4 4M33 33l4 4M37 11l-4 4M15 33l-4 4"></path>
+      </svg>
+    </span>
+    <span class="io-stat" data-anim-role="stat" data-slot="icon3_value">1/5</span>
+    <span class="io-caption" data-anim-role="caption" data-slot="icon3_label">部署成本</span>
+  </div>
+
+  <div class="io-line" data-anim-role="accent-line"></div>
+</div>
+
+<script data-hf="structure-script">
+window.__hf_structure_init = function (tl, ctx) {
+  var gsap = ctx.gsap, root = ctx.root;
+  var icons = root.querySelectorAll('[data-anim-role="icon"]');
+  if (icons.length) {
+    tl.from(icons, { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(1.6)", stagger: 0.1, transformOrigin: "center center" }, 0.2);
+    for (var i = 0; i < icons.length; i++) { icons[i].removeAttribute("data-anim-role"); }
+  }
+};
+</script>

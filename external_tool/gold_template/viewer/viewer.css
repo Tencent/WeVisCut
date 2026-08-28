@@ -1,0 +1,165 @@
+:root {
+  --vbg: #0b0f17;
+  --vpanel: #131925;
+  --vpanel-2: #1b2333;
+  --vline: #283145;
+  --vink: #e7edf6;
+  --vink-2: #9fb0c8;
+  --vink-3: #6b7a93;
+  --vaccent: #5b8cff;
+  --vaccent-2: #38d39f;
+  --vwarn: #ffb454;
+  --vbad: #ff6b6b;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: -apple-system, "Noto Sans SC", system-ui, "Segoe UI", sans-serif;
+  background: var(--vbg);
+  color: var(--vink);
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+}
+
+header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 20px; border-bottom: 1px solid var(--vline);
+  background: var(--vpanel);
+}
+header h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: .02em; }
+header .tag { font-size: 11px; color: var(--vink-3); }
+header .spacer { flex: 1; }
+header .combo-id {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+  color: var(--vaccent-2); background: var(--vpanel-2);
+  padding: 3px 10px; border-radius: 999px; border: 1px solid var(--vline);
+}
+
+main { flex: 1; display: flex; min-height: 0; }
+
+/* ── left controls ── */
+.controls {
+  width: 280px; flex: 0 0 280px; overflow-y: auto;
+  border-right: 1px solid var(--vline); background: var(--vpanel);
+  padding: 12px; display: flex; flex-direction: column; gap: 12px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; color: var(--vink-2); font-weight: 600; letter-spacing: .03em; }
+.field select, .field input[type="number"], .field input[type="text"] {
+  width: 100%; background: var(--vpanel-2); color: var(--vink);
+  border: 1px solid var(--vline); border-radius: 6px; padding: 7px 8px;
+  font-size: 12px; font-family: inherit;
+}
+.field select:focus, .field input:focus {
+  outline: none; border-color: var(--vaccent);
+}
+.field .hint { font-size: 10px; color: var(--vink-3); }
+option[disabled] { color: var(--vink-3); }
+
+.compat-warn {
+  font-size: 10px; color: var(--vwarn); background: rgba(255,180,84,.1);
+  border: 1px solid rgba(255,180,84,.35); border-radius: 6px; padding: 6px 8px;
+  line-height: 1.5;
+}
+
+.row { display: flex; gap: 6px; flex-wrap: wrap; }
+.field.half { flex: 1 1 80px; min-width: 80px; }
+.timing-row { gap: 6px; }
+.bg-video-field.hidden { display: none; }
+
+button {
+  background: var(--vpanel-2); color: var(--vink);
+  border: 1px solid var(--vline); border-radius: 6px;
+  padding: 6px 10px; font-size: 12px; cursor: pointer; font-family: inherit;
+  transition: background .12s, border-color .12s;
+}
+button:hover { background: #232c40; border-color: var(--vaccent); }
+button.primary { background: var(--vaccent); border-color: var(--vaccent); color: #fff; font-weight: 600; }
+button.primary:hover { background: #6f9bff; }
+button.ghost { background: transparent; }
+button.sm { padding: 4px 8px; font-size: 11px; }
+
+/* ── center preview ── */
+.stage-wrap {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  background: #05070c;
+}
+.preview-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 16px; overflow: hidden; position: relative;
+}
+.frame-box {
+  position: relative; overflow: hidden; border-radius: var(--radius);
+  box-shadow: 0 24px 70px rgba(0,0,0,.6); background: #000;
+}
+.frame-box iframe {
+  width: 1920px; height: 1080px; border: 0; transform-origin: top left; display: block;
+}
+.empty-hint {
+  color: var(--vink-3); font-size: 13px; text-align: center; line-height: 1.7;
+}
+
+.transport {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-top: 1px solid var(--vline); background: var(--vpanel);
+}
+.transport .status { font-size: 11px; color: var(--vink-3); margin-left: auto; }
+.transport .status.err { color: var(--vbad); }
+.transport .status.ok { color: var(--vaccent-2); }
+
+/* ── SFX bar ── */
+.sfxbar {
+  border-top: 1px solid var(--vline); background: var(--vpanel-2);
+  padding: 8px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  min-height: 44px;
+}
+.sfxbar .title { font-size: 11px; font-weight: 700; color: var(--vink-2); letter-spacing: .04em; }
+.sfx-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--vpanel); border: 1px solid var(--vline); border-radius: 999px;
+  padding: 4px 8px 4px 6px; font-size: 11px;
+}
+.sfx-chip input[type="checkbox"] { accent-color: var(--vaccent); width: 14px; height: 14px; }
+.sfx-chip .name { font-weight: 600; }
+.sfx-chip .meta { color: var(--vink-3); font-family: ui-monospace, monospace; }
+.sfx-chip .play { cursor: pointer; border-radius: 999px; padding: 2px 6px; }
+.sfxbar .none { font-size: 11px; color: var(--vink-3); }
+
+/* ── right slots panel ── */
+.slots-panel {
+  width: 320px; flex: 0 0 320px; overflow-y: auto;
+  border-left: 1px solid var(--vline); background: var(--vpanel);
+  padding: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.slots-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.slots-header label { font-size: 11px; color: var(--vink-2); font-weight: 600; letter-spacing: .03em; }
+#slotFields {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+.slot-field { display: flex; flex-direction: column; gap: 3px; }
+.slot-field label {
+  font-size: 10px; color: var(--vink-2); font-weight: 600; letter-spacing: .02em;
+  display: flex; align-items: center; gap: 6px;
+}
+.slot-field label .slot-tag {
+  font-size: 9px; color: var(--vink-3); background: var(--vpanel-2);
+  padding: 1px 5px; border-radius: 4px; font-weight: 400;
+}
+.slot-field input[type="text"] {
+  width: 100%; background: var(--vpanel-2); color: var(--vink);
+  border: 1px solid var(--vline); border-radius: 6px; padding: 7px 8px;
+  font-size: 12px; font-family: inherit;
+}
+.slot-field input[type="text"]:focus { outline: none; border-color: var(--vaccent); }
+.slot-field textarea.slot-json {
+  width: 100%; min-height: 90px; resize: vertical;
+  background: var(--vpanel-2); color: var(--vink);
+  border: 1px solid var(--vline); border-radius: 6px; padding: 6px 8px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px;
+  line-height: 1.4;
+}
+.slot-field textarea.slot-json:focus { outline: none; border-color: var(--vaccent); }
+.slots-panel .hint { font-size: 10px; color: var(--vink-3); }

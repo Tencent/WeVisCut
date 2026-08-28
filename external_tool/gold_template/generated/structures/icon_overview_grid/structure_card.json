@@ -1,0 +1,15 @@
+{
+  "structure_id": "icon_overview_grid",
+  "family": "diagram",
+  "bound": true,
+  "display_name": "图标概要卡",
+  "use_for": ["关键数字配图标", "概要卡片", "emoji图标展示"],
+  "spotlight_level": "mid",
+  "duration_range": [4.5, 7.0],
+  "anim_roles": ["title", "icon", "stat", "caption", "accent-line"],
+  "slots": ["headline", "icon1_value", "icon1_label", "icon2_value", "icon2_label", "icon3_value", "icon3_label"],
+  "sfx_cues": [
+    {"at": 0.2, "sfx": "pop", "comment": "图标弹现"},
+    {"at": 0.5, "sfx": "sparkle", "comment": "指标高亮"}
+  ]
+}

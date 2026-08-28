@@ -1,0 +1,10 @@
+{
+  "motion_id": "parallax_pan",
+  "label": "视差平移",
+  "targets": ["bg", "media", "title", "list-item", "accent-line"],
+  "sfx_cues": [
+    { "at": 0.15, "sfx": "whoosh", "comment": "视差滑入" }
+  ],
+  "style": "spatial_depth",
+  "deterministic": true
+}

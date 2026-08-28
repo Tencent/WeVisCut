@@ -1,0 +1,10 @@
+{
+  "structure_id": "myth_busting_wipe",
+  "family": "narrative",
+  "use_for": ["误区纠正", "谣言辟谣", "认知翻转"],
+  "spotlight_level": "high",
+  "duration_range": [5.0, 7.5],
+  "anim_roles": ["eyebrow", "decoration", "title", "body"],
+  "slots": ["eyebrow", "wrong_text", "right_text"],
+  "sfx": [{"at": 0.5, "sfx": "pop"}, {"at": 3.2, "sfx": "whoosh"}, {"at": 3.8, "sfx": "chime"}]
+}

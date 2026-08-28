@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "eyebrow", "type": "string", "label": "顶部标签", "default": "太空趣闻"}, {"id": "emoji_icon", "type": "string", "label": "主图标Emoji", "default": "🌍"}, {"id": "fact_text", "type": "string", "label": "核心事实", "default": "地球每天变重 60 吨"}, {"id": "explain_text", "type": "string", "label": "解释说明", "default": "每天有大量宇宙尘埃和微陨石落入大气层"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ===== fonts (CJK 必须本地注入；HyperFrames 内置列表为拉丁字体) ===== */
+      @font-face{font-family:"Noto Sans SC";font-weight:900;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Black.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Bold.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:500;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Medium.ttf") format("truetype");}
+      @font-face{font-family:"Noto Sans SC";font-weight:400;font-style:normal;font-display:block;src:url("fonts/NotoSansSC-Regular.ttf") format("truetype");}
+      @font-face{font-family:"Noto Serif SC";font-weight:700;font-style:normal;font-display:block;src:url("fonts/NotoSerifSC-Bold.otf") format("opentype");}
+      /* ===== reset ===== */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; }
+      /* ===== centered translucent rounded stage panel (geometry fixed here, look from tokens) ===== */
+      #scene { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+      .stage-panel {
+        position: relative; overflow: hidden;
+        width: calc(100% - 320px); height: calc(100% - 200px);
+        background: var(--stage-bg); border-radius: var(--radius-stage);
+        box-shadow: var(--shadow-soft);
+        -webkit-backdrop-filter: blur(var(--stage-blur, 0px)); backdrop-filter: blur(var(--stage-blur, 0px));
+      }
+      /* ===== Layer 3: visual tokens (neon_cyber) ===== */
+      :root {
+        --bg: #070612;
+        --bg-2: #0d0a20;
+        --surface: rgba(30, 20, 60, 0.55);
+        --surface-2: rgba(30, 20, 60, 0.8);
+        --ink-1: #f5f0ff;
+        --ink-2: #c9bdf0;
+        --ink-3: #8a7fb5;
+        --accent: #ff3df0;
+        --accent-2: #27e1ff;
+        --danger: #ff5470;
+        --success: #5cffb0;
+        --line: rgba(255, 61, 240, 0.18);
+        --line-strong: rgba(39, 225, 255, 0.5);
+        --font-display: "Noto Sans SC", system-ui, sans-serif;
+        --font-body: "Noto Sans SC", system-ui, sans-serif;
+        --font-caption: "Noto Sans SC", system-ui, sans-serif;
+        --weight-display: 800;
+        --weight-body: 500;
+        --radius-card: 16px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.6);
+        --shadow-glow: 0 0 48px rgba(255, 61, 240, 0.45);
+        --grid-color: rgba(39, 225, 255, 0.06);
+        --stage-bg: rgba(13, 10, 32, 0.5);
+        --radius-stage: 36px;
+        --stage-blur: 12px;
+      }
+
+      .stage {
+        font-family: var(--font-body);
+        color: var(--ink-1);
+        background: var(--bg);
+      }
+
+      .bg-stage {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 60% 50% at 20% 80%, rgba(255, 61, 240, 0.18) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 60% at 80% 20%, rgba(39, 225, 255, 0.14) 0%, transparent 70%),
+          repeating-linear-gradient(
+            0deg,
+            var(--grid-color) 0px,
+            var(--grid-color) 1px,
+            transparent 1px,
+            transparent 60px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            var(--grid-color) 0px,
+            var(--grid-color) 1px,
+            transparent 1px,
+            transparent 60px
+          ),
+          var(--bg);
+        box-shadow: inset 0 0 120px rgba(255, 61, 240, 0.08), inset 0 0 80px rgba(39, 225, 255, 0.06);
+        border-radius: var(--radius-stage);
+        backdrop-filter: blur(var(--stage-blur));
+      }
+
+      .caption-bar {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 12px 20px;
+        box-shadow: var(--shadow-glow);
+      }
+
+      .caption-bar .caption-text {
+        font-family: var(--font-body);
+        font-weight: var(--weight-display);
+        font-size: 24px;
+        color: var(--ink-1);
+        text-shadow: 0 0 12px var(--accent), 0 0 4px var(--accent-2);
+      }
+      /* ===== Layer 1: structure css (fun_fact_stack) ===== */
+      [data-hf="structure-dom"] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 60px 100px;
+        gap: 0;
+        box-sizing: border-box;
+        text-align: center;
+      }
+
+      [data-hf="structure-dom"] .stage-panel {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      [data-hf="structure-dom"] .top-half {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1;
+        gap: 16px;
+        padding-bottom: 24px;
+      }
+
+      [data-hf="structure-dom"] .bottom-half {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        flex: 1;
+        gap: 20px;
+        padding-top: 24px;
+      }
+
+      [data-hf="structure-dom"] .eyebrow-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 9px 30px;
+        border-radius: var(--radius-pill);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        font-family: var(--font-caption);
+        font-weight: var(--weight-body);
+        font-size: 22px;
+        color: var(--ink-2);
+        letter-spacing: 0.1em;
+      }
+
+      [data-hf="structure-dom"] .emoji-hero {
+        font-size: 180px;
+        line-height: 1;
+      }
+
+      [data-hf="structure-dom"] .fact-text {
+        font-family: var(--font-display);
+        font-weight: var(--weight-display);
+        font-size: 88px;
+        line-height: 1.15;
+        color: var(--ink-1);
+        max-width: 1200px;
+      }
+
+      [data-hf="structure-dom"] .explain-text {
+        font-family: var(--font-body);
+        font-weight: var(--weight-body);
+        font-size: 34px;
+        line-height: 1.5;
+        color: var(--ink-2);
+        max-width: 1000px;
+      }
+    </style>
+  </head>
+  <body class="stage">
+    <div id="root" data-composition-id="root" data-start="0" data-duration="5.5" data-width="1920" data-height="1080">
+      <div class="bg-stage" data-anim-role="bg"></div>
+      <div id="scene" class="clip" data-start="0" data-duration="5.5" data-track-index="1">
+        <div class="stage-panel">
+          <div data-hf="structure-dom">
+            <div class="top-half">
+              <div class="eyebrow-pill" data-anim-role="eyebrow" data-slot="eyebrow">冷知识</div>
+              <div class="emoji-hero" data-anim-role="decoration" data-slot="emoji_icon">🐙</div>
+            </div>
+            <div class="bottom-half">
+              <h1 class="fact-text" data-anim-role="title" data-slot="fact_text">章鱼有三颗心脏</h1>
+              <p class="explain-text" data-anim-role="subtitle" data-slot="explain_text">两颗负责鳃部供血，一颗负责全身循环</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== SFX audio tracks ===== -->
+      <audio id="sfx-0" data-start="0.3" data-duration="0.6" data-track-index="102" src="sfx/pop.mp3" data-volume="0.3"></audio>
+      <audio id="sfx-1" data-start="0.4" data-duration="0.6" data-track-index="103" src="sfx/pop.mp3" data-volume="0.3"></audio>
+      <audio id="sfx-2" data-start="1.0" data-duration="1.5" data-track-index="104" src="sfx/sparkle.mp3" data-volume="0.4"></audio>
+    </div>
+    <!-- ===== Layer 2: motion (scale_pop_hold) ===== -->
+    <script>
+      window.__hf_motions = window.__hf_motions || {};
+      window.__hf_motions["scale_pop_hold"] = function (tl, ctx) {
+        var gsap = ctx.gsap, root = ctx.root;
+        var $ = function (role) { return root.querySelectorAll('[data-anim-role="' + role + '"]'); };
+
+        if ($("eyebrow").length) {
+          tl.from($("eyebrow"), { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.15);
+        }
+        if ($("title").length) {
+          tl.from($("title"), { scale: 0.82, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("subtitle").length) {
+          tl.from($("subtitle"), { y: 24, opacity: 0, duration: 0.55, ease: "expo.out" }, 0.62);
+        }
+        if ($("stat").length) {
+          tl.from($("stat"), { scale: 0.75, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, 0.30);
+        }
+        if ($("unit").length) {
+          tl.from($("unit"), { scale: 0.7, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 0.65);
+        }
+        if ($("card").length) {
+          tl.from($("card"), { scale: 0.92, opacity: 0, duration: 0.55, ease: "back.out(1.3)", stagger: 0.15 }, 0.40);
+        }
+        if ($("list-item").length) {
+          tl.from($("list-item"), { y: 20, opacity: 0, duration: 0.4, ease: "power2.out", stagger: 0.10 }, 0.70);
+        }
+        if ($("media").length) {
+          tl.from($("media"), { scale: 0.94, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.35);
+        }
+        if ($("caption").length) {
+          tl.from($("caption"), { y: 16, opacity: 0, duration: 0.45, ease: "power2.out" }, 0.80);
+        }
+        if ($("accent-line").length) {
+          tl.from($("accent-line"), { scaleX: 0, opacity: 0, duration: 0.5, ease: "power2.out", transformOrigin: "left center" }, 0.85);
+        }
+        if ($("badge").length) {
+          tl.from($("badge"), { y: 16, opacity: 0, duration: 0.4, ease: "power2.out" }, 0.90);
+        }
+        if ($("cta").length) {
+          tl.from($("cta"), { scale: 0.9, opacity: 0, duration: 0.45, ease: "back.out(1.2)" }, 1.0);
+        }
+      };
+    </script>
+    <script>
+            const V = window.__hyperframes.getVariables();
+            document.querySelectorAll('[data-slot]').forEach(function (el) {
+              const k = el.getAttribute('data-slot');
+              if (V[k] !== undefined && V[k] !== null) el.textContent = V[k];
+            });
+            const root = document.getElementById('root');
+            const tl = gsap.timeline({ paused: true });
+            if (window.__hf_structure_init) {
+              window.__hf_structure_init(tl, { gsap: gsap, root: root, duration: 5.5, isFinal: false });
+            }
+            if (window.__hf_motions && window.__hf_motions["scale_pop_hold"]) {
+              window.__hf_motions["scale_pop_hold"](tl, { gsap: gsap, root: root, duration: 5.5, isFinal: false });
+            }
+            window.__timelines = window.__timelines || {};
+            window.__timelines["root"] = tl;
+        
+    
+    </script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "motion_id": "scale_pop_hold",
+  "energy": "mid",
+  "desc": "标题 scale+back.out 弹出，配 eyebrow 上滑、副标题渐显，适合开头钩子",
+  "targets": ["eyebrow", "title", "subtitle", "accent-line", "badge", "cta"],
+  "sfx_cues": [
+    { "at": 0.30, "sfx": "pop", "comment": "标题弹出" }
+  ]
+}
