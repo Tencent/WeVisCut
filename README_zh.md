@@ -115,7 +115,17 @@ pip install -r requirements.txt
 pip install -r requirements-gpu.txt
 ```
 
-`ms-swift` 必须是注册了 `qwen3_5` 模型类型的版本。如果你装的那个没有，把
+有两处 pin 是关键的。
+
+**harness。** `deepagents` 从上游 `0.7.7` release tag 安装，而不是从 PyPI 装，这样
+代码树与本策略开发时所用的完全一致。这条路径需要 `git` 和访问 `github.com` 的能力；
+在无法访问的环境下，发布包是等价的（该 tag 上真正打包的源码与之完全相同），改用
+`pip install deepagents==0.7.7` 即可。两种写法都不要放宽版本约束：
+`aicut_agent/agent.py` 依赖 `HarnessProfile` 和 `register_harness_profile` 来剔除
+内置工具集，如果 harness 版本改动了这些 API，结果是直接 import 失败，而不是悄悄
+降级。
+
+**`ms-swift`。** 必须是注册了 `qwen3_5` 模型类型的版本。如果你装的那个没有，把
 `model.ms_swift_path` 指向一个包含该注册的 checkout，或者导出
 `AICUT_MS_SWIFT_PATH`。
 

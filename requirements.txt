@@ -9,7 +9,20 @@
 # ==========================================================================
 
 # ── Agent harness ──
-deepagents==0.7.7
+# Pinned to the upstream 0.7.7 release tag rather than the PyPI package, so the
+# harness tree is byte-for-byte the one this policy was developed against. The
+# tag resolves to commit 42ed9406f08dfec11369631011405c1dc650293a; substitute
+# that SHA below if the tag ever moves.
+#
+# aicut_agent/agent.py depends on HarnessProfile / register_harness_profile /
+# GeneralPurposeSubagentProfile to strip the built-in tool suite, so a harness
+# version that changes those APIs will not just degrade — it will fail to
+# import. Do not float this pin.
+#
+# Needs git and access to github.com. Where that is unavailable, the released
+# package is equivalent (the shipped source at the tag is identical to it):
+#     pip install deepagents==0.7.7
+deepagents @ git+https://github.com/langchain-ai/deepagents.git@deepagents==0.7.7#subdirectory=libs/deepagents
 langchain>=1.3.14,<2.0.0
 langchain-core>=1.5.0,<2.0.0
 langgraph>=1.2.0

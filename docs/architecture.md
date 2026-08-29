@@ -216,6 +216,11 @@ The model ends up seeing the 12 tools it was trained on and nothing else. This i
 asserted by `tests/test_aicut_agent.py`, because a harness upgrade silently
 adding a tool would be an easy regression to miss.
 
+This is also why `deepagents` is pinned to an exact upstream tag in
+`requirements.txt` rather than a range. The action space the policy sees is a
+function of the harness version, so the harness is part of the training contract,
+not an interchangeable dependency.
+
 ---
 
 ## The tool environment (`pipeline/`)

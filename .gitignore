@@ -54,6 +54,9 @@ external_tool/mmfinder/*
 external_tool/gold_template/fonts/*
 !external_tool/gold_template/fonts/README.md
 external_tool/gold_template/renders/
+# Scratch shot composites the renderer drops in the template root. The tracked
+# `_*.py` helpers are unaffected; nothing tracked here matches `_*.html`.
+external_tool/gold_template/_*.html
 external_tool/asset_retrieval_tool/test_results/downloaded/
 
 # ── Editor / OS ──

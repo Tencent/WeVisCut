@@ -122,8 +122,19 @@ pip install -r requirements.txt
 pip install -r requirements-gpu.txt
 ```
 
-`ms-swift` must be a build that registers the `qwen3_5` model type. If yours does
-not, point `model.ms_swift_path` at a checkout that does, or export
+Two pins are load-bearing.
+
+**The harness.** `deepagents` is installed from its upstream `0.7.7` release tag,
+not from PyPI, so the tree is exactly the one this policy was developed against.
+This needs `git` and access to `github.com`; where that is unavailable the
+released package is equivalent — the shipped source at that tag is identical to
+it — so substitute `pip install deepagents==0.7.7`. Do not float the pin either
+way: `aicut_agent/agent.py` uses `HarnessProfile` and `register_harness_profile`
+to strip the built-in tool suite, and a version that reshapes those APIs fails to
+import rather than degrading quietly.
+
+**`ms-swift`.** It must be a build that registers the `qwen3_5` model type. If
+yours does not, point `model.ms_swift_path` at a checkout that does, or export
 `AICUT_MS_SWIFT_PATH`.
 
 ### 2. External runtimes
