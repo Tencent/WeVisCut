@@ -52,7 +52,10 @@ OP_SPEC: dict[str, dict[str, Any]] = {
     },
     "swap_template": {
         "required": ["shot_id"],
-        "optional": ["structure_id", "motion_id", "visual_id"],
+        # ``slots`` is accepted here because switching structure_id clears the
+        # old slots: refilling them is part of the same edit, and rejecting the
+        # combined form threw away the whole batch.
+        "optional": ["structure_id", "motion_id", "visual_id", "slots"],
         "label": "换模板",
         "risk": "high",
     },
@@ -118,6 +121,66 @@ class OpResult:
 
 def _as_dict(v: Any) -> dict[str, Any]:
     return v if isinstance(v, dict) else {}
+
+
+# ---------------------------------------------------------------------------
+# Gold Template registry
+# ---------------------------------------------------------------------------
+# Which file proves a template layer actually exists on disk. The renderer
+# (`timeline_compose._resolve_*_id`) probes exactly these paths and silently
+# falls back to a default when one is missing, so an id that is not here is not
+# a template — it is a no-op that looks like a successful edit.
+_TEMPLATE_LAYERS: dict[str, tuple[str, str]] = {
+    "structure_id": ("structures", "structure.html"),
+    "motion_id": ("motions", "motion.js"),
+    "visual_id": ("visuals", "tokens.css"),
+}
+
+_REGISTRY_CACHE: dict[str, dict[str, list[str]]] = {}
+
+
+def _gold_template_root(project: Project) -> str:
+    paths = _as_dict(_as_dict(project.state.get("config")).get("paths"))
+    return str(paths.get("gold_template_root", "") or "").strip()
+
+
+def template_registry(project: Project) -> dict[str, list[str]]:
+    """Available ids per template layer, read from the Gold Template library.
+
+    Returns empty lists when the library is not configured or reachable; callers
+    treat that as "cannot verify" and skip validation rather than blocking edits
+    on a deployment that renders through some other backend.
+    """
+    root = _gold_template_root(project)
+    if not root:
+        return {key: [] for key in _TEMPLATE_LAYERS}
+
+    cached = _REGISTRY_CACHE.get(root)
+    if cached is not None:
+        return cached
+
+    registry: dict[str, list[str]] = {}
+    for key, (subdir, marker) in _TEMPLATE_LAYERS.items():
+        base = Path(root) / "generated" / subdir
+        try:
+            registry[key] = sorted(
+                d.name for d in base.iterdir() if (d / marker).is_file()
+            )
+        except OSError:
+            registry[key] = []
+    _REGISTRY_CACHE[root] = registry
+    return registry
+
+
+def _suggest(value: str, options: list[str], limit: int = 6) -> list[str]:
+    """Ids a caller plausibly meant, so a rejection is actionable."""
+    import difflib
+
+    close = difflib.get_close_matches(value, options, n=limit, cutoff=0.4)
+    if close:
+        return close
+    prefix = value.split("_")[0]
+    return [o for o in options if o.startswith(prefix)][:limit]
 
 
 # ---------------------------------------------------------------------------
@@ -199,6 +262,7 @@ def _trial_copy(project: Project) -> Project:
         state=copy.deepcopy(project.state),
         dirty={k: set(v) for k, v in project.dirty.items()},
         bgm_dirty=project.bgm_dirty,
+        restitch_dirty=project.restitch_dirty,
         history=[],
     )
 
@@ -262,11 +326,20 @@ def _op_set_narration(project: Project, op: dict[str, Any]) -> OpResult:
         raise EditError("旁白文字不能为空")
     old = str(shot.get("vocal_script", "") or "")
     shot["vocal_script"] = text
+    # A subtitle override was written against the *old* narration, so keeping it
+    # would caption the new audio with the previous wording. Narration is the
+    # source of truth: drop the override and let subtitles follow the new script.
+    stale_subtitle = str(shot.pop("subtitle_text", "") or "")
     # Invalidate the recorded audio so regeneration cannot silently reuse it.
     assets = project.assets_for(sid)
     assets.pop("audio_path", None)
     assets.pop("audio_meta", None)
     project.mark_dirty(sid, "tts")
+    if stale_subtitle and stale_subtitle != text:
+        return OpResult("set_narration", True,
+                        f"{sid} 旁白已更新，将重新配音（原先单独设置的字幕已同步为新旁白）",
+                        sid, {"old": old[:120], "new": text[:120],
+                              "dropped_subtitle": stale_subtitle[:120]})
     return OpResult("set_narration", True, f"{sid} 旁白已更新，将重新配音", sid,
                     {"old": old[:120], "new": text[:120]})
 
@@ -277,12 +350,33 @@ def _op_set_subtitle(project: Project, op: dict[str, Any]) -> OpResult:
     if not text:
         raise EditError("字幕文字不能为空")
     old = str(shot.get("subtitle_text") or shot.get("vocal_script", "") or "")
+    script = str(shot.get("vocal_script", "") or "")
     # Kept separate from vocal_script so display text can diverge from spoken
-    # audio without triggering a TTS regeneration.
+    # audio without triggering a TTS regeneration. An override equal to the
+    # narration is not a divergence, so store nothing rather than a duplicate
+    # that later narration edits would have to remember to clean up.
+    if _same_text(text, script):
+        shot.pop("subtitle_text", None)
+        project.mark_dirty(sid, "render")
+        return OpResult("set_subtitle", True, f"{sid} 字幕已与配音保持一致", sid,
+                        {"old": old[:120], "new": text[:120], "synced": True})
+
     shot["subtitle_text"] = text
     project.mark_dirty(sid, "render")
-    return OpResult("set_subtitle", True, f"{sid} 字幕已更新（不重新配音）", sid,
-                    {"old": old[:120], "new": text[:120]})
+    # This op deliberately skips TTS, so the audience now reads one thing and
+    # hears another. That is legitimate for a typo or a length trim, but it is
+    # the single easiest way to ship a cut whose captions do not match the
+    # voice-over, so say so instead of reporting a quiet success.
+    return OpResult("set_subtitle", True,
+                    f"{sid} 字幕已更新（不重新配音，配音仍是原文）", sid,
+                    {"old": old[:120], "new": text[:120],
+                     "diverges_from_narration": True,
+                     "narration": script[:120]})
+
+
+def _same_text(a: str, b: str) -> bool:
+    """Compare display/spoken text ignoring whitespace-only differences."""
+    return " ".join(str(a or "").split()) == " ".join(str(b or "").split())
 
 
 def _op_set_spotlight_slots(project: Project, op: dict[str, Any]) -> OpResult:
@@ -315,12 +409,26 @@ def _op_swap_template(project: Project, op: dict[str, Any]) -> OpResult:
         raise EditError(f"{sid} 不是 spotlight 镜头，无法换模板")
     assets = project.assets_for(sid)
     deco = _as_dict(assets.get("decoration"))
+    registry = template_registry(project)
     changed: dict[str, Any] = {}
     for key in ("structure_id", "motion_id", "visual_id"):
         val = op.get(key)
-        if val:
-            changed[key] = str(val)
-            deco[key] = str(val)
+        if not val:
+            continue
+        val = str(val)
+        # The renderer resolves an unknown id to a built-in default without
+        # complaining, so an unvalidated swap reports success while the cut keeps
+        # the old template. Reject it here instead, and say what is available.
+        known = registry.get(key) or []
+        if known and val not in known:
+            hint = _suggest(val, known)
+            raise EditError(
+                f"{key}={val!r} 不存在于模板库。"
+                + (f"是否想用: {', '.join(hint)}？" if hint else "")
+                + f"（共 {len(known)} 个可选，例如 {', '.join(known[:8])}）"
+            )
+        changed[key] = val
+        deco[key] = val
     if not changed:
         raise EditError("没有提供任何模板字段")
     # A different structure exposes different slots; stale values would render
@@ -328,6 +436,19 @@ def _op_swap_template(project: Project, op: dict[str, Any]) -> OpResult:
     if "structure_id" in changed:
         deco.pop("slots", None)
         deco.pop("template_id", None)
+
+    incoming_slots = op.get("slots")
+    if incoming_slots is not None:
+        if not isinstance(incoming_slots, dict):
+            raise EditError("slots 必须是对象，形如 {\"headline\": \"新标题\"}")
+        slots = _as_dict(deco.get("slots"))
+        # After a structure swap the old slot names are gone, so there is
+        # nothing to validate against and any name is provisional; the renderer
+        # maps them onto the new structure's schema.
+        slots.update({str(k): ("" if v is None else str(v)) for k, v in incoming_slots.items()})
+        deco["slots"] = slots
+        changed["slots"] = sorted(slots)
+
     assets["decoration"] = deco
     project.mark_dirty(sid, "decoration")
     return OpResult("swap_template", True, f"{sid} 模板已切换: {changed}", sid, changed)
@@ -371,6 +492,7 @@ def _op_reorder_shots(project: Project, op: dict[str, Any]) -> OpResult:
     project.state["shot_plan"] = [by_id[sid] for sid in new_order]
     # Clip content is unchanged; only concat order and subtitle timing shift,
     # so a re-stitch is enough and no shot needs re-rendering.
+    project.restitch_dirty = True
     return OpResult("reorder_shots", True, f"镜头顺序已调整（{len(new_order)} 个）", "",
                     {"order": new_order})
 
@@ -384,6 +506,7 @@ def _op_delete_shot(project: Project, op: dict[str, Any]) -> OpResult:
     ]
     project.shot_assets.pop(sid, None)
     project.dirty.pop(sid, None)
+    project.restitch_dirty = True
     return OpResult("delete_shot", True, f"{sid} 已删除", sid)
 
 
@@ -408,12 +531,19 @@ def _op_set_bgm(project: Project, op: dict[str, Any]) -> OpResult:
         if query:
             project.state["bgm_query"] = query
             details["query"] = query
+            if not style:
+                # Keep the field the digest and the search node read in sync with
+                # the request, otherwise the UI keeps showing the style chosen at
+                # generation time.
+                project.state["music_style"] = query
         project.state["bgm_tracks"] = []
         project.bgm_dirty = True
 
     if not details:
         raise EditError("set_bgm 需要 query / music_style / volume 至少一项")
-    # Volume is applied by the stitch step, so either path needs a re-stitch.
+    # Volume is applied by the stitch step, so either path needs a re-stitch —
+    # and the mix has to be rebuilt rather than remuxed from the previous one.
+    project.restitch_dirty = True
     return OpResult("set_bgm", True, f"配乐设置已更新: {details}", "", details)
 
 
@@ -491,9 +621,38 @@ def plan_regeneration(project: Project, scope: str = "only_dirty") -> list[dict[
     return steps
 
 
+def subtitle_drift(project: Project) -> list[dict[str, str]]:
+    """Shots whose on-screen text no longer matches what the voice-over says.
+
+    Only ``set_subtitle`` can create this state, and it is invisible in the
+    player until someone reads along with the audio — which is how a cut went
+    out with captions showing a shortened version of the narration while the
+    TTS still read the full script. Surfaced so the UI and the chat agent can
+    warn instead of the mismatch being discovered in the finished video.
+    """
+    drift: list[dict[str, str]] = []
+    for shot in project.shot_plan:
+        override = str(shot.get("subtitle_text") or "").strip()
+        if not override:
+            continue
+        script = str(shot.get("vocal_script", "") or "")
+        if not _same_text(override, script):
+            drift.append({
+                "shot_id": str(shot.get("shot_id", "")),
+                "subtitle": override[:160],
+                "narration": script[:160],
+            })
+    return drift
+
+
 def needs_restitch(project: Project, steps: list[dict[str, Any]]) -> bool:
-    """Any applied edit changes the final cut, so it must be re-concatenated."""
-    return bool(steps) or bool(project.history)
+    """Whether the final cut has to be re-concatenated.
+
+    True for any regeneration step, and also for edits that produce no steps at
+    all — reordering, deleting and BGM changes leave every shot's render valid
+    but change the cut that is assembled from them.
+    """
+    return bool(steps) or project.restitch_dirty
 
 
 def stitch_step(project: Project, *, bgm_changed: bool = False) -> dict[str, Any]:
@@ -501,17 +660,22 @@ def stitch_step(project: Project, *, bgm_changed: bool = False) -> dict[str, Any
     concatenates clips from all shots — but clips for unchanged shots already
     exist from the initial generation, so this is effectively a fast re-concat.
 
-    When *bgm_changed* is False (default for chat edits), the stitch will try
-    to remux the old BGM audio onto the new video via stream copy instead of
-    re-reading BGM files from disk — much faster on slow NFS mounts.
+    The BGM fast path remuxes the previous mix onto the new video by stream copy
+    instead of re-reading BGM files from disk, which matters on slow NFS mounts.
+    It is only sound when the audio the old mix baked in is still correct, so it
+    is disabled whenever the track list, the volume, or the shot order changed
+    (*bgm_changed*, or anything that set ``restitch_dirty``). Reordering keeps
+    the total duration identical, so the remux's duration guard would not catch
+    it and the narration would play in the old order under the new picture.
     """
     shot_ids = project.shot_ids()
+    reuse_old_mix = not (bgm_changed or project.restitch_dirty)
     args: dict[str, Any] = {
         "shot_count": len(shot_ids),
         "approved_count": len(shot_ids),
         "final_gate_required": False,
         "skip_rendered_check": True,
-        "skip_bgm_remix": not bgm_changed,
+        "skip_bgm_remix": reuse_old_mix,
     }
     vol = project.state.get("bgm_volume")
     if vol is not None:

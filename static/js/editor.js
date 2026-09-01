@@ -41,6 +41,8 @@
         fieldDelete: document.getElementById('fieldDelete'),
         pendingBox: document.getElementById('pendingBox'),
         pendingList: document.getElementById('pendingList'),
+        driftBox: document.getElementById('driftBox'),
+        driftList: document.getElementById('driftList'),
         regenBtn: document.getElementById('regenBtn'),
         versionList: document.getElementById('versionList'),
       };
@@ -119,6 +121,7 @@
       this.el.body.hidden = true;
       this.el.empty.hidden = false;
       this.el.pendingBox.hidden = true;
+      if (this.el.driftBox) this.el.driftBox.hidden = true;
       this.el.regenBtn.disabled = true;
       this.el.versionList.innerHTML = '<p class="empty">暂无历史版本</p>';
     }
@@ -278,13 +281,19 @@
     _renderPending() {
       const steps = (this.project && this.project.pending_steps) || [];
       const dirty = (this.project && this.project.dirty) || {};
-      const anyDirty = Object.keys(dirty).length > 0 || (this.project && this.project.bgm_dirty);
+      // `restitch_dirty` covers edits that need no per-shot render but do change
+      // the cut (reorder, delete, BGM/volume), so the button must stay enabled.
+      const anyDirty = Object.keys(dirty).length > 0
+        || !!(this.project && this.project.bgm_dirty)
+        || !!(this.project && this.project.restitch_dirty);
 
-      this.el.pendingBox.hidden = steps.length === 0;
+      this.el.pendingBox.hidden = steps.length === 0 && !anyDirty;
       this.el.pendingList.innerHTML = '';
-      steps.forEach((s) => {
+      const labels = steps.map((s) => s.label);
+      if (!labels.length && anyDirty) labels.push('重新拼接成片');
+      labels.forEach((label) => {
         const li = document.createElement('li');
-        li.textContent = s.label;
+        li.textContent = label;
         this.el.pendingList.appendChild(li);
       });
 
@@ -292,6 +301,25 @@
       this.el.regenBtn.textContent = this.autoRestitch
         ? '重新渲染并拼接' : '重新渲染';
       if (this.ctx.timeline) this.ctx.timeline.setDirty(dirty);
+      this._renderDrift();
+    }
+
+    /** Warn about shots whose on-screen text no longer matches the narration. */
+    _renderDrift() {
+      const drift = (this.project && this.project.subtitle_drift) || [];
+      if (!this.el.driftBox) return;
+      this.el.driftBox.hidden = drift.length === 0;
+      this.el.driftList.innerHTML = '';
+      drift.forEach((d) => {
+        const li = document.createElement('li');
+        li.innerHTML =
+          '镜头 <code></code>：字幕「<span class="d-sub"></span>」' +
+          ' / 配音「<span class="d-nar"></span>」';
+        li.querySelector('code').textContent = d.shot_id;
+        li.querySelector('.d-sub').textContent = d.subtitle;
+        li.querySelector('.d-nar').textContent = d.narration;
+        this.el.driftList.appendChild(li);
+      });
     }
 
     _renderVersions() {

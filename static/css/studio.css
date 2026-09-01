@@ -417,6 +417,13 @@ textarea:focus, input[type=text]:focus, .script-input:focus {
 .pending h3 { font-size: 11px; color: var(--warn); margin-bottom: 5px; }
 .pending ul { margin: 0; padding-left: 16px; font-size: 11px; color: var(--text-2); line-height: 1.6; }
 
+/* A caption that does not match the voice-over is invisible in the player, so
+   it needs to be loud in the panel rather than found in the finished video. */
+.drift-warn { margin-top: 8px; padding: 8px 9px; background: var(--err-weak); border-radius: var(--radius); }
+.drift-warn h3 { font-size: 11px; color: var(--err); margin-bottom: 5px; }
+.drift-warn ul { margin: 0 0 5px; padding-left: 16px; font-size: 11px; color: var(--text-2); line-height: 1.6; }
+.drift-warn code { font-family: var(--mono); font-size: 10px; }
+
 /* ─────────── chat ─────────── */
 .chat-meta { flex: none; display: flex; align-items: center; justify-content: space-between;
              font-size: 10px; color: var(--text-3); font-family: var(--mono); }

@@ -595,7 +595,12 @@ def run(
         clip_meta_for_render["normalized_resolution"] = f"{TARGET_WIDTH}x{TARGET_HEIGHT}"
 
     subtitle_duration = audio_duration if audio_duration > 0 else duration
-    subtitles = build_subtitle_track(vocal_script, subtitle_duration, config=config)
+    # `subtitle_text` is written by the editor's `set_subtitle`, which exists so
+    # on-screen text can be fixed without paying for a TTS re-run. It must
+    # therefore override the spoken script here — the narration audio keeps
+    # using `vocal_script`.
+    subtitle_source = str(shot.get("subtitle_text") or "").strip() or vocal_script
+    subtitles = build_subtitle_track(subtitle_source, subtitle_duration, config=config)
 
     timeline = {
         "shot_id": shot_id,

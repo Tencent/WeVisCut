@@ -441,6 +441,8 @@ class ChatEditAgent:
             user_message=message,
             available_ops=self.available_ops(),
             max_ops_per_turn=self.max_ops_per_turn,
+            template_registry=editor.template_registry(project),
+            subtitle_drift=editor.subtitle_drift(project),
         )
 
         reply: ChatReply | None = None

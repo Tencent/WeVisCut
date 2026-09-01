@@ -46,6 +46,11 @@ class Project:
     # shot_id -> set of reasons needing regeneration ("tts"|"footage"|"decoration"|"render")
     dirty: dict[str, set[str]] = field(default_factory=dict)
     bgm_dirty: bool = False
+    # Set by edits that change the final cut without invalidating any single
+    # shot's render: reordering, deleting, and BGM/volume changes. Without this
+    # such an edit produces no regeneration steps at all and the concatenated
+    # video is never rebuilt.
+    restitch_dirty: bool = False
     history: list[dict[str, Any]] = field(default_factory=list)
 
     # ---------------- accessors ----------------
@@ -98,9 +103,10 @@ class Project:
     def clear_dirty(self) -> None:
         self.dirty.clear()
         self.bgm_dirty = False
+        self.restitch_dirty = False
 
     def is_dirty(self) -> bool:
-        return bool(self.dirty) or self.bgm_dirty
+        return bool(self.dirty) or self.bgm_dirty or self.restitch_dirty
 
     # ---------------- summaries ----------------
     def digest(self, max_shots: int = 60) -> dict[str, Any]:
@@ -126,6 +132,12 @@ class Project:
                 "visual_query": str(s.get("visual_query", "") or "")[:60],
                 "is_spotlight": bool(s.get("is_spotlight")),
             }
+            # Only surfaced once `set_subtitle` made the on-screen text diverge
+            # from the narration, so the agent does not re-propose a fix that
+            # has already been applied.
+            subtitle = str(s.get("subtitle_text", "") or "")
+            if subtitle and subtitle != row["text"]:
+                row["subtitle"] = subtitle
             if s.get("is_spotlight"):
                 deco = _as_dict(assets.get("decoration"))
                 row["template"] = {
@@ -208,6 +220,10 @@ class Project:
             "bgm_tracks": self.state.get("bgm_tracks", []),
             "stitch_result": self.state.get("stitch_result", {}),
             "music_style": self.state.get("music_style", ""),
+            # Both are set by `set_bgm`. Leaving them out meant a reload
+            # resurrected the original style and volume.
+            "bgm_query": self.state.get("bgm_query", ""),
+            "bgm_volume": self.state.get("bgm_volume"),
             "final_video_path": self.state.get("final_video_path", ""),
             "edit_history": self.history[-200:],
             "saved_at": datetime.now().isoformat(),
@@ -280,8 +296,14 @@ class Project:
             "bgm_tracks": payload.get("bgm_tracks", []),
             "stitch_result": payload.get("stitch_result", {}),
             "music_style": payload.get("music_style", ""),
+            "bgm_query": payload.get("bgm_query", ""),
             "final_video_path": payload.get("final_video_path", ""),
         })
+        if payload.get("bgm_volume") is not None:
+            try:
+                self.state["bgm_volume"] = float(payload["bgm_volume"])
+            except (TypeError, ValueError):
+                pass
         self.clear_dirty()
 
 
@@ -317,6 +339,7 @@ def load(project_dir: str | Path, pipeline_config: dict[str, Any] | None = None)
         "bgm_tracks": _as_list(payload.get("bgm_tracks")),
         "stitch_result": _as_dict(payload.get("stitch_result")),
         "music_style": payload.get("music_style", ""),
+        "bgm_query": payload.get("bgm_query", ""),
         "final_video_path": payload.get("final_video_path", ""),
         "severity_scores": {},
         "severity_ranked_shots": [],
@@ -324,6 +347,11 @@ def load(project_dir: str | Path, pipeline_config: dict[str, Any] | None = None)
         "errors": [],
         "trajectory": [],
     }
+    if payload.get("bgm_volume") is not None:
+        try:
+            state["bgm_volume"] = float(payload["bgm_volume"])
+        except (TypeError, ValueError):
+            pass
 
     return Project(
         project_id=project_id,

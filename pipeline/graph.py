@@ -2209,12 +2209,24 @@ def node_music_search(state: PipelineState) -> dict[str, Any]:
         "start",
         summary="按全片风格检索或生成占位 BGM 元数据",
     )
+    # ``bgm_query`` is the post-production override written by the editor's
+    # ``set_bgm``; it wins over the style inferred at segmentation time.
+    requested_style = str(
+        state.get("bgm_query") or state.get("music_style") or ""
+    ).strip()
+
     cached = _load_cached_json(state, "stage3_bgm", "music_search.json")
     if (
         cached
         and isinstance(cached, dict)
         and cached.get("selected_tracks")
         and cached.get("playlist_policy_version") == 2
+        # The cache scope key is derived from the article text, so every BGM
+        # search for one project maps to the same file. Reusing it whenever it
+        # exists means a user asking for a different style keeps getting the
+        # tracks picked on the first run. Only a cache produced by the *same*
+        # request may be reused.
+        and str(cached.get("requested_style", "") or "").strip() == requested_style
     ):
         logger.info("[music_search] 命中缓存: %s", cached.get("_cache_path", ""))
         entries = _log_tool(
@@ -2243,7 +2255,7 @@ def node_music_search(state: PipelineState) -> dict[str, Any]:
             "trajectory": stage_entries + entries,
         }
 
-    music_style = state.get("music_style", "")
+    music_style = requested_style
     if not music_style:
         music_style = "中速现代纪录片纯音乐，钢琴、弦乐与轻电子节拍，克制清晰"
 
@@ -2267,6 +2279,10 @@ def node_music_search(state: PipelineState) -> dict[str, Any]:
         total_video_duration=total_duration,
         config=config,
     )
+    # Stamp the request this artifact answers. `music_search.run` normalises the
+    # style it was given, so its own `music_style` field cannot be compared back
+    # against the raw request when deciding whether the cache is still valid.
+    result["requested_style"] = requested_style
 
     logger.info(
         "[music_search] 完成: %d tracks selected, total_bgm=%.1fs",

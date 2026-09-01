@@ -5632,6 +5632,24 @@ class InferenceOrchestrator:
                         "level": "stdout",
                     })
                     skip_bgm = bool(tool_args.get("skip_bgm_remix", False))
+                    # `bgm_volume` / `duck_under_voice` are declared in this
+                    # tool's arg schema and the editor sends them after a
+                    # "调音量" edit. Dropping them here left `stitch_video.run`
+                    # on its own defaults, so the mix never changed.
+                    music_cfg = config.get("music", {}) if isinstance(config.get("music"), dict) else {}
+                    try:
+                        bgm_volume = float(
+                            tool_args.get("bgm_volume",
+                                          state.get("bgm_volume",
+                                                    music_cfg.get("bgm_volume", 0.5)))
+                        )
+                    except (TypeError, ValueError):
+                        bgm_volume = 0.5
+                    bgm_volume = max(0.0, min(1.0, bgm_volume))
+                    duck_under_voice = bool(
+                        tool_args.get("duck_under_voice",
+                                      music_cfg.get("duck_under_voice", True))
+                    )
                     try:
                         result = await asyncio.to_thread(
                             sv_tool.run,
@@ -5639,6 +5657,8 @@ class InferenceOrchestrator:
                             shot_assets,
                             state.get("output_dir", "."),
                             bgm_tracks=state.get("bgm_tracks", []),
+                            bgm_volume=bgm_volume,
+                            duck_under_voice=duck_under_voice,
                             config=config,
                             progress_callback=_stitch_progress,
                             skip_bgm_remix=skip_bgm,

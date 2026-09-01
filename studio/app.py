@@ -477,6 +477,8 @@ def _project_payload(proj: project_mod.Project) -> dict[str, Any]:
         "final_video_path": proj.final_video_path,
         "dirty": {sid: sorted(r) for sid, r in proj.dirty.items()},
         "bgm_dirty": proj.bgm_dirty,
+        "restitch_dirty": proj.restitch_dirty,
+        "subtitle_drift": editor.subtitle_drift(proj),
         "pending_steps": [
             {"tool": s["tool"], "label": s["label"]}
             for s in editor.plan_regeneration(proj)
@@ -976,7 +978,10 @@ async def project_chat(req: ChatRequest) -> dict[str, Any]:
         if bool(safety.get("allow_rerender", True)) and studio.model and studio.model.is_loaded:
             scope = str(rerender.get("scope", "only_dirty"))
             steps = editor.plan_regeneration(proj, scope)
-            if steps:
+            # `reorder_shots`, `delete_shot` and BGM/volume changes need no
+            # per-shot regeneration, only a re-stitch. Gating on `steps` alone
+            # left them applied in state but never rendered into the cut.
+            if editor.needs_restitch(proj, steps):
                 restitch = bool(rerender.get("auto_restitch", True))
                 job_id = f"chat_{uuid.uuid4().hex[:8]}"
                 job = studio.store.create(
@@ -1011,7 +1016,7 @@ async def project_chat(req: ChatRequest) -> dict[str, Any]:
             if bool(safety.get("allow_rerender", True)) and studio.model and studio.model.is_loaded:
                 scope = str(rerender.get("scope", "only_dirty"))
                 steps = editor.plan_regeneration(proj, scope)
-                if steps:
+                if editor.needs_restitch(proj, steps):
                     restitch = bool(rerender.get("auto_restitch", True))
                     job_id = f"chat_{uuid.uuid4().hex[:8]}"
                     job = studio.store.create(
@@ -1027,6 +1032,8 @@ async def project_chat(req: ChatRequest) -> dict[str, Any]:
                     payload["reply"] += (
                         f"\n\n正在自动重渲染改动的 {len(dirty_ids)} 个镜头，"
                         "完成后视频会自动更新。"
+                        if dirty_ids else
+                        "\n\n正在重新拼接成片，完成后视频会自动更新。"
                     )
         except editor.EditError as exc:
             payload["applied"] = False
