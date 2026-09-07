@@ -1,0 +1,217 @@
+# ============================================================================
+# Example campaign config — batch trajectory annotation
+#
+# Baseline only. The campaign UI freezes tool_switches, step budget, output
+# directory and template-policy paths into
+# <output_root>/_state/session_config.yaml; workers read that copy so a
+# finished corpus can be reconstructed later.
+#
+#   bash data_construct_pipeline/scripts/launch_wedirector_ui.sh
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# 1. Environment
+# ---------------------------------------------------------------------------
+pipeline:
+  root: ${AICUT_PIPELINE_ROOT:-${WEDIRECTOR_ROOT:-}}
+  pipeline_config: config/pipeline_runtime.yaml
+  system_prompt_file: configs/unified_v5_system_prompt.txt
+  stage_config_file: configs/stage_allowed_tools.yaml
+  tts_service_url: ${AICUT_TTS_URL:-http://127.0.0.1:7865}
+
+  config_overrides:
+    execution:
+      mode: real
+    hitl:
+      # 无人值守：HITL 自动选推荐项，否则 9k 条会全部卡在第一个人工确认点。
+      enabled: true
+      mode: auto
+    stage3_trajectory:
+      max_workers: 4
+      # 视觉检索后端不可达时用黑色占位兜底。text_only 模式下检索本来就关着，
+      # 但 full_media 模式下这两个开关决定了「个别镜头失败」是继续还是终止。
+      visual_placeholder_on_failure: true
+      require_all_visual_audio_success: false
+
+  render_split:
+    enabled: true
+    overlay_format: webm
+    cache_dir: /tmp/aicut_render_split
+
+# ---------------------------------------------------------------------------
+# 2. 模型端点
+#
+# base_url 只是占位：批量跑时由机器池按 episode 分配，通过 --base-url 覆盖，
+# 每条 rollout 固定在一台机器上（同时也让该机器的 prefix cache 在这一条的
+# ~140 次调用里保持热）。在前端「机器池」里加机器，填 ip:端口 即可。
+# ---------------------------------------------------------------------------
+annotation_profile: ${LVP_PROFILE:-all_qwen}
+
+profiles:
+  all_qwen: {}
+
+  critic_gemini:
+    models:
+      critic:
+        provider: gemini
+        base_url: ${LVP_GEMINI_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_GEMINI_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_GEMINI_MODEL:-gemini-3.1-pro-preview}
+        temperature: 0.2
+        max_tokens: 8192
+        max_concurrency: 4
+        native_tool_calls: false
+        drop_params: [top_p]
+
+  critic_opus:
+    models:
+      critic:
+        provider: claude
+        base_url: ${LVP_OPUS_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_OPUS_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_OPUS_MODEL:-claude-opus-4-20250514}
+        temperature: 0.2
+        max_tokens: 8192
+        max_concurrency: 4
+        native_tool_calls: false
+        drop_params: [top_p]
+
+  skills_gemini:
+    models:
+      generator:
+        provider: gemini
+        base_url: ${LVP_GEMINI_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_GEMINI_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_GEMINI_MODEL:-gemini-3.1-pro-preview}
+        temperature: 0.3
+        max_tokens: 16384
+        native_tool_calls: false
+        drop_params: [top_p]
+      critic:
+        provider: gemini
+        base_url: ${LVP_GEMINI_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_GEMINI_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_GEMINI_MODEL:-gemini-3.1-pro-preview}
+        temperature: 0.2
+        max_tokens: 8192
+        native_tool_calls: false
+        drop_params: [top_p]
+
+models:
+  default:
+    provider: qwen
+    base_url: ${OPENAI_BASE_URL:-http://127.0.0.1:8080/v1}
+    api_key: ${OPENAI_API_KEY:-EMPTY}
+    model: ${LVP_MODEL:-Qwen3.5-397B-A17B-FP8}
+    temperature: 0.0
+    top_p: 1.0
+    max_tokens: 8192
+    timeout: 900.0
+    connect_timeout: 20.0
+    max_retries: 3
+    # 单条 rollout 内的并发请求上限。机器池的 capacity 控制「一台机器上跑几条
+    # rollout」，这里控制「一条 rollout 同时发几个请求」，两者相乘不要超过服务端
+    # --max-num-seqs，否则排队延迟会吃掉吞吐。
+    max_concurrency: 4
+    native_tool_calls: true
+
+  orchestrator:
+    max_tokens: 24576
+    temperature: 0.0
+
+  generator:
+    # Qwen3.5 是推理模型，答案前会先写一大段 think。长口播稿做 segment_article 时
+    # 实测 completion_tokens 正好卡在 16384 —— 预算全花在思考上，JSON 还没写完就被
+    # 截断，工具只看到一段不可解析的文本，然后用同样的预算重试、在同一个位置再截断一次。
+    max_tokens: 32768
+    temperature: 0.3
+
+  critic:
+    # quality_judge 的结论很短，但前面的 think 不短；4096 对逐镜头打分不够用。
+    max_tokens: 8192
+    temperature: 0.2
+
+# ---------------------------------------------------------------------------
+# 3. 长程循环边界
+# ---------------------------------------------------------------------------
+agent:
+  agent_mode: long_horizon
+  # 实测一条 695 字的稿子把 35/48 步耗在 Tool_StitchVideo 重试上。text_only 模式
+  # 不做拼接，用不到这么多步；full_media 模式建议在前端调到 64。
+  max_steps: 48
+  max_same_tool_repeats: 10
+
+# ---------------------------------------------------------------------------
+# 4. 媒体工具开关
+#
+# 这里的值会被前端选的模式整体覆盖（见 campaign.MODE_TOOL_SWITCHES）。
+# 保留在这里是为了单条 `longvideo-polar run` 调试时有个确定的默认。
+# ---------------------------------------------------------------------------
+tool_switches:
+  tts: false
+  visual_retrieval: false
+  bgm_search: false
+  timeline_compose: false
+  hyperframes_render: false
+  final_stitch: false
+
+# ---------------------------------------------------------------------------
+# 5. Spotlight 模版策略
+#
+# 不开这一节，Infer_Vis_new 会把全部 90 个模版原样丢给每个镜头，而且
+# keywords/name 是空的（registry 存的是 use_for/display_name），也不记得这条
+# 视频前面用过什么 —— 实测 32 次检索坍缩到 7 个模版，problem_hook 一个占 34%。
+#
+# 开启后每个镜头拿到的是「语义相关 + 全局欠采样 + 家族分层」拼出来的候选池，
+# 并且 template_fill 的指令被换成「联想改写」而不是「摘抄」。
+# ---------------------------------------------------------------------------
+decoration:
+  enabled: true
+
+  # 每个镜头的候选池大小。训练时排到 top-12，这里给 14，留出覆盖位和分层位。
+  pool_size: 14
+
+  # 池子里有多少个来自语义排序（保证每次选择都讲得通道理）。
+  semantic_slice: 6
+
+  # 有多少个来自「全局用得最少」排序 —— 这一项是让 90 个模版的长尾轮得上的关键。
+  # 调大 → 语料直方图更平，单镜头相关性略降。
+  coverage_slice: 5
+
+  # 跨 episode 的模版使用账本（SQLite/WAL）。每条 rollout 是独立子进程，
+  # 内存计数器互相看不见，所以覆盖度必须落在共享存储上。
+  # 由前端/`prepare` 指向 <output_root>/_state/template_usage.db。
+  ledger_path: ""
+
+  # 90 个 slot_schema.json 的合并缓存。共享文件系统上单次 stat 约 2 秒，
+  # 不做缓存的话每个子进程光加载模版就要 3 分多钟。用 `longvideo-polar prepare` 生成。
+  slot_cache_path: ""
+
+# ---------------------------------------------------------------------------
+# 6. 轨迹落盘
+# ---------------------------------------------------------------------------
+recording:
+  output_root: ${LVP_OUTPUT_ROOT:-./rollouts/longvideo_polar}
+
+  # 分段那一步的原始输出可以到几十万字符。9k 条 × 全量 prompt 很占盘，
+  # 但 generator/critic 的单轮样本要能直接拿去 SFT，所以 store_full_prompts 保持开。
+  max_raw_output_chars: 200000
+  store_full_prompts: true
+
+  # 失败轨迹是反思修复训练最需要的负样本，务必保留。
+  save_on_failure: true
+
+  # 角色划分必须来自 AICutPipeline 的 server.tool_schema。schema 漂了会让三份
+  # 轨迹全部静默打错标签 —— 那比直接崩掉更难查。
+  strict_tool_schema: true
+
+# ---------------------------------------------------------------------------
+# 7. 批量（旧的 glob 式批量；本项目走前端 campaign，这里只作兜底）
+# ---------------------------------------------------------------------------
+batch:
+  input_dir: ${LVP_INPUT_DIR:-}
+  input_glob: "*.txt"
+  workers: 8
+  limit: 0
+  resume: true
+  continue_on_error: true

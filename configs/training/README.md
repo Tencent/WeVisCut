@@ -15,8 +15,12 @@ recipe behind the released checkpoint is documented rather than implied.
 
 Paths have been replaced with `${WEDIRECTOR_DATA_ROOT}`,
 `${WEDIRECTOR_RESULT_ROOT}` and `${WEDIRECTOR_TRAINING_REPO}` placeholders.
-Export those before reusing a file, and expect to adapt the rest: the data
-pipeline that consumes them is a separate codebase.
+Export those before reusing a file.
+
+The code that rolls out scripts and writes the three role streams is
+[`data_construct_pipeline/`](../../data_construct_pipeline/README.md) in this
+repository. These YAML files are the SFT-mix / path recipes that sit on top of
+those dumps; they are not a second hidden pipeline.
 
 The matching system prompts live one level up in `configs/`. Only
 `unified_v5_system_prompt.txt` is loaded at inference — it must stay

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WeDirector 批量轨迹标注</title>
+<link rel="stylesheet" href="/static/app.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <h1>WeDirector 批量轨迹标注</h1>
+    <span class="sub" id="outputRoot">—</span>
+  </div>
+  <div class="phase" id="phaseBadge">空闲</div>
+</header>
+
+<main>
+  <!-- ============ 进度总览 ============ -->
+  <section class="card wide" id="progressCard">
+    <div class="card-head">
+      <h2>进度</h2>
+      <div class="controls">
+        <button id="btnStart" class="primary">启动</button>
+        <button id="btnPause">暂停</button>
+        <button id="btnResume">继续</button>
+        <button id="btnStop" class="danger">停止</button>
+        <button id="btnExport">导出数据集</button>
+      </div>
+    </div>
+
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+
+    <div class="metrics">
+      <div class="metric"><label>总数</label><b id="mTotal">0</b></div>
+      <div class="metric ok"><label>完成</label><b id="mDone">0</b></div>
+      <div class="metric run"><label>进行中</label><b id="mRunning">0</b></div>
+      <div class="metric"><label>等待</label><b id="mPending">0</b></div>
+      <div class="metric bad"><label>失败</label><b id="mFailed">0</b></div>
+      <div class="metric"><label>已跳过</label><b id="mSkipped">0</b></div>
+      <div class="metric"><label>平均耗时</label><b id="mMean">—</b></div>
+      <div class="metric"><label>吞吐</label><b id="mRate">—</b></div>
+      <div class="metric eta"><label>预计剩余</label><b id="mEta">—</b></div>
+      <div class="metric"><label>预计完成</label><b id="mFinish">—</b></div>
+    </div>
+    <p class="hint" id="modeHint">—</p>
+  </section>
+
+  <!-- ============ 机器池 ============ -->
+  <section class="card">
+    <div class="card-head">
+      <h2>机器池</h2>
+      <button id="btnProbe" class="small">重新探测</button>
+    </div>
+    <p class="hint">填 <code>ip:端口</code> 即可，其余自动探测。可随时增删，运行中也生效。</p>
+    <div class="add-row">
+      <input id="epAddress" placeholder="29.111.45.47:8080" />
+      <input id="epCapacity" type="number" min="1" max="64" value="4" title="并发 rollout 数" />
+      <button id="btnAddEp" class="primary">添加</button>
+    </div>
+    <div id="epList" class="ep-list"></div>
+    <p class="hint" id="poolSummary">—</p>
+  </section>
+
+  <!-- ============ 模式与筛选 ============ -->
+  <section class="card">
+    <div class="card-head"><h2>模式与筛选</h2></div>
+
+    <label class="field"><span>标注模式</span>
+      <select id="selMode"></select>
+    </label>
+    <p class="hint" id="modeSwitches">—</p>
+
+    <label class="field"><span>模型组合 profile</span>
+      <select id="selProfile">
+        <option value="all_qwen">all_qwen（三角色同一 Qwen，可做 RL）</option>
+        <option value="critic_gemini">critic_gemini（反思修复走 Gemini）</option>
+        <option value="critic_opus">critic_opus（反思修复走 Opus）</option>
+        <option value="skills_gemini">skills_gemini（生成+反思走 Gemini）</option>
+      </select>
+    </label>
+
+    <div class="grid2">
+      <label class="field"><span>口播稿字数下限</span><input id="fMinChars" type="number" value="200" /></label>
+      <label class="field"><span>字数上限</span><input id="fMaxChars" type="number" value="20000" /></label>
+      <label class="field"><span>单条最大步数</span><input id="fMaxSteps" type="number" value="48" /></label>
+      <label class="field"><span>条数上限（0=全部）</span><input id="fLimit" type="number" value="0" /></label>
+    </div>
+
+    <div class="field"><span>语种（多选）</span>
+      <div class="checks langs" id="fLangs">
+        <label><input type="checkbox" value="zh" checked /> zh <em>9659</em></label>
+        <label><input type="checkbox" value="zh-CN" checked /> zh-CN <em>139</em></label>
+        <label><input type="checkbox" value="zh-Hans" checked /> zh-Hans <em>5</em></label>
+        <label><input type="checkbox" value="en" /> en <em>73</em></label>
+      </div>
+      <small class="hint">计数为该语种有口播稿的条数；四项全选 = 9876 条</small>
+    </div>
+
+    <div class="checks">
+      <label><input type="checkbox" id="fStratify" /> 按长度分层抽样</label>
+      <label><input type="checkbox" id="fResume" checked /> 续跑（跳过已完成）</label>
+      <label><input type="checkbox" id="fRetry" /> 重试失败条目</label>
+    </div>
+
+    <div class="controls">
+      <button id="btnPreview">预览筛选结果</button>
+      <button id="btnCommit" class="primary">应用为待标注清单</button>
+    </div>
+    <div id="previewBox" class="preview"></div>
+  </section>
+
+  <!-- ============ episode 列表 ============ -->
+  <section class="card wide">
+    <div class="card-head">
+      <h2>Episode</h2>
+      <div class="controls">
+        <input id="epFilter" placeholder="搜索 BV号 / asset_id" />
+        <select id="epStatusFilter">
+          <option value="">全部状态</option>
+          <option value="running">进行中</option>
+          <option value="done">完成</option>
+          <option value="failed">失败</option>
+          <option value="pending">等待</option>
+          <option value="skipped">已跳过</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="epTable">
+        <thead><tr>
+          <th>#</th><th>Episode</th><th>状态</th><th>阶段</th>
+          <th>步数</th><th>机器</th><th>耗时</th><th>调用</th><th>日志</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="hint" id="tableHint">—</p>
+  </section>
+</main>
+
+<div id="logModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-head"><b id="logTitle">日志</b><button id="btnCloseLog">关闭</button></div>
+    <pre id="logBody"></pre>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

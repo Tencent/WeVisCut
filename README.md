@@ -26,6 +26,7 @@ hand-written state machine: the trajectory is the model's.
 | Agent harness on [deepagents](https://github.com/langchain-ai/deepagents) / LangGraph | `aicut_agent/` |
 | FastAPI backend, editing and conversational-edit APIs | `studio/` |
 | Browser UI: live timeline, manual editing, chat editing | `static/` |
+| **Training-data pipeline** (script → cut + 3 role streams) | [`data_construct_pipeline/`](data_construct_pipeline/README.md) |
 | **Pluggable footage / BGM providers** | `pipeline/providers/` |
 | Open-web footage and CC-music retrieval | `external_tool/asset_retrieval_tool/` |
 | Gold Template library (structure x motion x visual) | `external_tool/gold_template/` |
@@ -42,6 +43,7 @@ see [Installation](#installation).
 | [`docs/providers.md`](docs/providers.md) | Connecting your own footage and music sources |
 | [`docs/external_tools.md`](docs/external_tools.md) | The large downloads: what, where, how big |
 | [`docs/huggingface.md`](docs/huggingface.md) | Consuming and publishing the checkpoint |
+| [`data_construct_pipeline/README.md`](data_construct_pipeline/README.md) | How the training trajectories were collected |
 
 ---
 
@@ -385,6 +387,13 @@ WeDirector.
 
 `configs/training/` holds the data-preparation and SFT configs behind the
 released checkpoint. They are not read at inference time.
+
+The code that actually rolls out a script and writes those trajectories is
+[`data_construct_pipeline/`](data_construct_pipeline/README.md). It drives the
+long-horizon loop in `server/infer_graph.py`: the orchestrator picks one tool
+per turn; generator and critic skills, plus the media tools, execute it; the
+recorder splits the episode into three trainable streams. That package is
+independent of the studio and has its own install, smoke test, and README.
 
 ## License
 

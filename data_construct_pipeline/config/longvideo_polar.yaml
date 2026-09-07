@@ -1,0 +1,264 @@
+# ============================================================================
+# WeDirector data-construct pipeline — master config
+#
+# One file controls the environment root, the three role endpoints, which
+# media tools run, where trajectories land, and how batch annotation works.
+#
+#   longvideo-polar check                      # paths + endpoint connectivity
+#   longvideo-polar run --script-file a.txt    # one script → cut + 3 streams
+#   longvideo-polar batch --input-dir scripts/ # resumable corpus annotation
+#
+# Strings expand ${VAR} and ${VAR:-default}. Polar injects OPENAI_BASE_URL /
+# OPENAI_API_KEY this way; the file never needs to know the gateway port.
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# 1. Environment
+#
+# Drives InferenceOrchestrator.run_agentic_pipeline from this WeDirector
+# checkout (pipeline/ + server/). The only substitution is the model loader:
+# RoleRoutedModelClient stands in for UnifiedModelLoader.
+# ---------------------------------------------------------------------------
+pipeline:
+  # WeDirector repo root (the directory that contains pipeline/ and server/).
+  # Empty → auto-detect the parent of this package. Override with
+  # AICUT_PIPELINE_ROOT / WEDIRECTOR_ROOT if you keep the environment elsewhere.
+  root: ${AICUT_PIPELINE_ROOT:-${WEDIRECTOR_ROOT:-}}
+
+  # Runtime document for the training-time loop (not studio_config.yaml).
+  pipeline_config: config/pipeline_runtime.yaml
+
+  # Must stay byte-identical to the prompt the policy was trained with.
+  system_prompt_file: configs/unified_v5_system_prompt.txt
+
+  # Stage table used for precondition checks and phase labels.
+  stage_config_file: configs/stage_allowed_tools.yaml
+
+  # TTS 服务地址（AICutPipeline: bash run_qwen3_tts_service.sh，默认 7865）。
+  tts_service_url: ${AICUT_TTS_URL:-http://127.0.0.1:7865}
+
+  # 深合并进 AICutPipeline config.yaml 的覆盖项。
+  # 想调并发/超时/检索策略又不想改主仓库时写在这里。
+  config_overrides:
+    execution:
+      mode: real
+    hitl:
+      # 无人值守：HITL 自动选推荐项，不中断长程循环。
+      enabled: true
+      mode: auto
+    stage3_trajectory:
+      # 单机并发；素材检索 + TTS 的并行度，按机器和服务承载能力调。
+      max_workers: 4
+      # 视觉检索在线后端（embedding/cli/subprocess）整体不可达时，
+      # 用黑色占位 MP4 兜底，让 Stage 3a 容忍检索失败而不是强求全量成功。
+      # 底层 mmfinder / py3meshkit 缺失的环境下必须开它，否则一条 rollout
+      # 卡在第一个视觉检索失败处直接抛 RuntimeError 终止。
+      visual_placeholder_on_failure: true
+
+      # 关闭「3a 必须全量成功」硬约束：配合上面的 placeholder 兜底，
+      # 即使个别 shot 视觉检索失败也能继续往下走到装饰 + 拼合。
+      require_all_visual_audio_success: false
+
+  # 透明动画层渲染加速（spotlight 整场重渲 → 基础视频 + alpha 叠加层 + ffmpeg 合成）。
+  # 任一步失败自动回退整场渲染，不影响结果正确性。
+  render_split:
+    enabled: true
+    overlay_format: webm
+    cache_dir: /tmp/aicut_render_split
+
+# ---------------------------------------------------------------------------
+# 2. 标注 profile —— 选「全 Qwen」还是「反思修复走 Gemini / Opus」
+#
+# profile 就是一层 models 覆盖，深合并到下面的 models 上。切换方式（优先级从低到高）：
+#   annotation_profile: all_qwen        # 写在这里
+#   export LVP_PROFILE=critic_gemini    # 环境变量
+#   longvideo-polar run --profile critic_opus   # 命令行（最高）
+#
+# 为什么只换 critic：主流程和内容生成器是要被训练的对象，必须是自己的模型；
+# 反思修复是「教师信号」，用更强的模型给出的 issue 和修复建议做蒸馏收益最大，
+# 而且它是单轮 JSON、不用 function calling，换 provider 的兼容风险最低。
+#
+# 每条样本的 metadata 里都会带 provider/model，混合标注后仍然分得清哪条是
+# Opus 教的、哪条是 Qwen 自己产的 —— 合并分片前务必按这个字段过一遍。
+# ---------------------------------------------------------------------------
+annotation_profile: ${LVP_PROFILE:-all_qwen}
+
+profiles:
+  # 全 Qwen：三个角色共用一个 served model（unified v5 LoRA 的 role 路由）。
+  # 纯离线、无外部依赖、可做 RL（三个角色都可训）。
+  all_qwen: {}
+
+  # 反思修复走 Gemini。主流程/内容生成器仍是本地 Qwen。
+  # 走 AICutPipeline config.yaml 里同一个 302AI 网关（services.gemini）。
+  critic_gemini:
+    models:
+      critic:
+        provider: gemini
+        base_url: ${LVP_GEMINI_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_GEMINI_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_GEMINI_MODEL:-gemini-3.1-pro-preview}
+        temperature: 0.2
+        max_tokens: 8192
+        timeout: 180.0
+        connect_timeout: 20.0
+        max_retries: 3
+        # 三方网关按 key 限流，不是按显存；并发压太高只会拿一堆 429。
+        max_concurrency: 4
+        # 单轮出 JSON，不需要 function calling。
+        native_tool_calls: false
+        # 该网关对 top_p + temperature 同时出现会 400。
+        drop_params: [top_p]
+
+  # 反思修复走 Claude Opus。同一个网关，换 model 名。
+  critic_opus:
+    models:
+      critic:
+        provider: claude
+        base_url: ${LVP_OPUS_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_OPUS_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_OPUS_MODEL:-claude-opus-4-20250514}
+        temperature: 0.2
+        max_tokens: 8192
+        timeout: 300.0
+        connect_timeout: 20.0
+        max_retries: 3
+        max_concurrency: 4
+        native_tool_calls: false
+        drop_params: [top_p]
+
+  # 内容生成器和反思修复都走 Gemini：只训主流程时用这个，
+  # 长程决策的监督信号最干净（下游内容质量不受本地小模型拖累）。
+  skills_gemini:
+    models:
+      generator:
+        provider: gemini
+        base_url: ${LVP_GEMINI_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_GEMINI_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_GEMINI_MODEL:-gemini-3.1-pro-preview}
+        temperature: 0.3
+        max_tokens: 16384
+        timeout: 300.0
+        max_concurrency: 4
+        native_tool_calls: false
+        drop_params: [top_p]
+      critic:
+        provider: gemini
+        base_url: ${LVP_GEMINI_BASE_URL:-https://api.302ai.cn/v1}
+        api_key: ${LVP_GEMINI_API_KEY:-${AICUT_302AI_API_KEY:-}}
+        model: ${LVP_GEMINI_MODEL:-gemini-3.1-pro-preview}
+        temperature: 0.2
+        max_tokens: 8192
+        timeout: 180.0
+        max_concurrency: 4
+        native_tool_calls: false
+        drop_params: [top_p]
+
+# ---------------------------------------------------------------------------
+# 3. 三个角色的模型端点（profile 之前的基线）
+#
+# default 是基线，三个角色各自覆盖。可以三个角色共用一个 served model
+# （单模型 + role 路由，对应 unified v5 LoRA），也可以拆成不同规模的模型
+# （比如大模型做主流程决策、小模型做内容生成）。
+#
+# base_url 指向 Polar gateway 时，Polar 会捕获全部 wire-level completion 用于
+# 轨迹构建和 GRPO；本地直连 vLLM 时就是纯离线批量标注。
+#
+# provider 只是个标签，不改协议；它会写进每条样本的 metadata 做溯源。
+# 三方网关的兼容开关：endpoint_path / auth_header_prefix / extra_headers /
+# drop_params，见上面 profiles 里的用法。
+# ---------------------------------------------------------------------------
+models:
+  default:
+    provider: qwen
+    base_url: ${OPENAI_BASE_URL:-http://127.0.0.1:8000/v1}
+    api_key: ${OPENAI_API_KEY:-EMPTY}
+    model: ${LVP_MODEL:-Qwen3.5-9B}
+    temperature: 0.0
+    top_p: 1.0
+    max_tokens: 8192
+    timeout: 600.0
+    max_retries: 3
+    # 每个角色的最大并发请求数。管线会用 asyncio.gather 批量发技能调用
+    # （比如逐镜头装饰），不限流容易把单个 served model 打满。
+    max_concurrency: 8
+    # served model 支持原生 function calling 时保持 true（vLLM 需
+    # --enable-auto-tool-choice）。false 则退化为「让模型输出 JSON 文本再解析」。
+    native_tool_calls: true
+
+  # 主流程：长程决策，输出 <think> + 一个 tool_call。
+  # 输出要放得开一些，它要在长上下文里做规划。
+  orchestrator:
+    max_tokens: 24576
+    temperature: 0.0
+
+  # 内容生成器：分段、镜头规划、装饰、修复。单轮出 JSON。
+  # 一次要吐完整 segments/shots，是三个角色里输出最长的。
+  generator:
+    max_tokens: 16384
+    temperature: 0.3
+
+  # 反思修复：自检、质检、严重度排序。单轮出 JSON，输出较短。
+  critic:
+    max_tokens: 4096
+    temperature: 0.2
+
+# ---------------------------------------------------------------------------
+# 4. 长程循环边界
+# ---------------------------------------------------------------------------
+agent:
+  # 必须是 long_horizon，否则走的是旧的固定阶段模式，不是自主 Agent 循环。
+  agent_mode: long_horizon
+  # 一条完整长视频通常 12-20 步；留够余量给反思修复回环。
+  max_steps: 48
+  # 同一个工具连续重复多少次判定为死循环。
+  max_same_tool_repeats: 10
+
+# ---------------------------------------------------------------------------
+# 5. 媒体工具开关
+#
+# 独立于 AICutPipeline 自己的配置。做纯文本轨迹调试时把重的关掉，
+# 迭代一轮从几十分钟缩到几分钟；正式落盘要全开，否则拿不到真成片。
+# ---------------------------------------------------------------------------
+tool_switches:
+  tts: true                # Qwen3-TTS 配音
+  visual_retrieval: true   # 视觉素材检索
+  bgm_search: true         # BGM 检索
+  timeline_compose: true   # timeline 合成
+  hyperframes_render: true # HyperFrames spotlight 渲染
+  final_stitch: true       # 最终拼接成片
+
+# ---------------------------------------------------------------------------
+# 6. 轨迹落盘
+# ---------------------------------------------------------------------------
+recording:
+  output_root: ${LVP_OUTPUT_ROOT:-./rollouts/longvideo_polar}
+
+  # llm_calls.jsonl 里单条 prompt/输出的截断上限（字符）。
+  # 0 = 不截断。分段那一步的原始输出可以到几十万字符，注意磁盘。
+  max_raw_output_chars: 200000
+
+  # 是否把完整 system prompt 一起落盘。关掉能省很多体积，
+  # 但 generator/critic 的单轮样本就不能直接拿去 SFT 了。
+  store_full_prompts: true
+
+  # 崩了也把已捕获的部分写盘。失败轨迹恰好是反思修复训练最需要的，默认开。
+  save_on_failure: true
+
+  # 严格校验角色划分来自 AICutPipeline 的 server.tool_schema，而不是内置快照。
+  # 保持 true：schema 漂了会让三份轨迹全部打错标签，且不报错。
+  strict_tool_schema: true
+
+# ---------------------------------------------------------------------------
+# 7. 批量标注
+#
+# 每条 rollout 一个独立子进程：AICutPipeline 的 Agent 循环会临时 patch
+# pipeline.graph._get_llm，同进程并发要么串行化要么互相踩。
+# ---------------------------------------------------------------------------
+batch:
+  input_dir: ${LVP_INPUT_DIR:-}
+  input_glob: "*.txt"
+  # 并发 rollout 数。上限取决于 TTS/渲染/served model 的承载，不是 CPU 核数。
+  workers: 4
+  limit: 0              # >0 时只跑前 N 条，用于试跑
+  resume: true          # 已出成片的跳过；失败没出片的会重跑
+  continue_on_error: true

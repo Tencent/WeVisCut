@@ -1,0 +1,55 @@
+# Runtime config consumed by InferenceOrchestrator during data construction.
+# This is *not* studio_config.yaml — the studio and the training-time loop
+# share pipeline/ + server/ but read different top-level documents.
+#
+# Paths are resolved against pipeline.root (the WeDirector repo by default).
+# ${REPO_ROOT} is *not* injected here; use WEDIRECTOR_GOLD_TEMPLATE / relative
+# paths instead.
+
+execution:
+  mode: real
+  fake_mode:
+    skip_final_stitch: false
+    final_hyperframes_render: true
+    skip_hyperframes_render: false
+
+hitl:
+  enabled: true
+  mode: auto
+
+llm:
+  base_url: ${OPENAI_BASE_URL:-http://127.0.0.1:8000/v1}
+  api_key: ${OPENAI_API_KEY:-EMPTY}
+  model: ${LVP_MODEL:-Qwen3.5-9B}
+  temperature: 0.2
+  max_tokens: 8192
+  timeout: 600
+
+tts:
+  backend: qwen3
+  service_url: ${AICUT_TTS_URL:-http://127.0.0.1:7865}
+
+paths:
+  gold_template_root: ${WEDIRECTOR_GOLD_TEMPLATE:-external_tool/gold_template}
+  asset_library: ${WEDIRECTOR_ASSET_LIBRARY:-workspace/asset_library}
+  output_root: ${WEDIRECTOR_WORKSPACE:-workspace}/pipeline_out
+  storage_root: ${WEDIRECTOR_WORKSPACE:-workspace}/storage
+
+stage3_trajectory:
+  max_workers: 4
+  visual_placeholder_on_failure: true
+  require_all_visual_audio_success: false
+
+stage2_segment:
+  max_repair_rounds: 3
+
+render:
+  shot_concurrency: 4
+  defer_stitch: true
+
+music: {}
+
+render_split:
+  enabled: true
+  overlay_format: webm
+  cache_dir: /tmp/wedirector_render_split

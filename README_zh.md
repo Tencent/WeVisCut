@@ -24,6 +24,7 @@ WeDirector 把一段纯文本口播稿变成一条剪好的、时长可达数分
 | 基于 [deepagents](https://github.com/langchain-ai/deepagents) / LangGraph 的智能体框架 | `aicut_agent/` |
 | FastAPI 后端、剪辑与对话式改片接口 | `studio/` |
 | 浏览器前端：实时时间轴、手动剪辑、对话改片 | `static/` |
+| **训练数据管线**（口播稿 → 成片 + 三份角色流） | [`data_construct_pipeline/`](data_construct_pipeline/README_zh.md) |
 | **可插拔的素材 / BGM 检索接口** | `pipeline/providers/` |
 | 公开网络素材与 CC 音乐检索 | `external_tool/asset_retrieval_tool/` |
 | Gold Template 模板库（结构 × 运动 × 视觉） | `external_tool/gold_template/` |
@@ -39,6 +40,7 @@ WeDirector 把一段纯文本口播稿变成一条剪好的、时长可达数分
 | [`docs/providers.md`](docs/providers.md) | 接入你自己的视频素材与音乐源 |
 | [`docs/external_tools.md`](docs/external_tools.md) | 需要下载的大文件：是什么、放哪里、多大 |
 | [`docs/huggingface.md`](docs/huggingface.md) | 使用与发布模型权重 |
+| [`data_construct_pipeline/README_zh.md`](data_construct_pipeline/README_zh.md) | 训练轨迹是怎么采出来的 |
 
 ---
 
@@ -365,6 +367,12 @@ node tests/test_frontend.js                    # 前端（需要 node）
 
 `configs/training/` 放的是发布 checkpoint 背后的数据准备与 SFT 配置，推理时不会
 读取。
+
+真正把口播稿跑成轨迹并落盘的代码在
+[`data_construct_pipeline/`](data_construct_pipeline/README_zh.md)。它驱动
+`server/infer_graph.py` 里的长程循环：主流程每轮自选一个工具，内容生成 / 反思
+质检 / 媒体工具负责执行，recorder 再切成三份可训练的流。这个包和 Studio 解耦，
+有自己的安装方式、离线自测和 README。
 
 ## 许可
 

@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+rollouts/
+workspace/
+*.log
+
+# Private corpus runbooks (cluster paths, dataset internals)
+260806_Bilibli_data_use.md

@@ -38,6 +38,7 @@ checkpoints/
 workspace/
 /tmp/
 *.log
+data_construct_pipeline/rollouts/
 
 # ── Downloaded external tools (see docs/external_tools.md) ──
 # Use `dir/*` rather than `dir/`: git does not descend into an excluded
