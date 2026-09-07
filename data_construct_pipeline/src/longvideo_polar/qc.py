@@ -605,7 +605,7 @@ def _render_readme(card: dict[str, Any]) -> str:
     )
     return f"""# {card['name']}
 
-bilibili 长视频口播稿的长程 Agent 轨迹标注集，按主流程 / 内容生成器 / 反思修复
+口播稿长程 Agent 轨迹标注集，按主流程 / 内容生成器 / 反思修复
 三个角色切分，可直接用于 SFT 与 RL。
 
 生成时间：{card['generated_at']}
@@ -618,7 +618,7 @@ bilibili 长视频口播稿的长程 Agent 轨迹标注集，按主流程 / 内�
 ├── dataset_card.json         机器可读的数据集卡片
 ├── worklist.jsonl            入选清单 + 筛选条件（可复现）
 ├── episodes/                 每条视频一个目录
-│   └── <序号>__<BV号>__<asset_id前8位>/
+│   └── <序号>__<source_id>__<asset_id前8位>/
 │       ├── episode.json          运行清单：状态、分角色统计、reward、错误、耗时
 │       ├── worker.log            该条 rollout 的完整日志
 │       └── trajectories/
@@ -645,8 +645,8 @@ bilibili 长视频口播稿的长程 Agent 轨迹标注集，按主流程 / 内�
 
 ## 命名
 
-`<序号>__<BV号>__<asset_id 前8位>`，例如 `000123__BV1Qx411V7yh__0001c616`。
-序号用于排序与分页，BV 号是可公开引用的来源视频句柄，asset_id 前缀保证与原数据集
+`<序号>__<source_id>__<asset_id 前8位>`，例如 `000123__example_src_001__0a1b2c3d`。
+序号用于排序与分页，source id 是清单里的可选来源句柄，asset_id 前缀保证与
 `videos/` `scripts/` 的连接唯一。完整 asset_id 见 `worklist.jsonl` 与
 `episode.json`。
 
@@ -693,6 +693,6 @@ bilibili 长视频口播稿的长程 Agent 轨迹标注集，按主流程 / 内�
   依赖成片硬门槛的 RL reward 在这批数据上不可用，需要另跑 `full_media` 子集。
 - 失败轨迹一并保留（`recording.save_on_failure`）。反思修复训练需要它们，
   但按 `status` 过滤前不要直接当正样本用。
-- 口播稿来自字幕，含 ASR / 字幕组噪声；超过 {selection.get('max_chars', 0)} 字与
+- 口播稿可能含识别噪声；超过 {selection.get('max_chars', 0)} 字与
   少于 {selection.get('min_chars', 0)} 字的条目已在选取阶段排除。
 """

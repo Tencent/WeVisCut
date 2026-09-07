@@ -1,6 +1,6 @@
-"""Offline checks for the 260821 batch-annotation control plane.
+"""Offline checks for the batch-annotation control plane.
 
-Exercises the pieces that must be right *before* 9,876 rollouts start, none of
+Exercises the pieces that must be right before a large batch starts, none of
 which need a model endpoint:
 
 1. curation  — the manifest filters, stratified sampling and folder naming
@@ -56,14 +56,14 @@ def test_curation() -> None:
 
     check(
         "folder naming is seq__BV__asset8",
-        episode_dir_name(123, "0001c61657e1ab22a6337a839c82f925", "BV1Qx411V7yh")
-        == "000123__BV1Qx411V7yh__0001c616",
-        episode_dir_name(123, "0001c61657e1ab22a6337a839c82f925", "BV1Qx411V7yh"),
+        episode_dir_name(123, "0a1b2c3d4e5f67890123456789abcdef", "example_src_001")
+        == "000123__example_src_001__0a1b2c3d",
+        episode_dir_name(123, "0a1b2c3d4e5f67890123456789abcdef", "example_src_001"),
     )
     check(
-        "naming degrades gracefully without a BV id",
-        episode_dir_name(7, "0001c61657e1ab22a6337a839c82f925") == "000007__0001c616",
-        episode_dir_name(7, "0001c61657e1ab22a6337a839c82f925"),
+        "naming degrades gracefully without a source id",
+        episode_dir_name(7, "0a1b2c3d4e5f67890123456789abcdef") == "000007__0a1b2c3d",
+        episode_dir_name(7, "0a1b2c3d4e5f67890123456789abcdef"),
     )
 
     manifest = DATASET_ROOT / "manifest.jsonl"

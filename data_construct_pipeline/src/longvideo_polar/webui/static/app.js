@@ -96,7 +96,7 @@ async function refreshEndpoints(pool) {
   });
 
   if (!(data.endpoints || []).length) {
-    list.innerHTML = '<p class="hint">还没有机器。填 ip:端口 添加，例如 29.111.45.47:8080</p>';
+    list.innerHTML = '<p class="hint">还没有机器。填 ip:端口 添加，例如 10.0.0.1:8000</p>';
   }
 
   $('poolSummary').textContent =

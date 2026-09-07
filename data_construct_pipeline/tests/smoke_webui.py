@@ -20,7 +20,7 @@ PKG_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(PKG_SRC) not in sys.path:
     sys.path.append(str(PKG_SRC))
 
-CONFIG = Path(__file__).resolve().parents[1] / "config" / "wedirector_260821.yaml"
+CONFIG = Path(__file__).resolve().parents[1] / "config" / "campaign.example.yaml"
 DATASET_ROOT = Path(os.environ.get("LVP_SMOKE_DATASET", ""))
 
 _failures: list[str] = []

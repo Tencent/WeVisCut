@@ -23,7 +23,7 @@ pipeline:
     execution:
       mode: real
     hitl:
-      # 无人值守：HITL 自动选推荐项，否则 9k 条会全部卡在第一个人工确认点。
+      # 无人值守：HITL 自动选推荐项，否则批量会卡在第一个人工确认点。
       enabled: true
       mode: auto
     stage3_trajectory:
@@ -193,7 +193,7 @@ decoration:
 recording:
   output_root: ${LVP_OUTPUT_ROOT:-./rollouts/longvideo_polar}
 
-  # 分段那一步的原始输出可以到几十万字符。9k 条 × 全量 prompt 很占盘，
+  # 分段那一步的原始输出可以到几十万字符。大批量 × 全量 prompt 很占盘，
   # 但 generator/critic 的单轮样本要能直接拿去 SFT，所以 store_full_prompts 保持开。
   max_raw_output_chars: 200000
   store_full_prompts: true

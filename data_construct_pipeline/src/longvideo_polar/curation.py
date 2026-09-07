@@ -1,22 +1,21 @@
-"""Turn the bilibili manifest into an explicit, reproducible annotation worklist.
+"""Turn a source manifest into an explicit, reproducible annotation worklist.
 
-Selecting inputs with a glob makes a corpus you cannot describe in a paper: the
-scripts run range from 4 characters to 161,933, span five language tags, and the
-episode folders come out named after 32-hex asset ids. This module replaces the
-glob with a declared selection.
+Selecting inputs with a glob makes a corpus you cannot describe: script lengths
+and language tags vary, and episode folders come out named after opaque asset
+ids. This module replaces the glob with a declared selection.
 
 A worklist is written once and then obeyed. It records, per episode, the exact
 input file, the output directory name and the manifest facts behind it; and it
 records, once at the top, the filter that produced it. Re-running the same
-:class:`CurationFilter` reproduces the same worklist, and a reader of the dataset
-can see what was excluded and why.
+:class:`CurationFilter` reproduces the same worklist, and a reader of the
+exported set can see what was excluded and why.
 
-Episode directories are named ``<seq>__<bv_id>__<asset8>``:
+Episode directories are named ``<seq>__<source_id>__<asset8>``:
 
-    000123__BV1Qx411V7yh__0001c616
+    000123__example_src_001__0a1b2c3d
 
-The sequence number sorts and pages the 9k directories, the BV id is the public
-handle that identifies the source video, and the asset-id prefix keeps the join
+The sequence number sorts and pages the directories, the source id is an
+optional handle from the manifest, and the asset-id prefix keeps the join
 back to ``videos/`` and ``scripts/`` unambiguous.
 """
 
@@ -46,7 +45,7 @@ _BV_RE = re.compile(r"(BV[0-9A-Za-z]{10})")
 
 
 def _extract_bv(row: dict[str, Any]) -> str:
-    """Find the BV id in ``bv_url`` or the ``title`` field that mirrors it."""
+    """Find an optional source handle in common manifest fields."""
     for key in ("bv_url", "title", "video_relpath"):
         match = _BV_RE.search(str(row.get(key) or ""))
         if match:
@@ -55,10 +54,10 @@ def _extract_bv(row: dict[str, Any]) -> str:
 
 
 def episode_dir_name(index: int, asset_id: str, bv_id: str = "") -> str:
-    """Build ``<seq>__<bv_id>__<asset8>``.
+    """Build ``<seq>__<source_id>__<asset8>``.
 
-    ``bv_id`` is omitted when unknown rather than padded, so the name never claims
-    a provenance it does not have.
+    ``bv_id`` (the optional source handle) is omitted when unknown rather than
+    padded, so the name never claims a provenance it does not have.
     """
     parts = [f"{index:06d}"]
     if bv_id:
@@ -83,7 +82,7 @@ class CurationFilter:
     stratify: bool = False
     strata: int = 8
     require_script_file: bool = True
-    seed: int = 20260821
+    seed: int = 42
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -188,10 +187,9 @@ def _stratified_sample(
 def _existing_scripts(root: Path, relpaths: Iterable[str]) -> set[str]:
     """Resolve which ``script_relpath`` values exist, using one listing per dir.
 
-    The corpus keeps all 9,876 scripts in a single flat directory. Stat'ing them
-    one by one costs a round trip each on the shared mount — minutes of wall time
-    for a selection preview the UI expects to answer instantly — whereas listing
-    the directory once answers every membership question from memory.
+    A corpus usually keeps scripts in one or a few flat directories. Stat'ing
+    them one by one costs a round trip each on a network mount, whereas listing
+    each directory once answers every membership question from memory.
     """
     by_dir: dict[str, set[str]] = {}
     for rel in relpaths:
@@ -302,7 +300,7 @@ def write_worklist(
         "selection": selection.as_dict(),
         "selected": len(items),
         "rejected": dict(rejected or {}),
-        "naming_scheme": "<seq>__<bv_id>__<asset_id[:8]>",
+        "naming_scheme": "<seq>__<source_id>__<asset_id[:8]>",
     }
     with path.open("w", encoding="utf-8") as handle:
         handle.write(json.dumps(header, ensure_ascii=False) + "\n")

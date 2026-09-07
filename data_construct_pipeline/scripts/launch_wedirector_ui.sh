@@ -23,7 +23,7 @@ REPO_ROOT="$(cd "$PKG_ROOT/.." && pwd)"
 
 DATASET_ROOT="${DATASET_ROOT:-$REPO_ROOT/workspace/scripts}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$REPO_ROOT/workspace/data_construct}"
-CONFIG="${CONFIG:-$PKG_ROOT/config/wedirector_260821.yaml}"
+CONFIG="${CONFIG:-$PKG_ROOT/config/campaign.example.yaml}"
 GOLD_ROOT="${GOLD_ROOT:-${WEDIRECTOR_GOLD_TEMPLATE:-$REPO_ROOT/external_tool/gold_template}}"
 PIPELINE_ROOT="${AICUT_PIPELINE_ROOT:-${WEDIRECTOR_ROOT:-$REPO_ROOT}}"
 ENDPOINTS="${ENDPOINTS:-}"

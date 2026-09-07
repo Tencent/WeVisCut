@@ -54,7 +54,7 @@
     </div>
     <p class="hint">填 <code>ip:端口</code> 即可，其余自动探测。可随时增删，运行中也生效。</p>
     <div class="add-row">
-      <input id="epAddress" placeholder="29.111.45.47:8080" />
+      <input id="epAddress" placeholder="10.0.0.1:8000" />
       <input id="epCapacity" type="number" min="1" max="64" value="4" title="并发 rollout 数" />
       <button id="btnAddEp" class="primary">添加</button>
     </div>
@@ -89,12 +89,12 @@
 
     <div class="field"><span>语种（多选）</span>
       <div class="checks langs" id="fLangs">
-        <label><input type="checkbox" value="zh" checked /> zh <em>9659</em></label>
-        <label><input type="checkbox" value="zh-CN" checked /> zh-CN <em>139</em></label>
-        <label><input type="checkbox" value="zh-Hans" checked /> zh-Hans <em>5</em></label>
-        <label><input type="checkbox" value="en" /> en <em>73</em></label>
+        <label><input type="checkbox" value="zh" checked /> zh</label>
+        <label><input type="checkbox" value="zh-CN" checked /> zh-CN</label>
+        <label><input type="checkbox" value="zh-Hans" checked /> zh-Hans</label>
+        <label><input type="checkbox" value="en" /> en</label>
       </div>
-      <small class="hint">计数为该语种有口播稿的条数；四项全选 = 9876 条</small>
+      <small class="hint">按清单字段筛选语种；条数以预览结果为准</small>
     </div>
 
     <div class="checks">
@@ -115,7 +115,7 @@
     <div class="card-head">
       <h2>Episode</h2>
       <div class="controls">
-        <input id="epFilter" placeholder="搜索 BV号 / asset_id" />
+        <input id="epFilter" placeholder="搜索 source_id / asset_id" />
         <select id="epStatusFilter">
           <option value="">全部状态</option>
           <option value="running">进行中</option>

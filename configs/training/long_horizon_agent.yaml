@@ -1,5 +1,5 @@
 input:
-  raw_root: ${WEDIRECTOR_RESULT_ROOT}/AICutPipeline260630_Final377videos/aicut_batch_20260630_192759/trajectory_results/all
+  raw_root: ${WEDIRECTOR_RESULT_ROOT}/raw_trajectories/latest/trajectory_results/all
   include_source_kinds: [base, augmented]
 
 output:

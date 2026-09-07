@@ -80,7 +80,7 @@ class SelectionBody(BaseModel):
     max_duration_sec: float = 0.0
     limit: int = 0
     stratify: bool = False
-    seed: int = 20260821
+    seed: int = 42
 
     def to_filter(self) -> CurationFilter:
         return CurationFilter(

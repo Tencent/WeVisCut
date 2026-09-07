@@ -7,5 +7,6 @@ rollouts/
 workspace/
 *.log
 
-# Private corpus runbooks (cluster paths, dataset internals)
-260806_Bilibli_data_use.md
+# Private corpus runbooks (paths, source inventories)
+*_data_use.md
+private/
