@@ -609,8 +609,10 @@
       const wasPlaying = !this.el.player.paused && !this.el.player.ended;
       this.el.player.setAttribute('src', src);
       // Drop the stale buffer so the element refetches instead of reusing cache.
-      this.el.player.load();
-      if (wasPlaying) this.el.player.play().catch(function () {});
+      if (typeof this.el.player.load === 'function') this.el.player.load();
+      if (wasPlaying && typeof this.el.player.play === 'function') {
+        this.el.player.play().catch(function () {});
+      }
       this.el.playerEmpty.hidden = true;
     }
 

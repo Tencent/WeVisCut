@@ -240,7 +240,7 @@ class Project:
             stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in snapshot_label)[:40]
             try:
-                shutil.copy2(target, versions / f"{stamp}_{safe}.json")
+                self._write_version_project(target, versions / f"{stamp}_{safe}")
             except OSError as exc:
                 logger.warning("版本快照失败（继续保存主状态）: %s", exc)
             self._prune_versions(versions, max_versions)
@@ -253,15 +253,33 @@ class Project:
         tmp.replace(target)  # atomic: never leave a half-written project
         return target
 
+    def _write_version_project(self, state_path: Path, snapshot_dir: Path) -> None:
+        snapshot_dir.mkdir(parents=True, exist_ok=True)
+        payload = json.loads(state_path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            shutil.copy2(state_path, snapshot_dir / STATE_FILENAME)
+            return
+        _copy_media_snapshot(payload, snapshot_dir)
+        (snapshot_dir / STATE_FILENAME).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, default=str),
+            encoding="utf-8",
+        )
+
     @staticmethod
     def _prune_versions(versions_dir: Path, keep: int) -> None:
         try:
-            files = sorted(versions_dir.glob("*.json"))
+            files = sorted(
+                [p for p in versions_dir.iterdir() if p.is_dir() or p.suffix == ".json"],
+                key=lambda p: p.name,
+            )
         except OSError:
             return
         for stale in files[: max(0, len(files) - max(1, keep))]:
             try:
-                stale.unlink()
+                if stale.is_dir():
+                    shutil.rmtree(stale)
+                else:
+                    stale.unlink()
             except OSError:
                 pass
 
@@ -270,25 +288,40 @@ class Project:
         if not versions.is_dir():
             return []
         out: list[dict[str, Any]] = []
-        for p in sorted(versions.glob("*.json"), reverse=True):
+        candidates = [p for p in versions.iterdir() if p.is_dir() or p.suffix == ".json"]
+        for p in sorted(candidates, key=lambda x: x.name, reverse=True):
             try:
                 stat = p.stat()
             except OSError:
                 continue
-            out.append({
+            item = {
                 "name": p.name,
                 "size": stat.st_size,
                 "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-            })
+                "kind": "project" if p.is_dir() else "state",
+            }
+            if p.is_dir():
+                item["project_dir"] = str(p)
+                try:
+                    payload = json.loads((p / STATE_FILENAME).read_text(encoding="utf-8"))
+                    item["final_video_path"] = str(payload.get("final_video_path", "") or "")
+                    item["has_video"] = bool(item["final_video_path"])
+                except (OSError, json.JSONDecodeError):
+                    item["final_video_path"] = ""
+                    item["has_video"] = False
+            out.append(item)
         return out
 
     def restore_version(self, name: str) -> None:
         """Roll the project back to a snapshot."""
-        candidate = (self.project_dir / VERSIONS_DIRNAME / name).resolve()
         root = (self.project_dir / VERSIONS_DIRNAME).resolve()
-        if root not in candidate.parents or not candidate.is_file():
+        candidate = (root / name).resolve()
+        if root not in candidate.parents:
             raise ProjectError(f"unknown version: {name}")
-        payload = json.loads(candidate.read_text(encoding="utf-8"))
+        state_file = candidate / STATE_FILENAME if candidate.is_dir() else candidate
+        if not state_file.is_file():
+            raise ProjectError(f"unknown version: {name}")
+        payload = json.loads(state_file.read_text(encoding="utf-8"))
         self.state.update({
             "segments": payload.get("segments", []),
             "shot_plan": payload.get("shot_plan", []),
@@ -305,6 +338,36 @@ class Project:
             except (TypeError, ValueError):
                 pass
         self.clear_dirty()
+
+
+def _copy_media_snapshot(payload: dict[str, Any], snapshot_dir: Path) -> None:
+    media_dir = snapshot_dir / "media"
+    media_dir.mkdir(parents=True, exist_ok=True)
+
+    def copy_one(path_value: Any, label: str) -> str:
+        src = Path(str(path_value or ""))
+        if not src.is_file():
+            return str(path_value or "")
+        suffix = src.suffix or ".bin"
+        dst = media_dir / f"{label}{suffix}"
+        try:
+            shutil.copy2(src, dst)
+            return str(dst)
+        except OSError as exc:
+            logger.warning("复制版本媒体失败 %s -> %s: %s", src, dst, exc)
+            return str(path_value or "")
+
+    if payload.get("final_video_path"):
+        payload["final_video_path"] = copy_one(payload.get("final_video_path"), "final_video")
+
+    assets = _as_dict(payload.get("shot_assets"))
+    for sid, raw_asset in list(assets.items()):
+        asset = raw_asset if isinstance(raw_asset, dict) else {}
+        safe_sid = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(sid))[:60] or "shot"
+        for key in ("rendered_path", "clip_path", "audio_path"):
+            if asset.get(key):
+                asset[key] = copy_one(asset.get(key), f"{safe_sid}_{key}")
+    payload["shot_assets"] = assets
 
 
 # ---------------------------------------------------------------------------

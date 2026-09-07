@@ -15,7 +15,8 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, Callable
 
 logger = logging.getLogger("aicut_infer")
 
@@ -227,15 +228,33 @@ class UnifiedModelLoader:
         temperature: float | None = None,
         top_p: float | None = None,
         timeout: float | None = None,
+        enable_thinking: bool | None = None,
+        stream_callback: Callable[[str, str], None] | None = None,
     ) -> PredictionResult:
         if not self._loaded or self.engine is None:
             raise RuntimeError("Model not loaded")
 
+        tools = _make_agent_tools(allowed_tools) if role == "orchestrator" else None
+        # vLLM's OpenAI server has two bad modes for this policy:
+        #   1. without native tool parsing it rejects/strips `tools`;
+        #   2. with native parsing enabled it can swallow the model's textual
+        #      <tool_call> output before our parser sees it.
+        #
+        # The policy was trained to emit a text block, and the rest of this
+        # module already parses that text robustly. For remote OpenAI-compatible
+        # backends, render the same tool definitions into the prompt and keep
+        # the HTTP request as ordinary text generation.
+        inline_tools = (
+            role == "orchestrator"
+            and bool(tools)
+            and self._infer_backend in {"openai", "api"}
+        )
+        effective_system = _inline_agent_tools(system_prompt, tools) if inline_tools else system_prompt
+        payload_tools = None if inline_tools else tools
         messages = [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": effective_system},
             {"role": "user", "content": user_content},
         ]
-        tools = _make_agent_tools(allowed_tools) if role == "orchestrator" else None
         effective_max = self._effective_max_tokens(role, stage, max_tokens)
         effective_temp = temperature if temperature is not None else self._temperature
         effective_top_p = top_p if top_p is not None else self._top_p
@@ -250,17 +269,29 @@ class UnifiedModelLoader:
             stop=use_stop,
         )
 
-        with self._infer_lock:
+        thinking = self._enable_thinking if enable_thinking is None else bool(enable_thinking)
+        payload = [{
+            "messages": messages,
+            "tools": payload_tools,
+            "chat_template_kwargs": {"enable_thinking": thinking},
+        }]
+        if stream_callback is not None and self._infer_backend in {"openai", "api"}:
+            payload[0]["stream_callback"] = stream_callback
+
+        # The lock exists because the in-process engines are not safe to call
+        # concurrently from several threads. A remote OpenAI endpoint is — it is
+        # just an HTTP call, and the server behind it batches on its own. Holding
+        # the lock there would serialise every user onto one request at a time,
+        # which is exactly what a multi-GPU deployment is meant to avoid.
+        if self._infer_backend in {"openai", "api"}:
             t0 = time.monotonic()
-            resp = self.engine.infer(
-                [{
-                    "messages": messages,
-                    "tools": tools,
-                    "chat_template_kwargs": {"enable_thinking": self._enable_thinking},
-                }],
-                request_config=request_config,
-            )
+            resp = self.engine.infer(payload, request_config=request_config)
             latency_ms = (time.monotonic() - t0) * 1000.0
+        else:
+            with self._infer_lock:
+                t0 = time.monotonic()
+                resp = self.engine.infer(payload, request_config=request_config)
+                latency_ms = (time.monotonic() - t0) * 1000.0
 
         return _build_prediction_result(resp, latency_ms=latency_ms, stage=stage, allowed_tools=allowed_tools)
 
@@ -546,6 +577,38 @@ def _tool_description(name: str, cards: dict[str, str], preconditions: dict[str,
     return f"AICut long-horizon agent action: {name}."
 
 
+def _inline_agent_tools(system_prompt: str, tools: list[dict[str, Any]] | None) -> str:
+    """Append the tool schema as plain text for OpenAI-compatible backends.
+
+    The in-process ms-swift path can pass ``tools`` to the chat template
+    directly. vLLM's OpenAI server cannot be trusted to do that for this model:
+    disabling native parsing makes it reject the request shape, while enabling a
+    native parser can consume the generated text and return an empty message.
+
+    Keeping the schema in text preserves the trained contract without involving
+    OpenAI tool-calling semantics at all. The output is still parsed by
+    ``_try_parse_tool_json`` below.
+    """
+    if not tools:
+        return system_prompt
+    schema = json.dumps(tools, ensure_ascii=False, separators=(",", ":"))
+    return (
+        f"{system_prompt.rstrip()}\n\n"
+        "【可用工具定义】\n"
+        "下面是本轮可以调用的工具 schema。你必须根据这些工具推进流程，"
+        "每轮只调用一个工具。\n"
+        f"<tools>\n{schema}\n</tools>\n\n"
+        "【工具调用输出格式】\n"
+        "只输出一个 <tool_call> 包裹的 JSON，不要输出自然语言说明，不要输出 Markdown。\n"
+        "格式必须是：\n"
+        "<tool_call>\n"
+        "{\"name\":\"Tool_SegmentArticle\",\"arguments\":{}}\n"
+        "</tool_call>\n"
+        "name 必须来自上面的工具列表；arguments 只使用 user payload 中 "
+        "allowed_tool_args 白名单允许的键。"
+    )
+
+
 _THINK_SUMMARY_LIMIT = 2000
 
 
@@ -564,6 +627,45 @@ def _extract_thinking(raw: str, reasoning_content: str = "") -> str:
     if extra:
         return extra[:_THINK_SUMMARY_LIMIT]
     return ""
+
+
+def _safe_stream_callback(callback: Callable[[str, str], None], text: str, source: str) -> None:
+    try:
+        callback(text, source)
+    except Exception:
+        logger.debug("thinking stream callback failed", exc_info=True)
+
+
+def _streamed_think_deltas(chunk: str, state: dict[str, Any]) -> list[str]:
+    """Extract incremental text that appears inside streamed <think> tags."""
+    if state.get("closed"):
+        return []
+    state["buf"] = str(state.get("buf", "")) + str(chunk or "")
+    out: list[str] = []
+
+    while True:
+        buf = str(state.get("buf", ""))
+        if not state.get("open"):
+            start = buf.find("<think>")
+            if start < 0:
+                state["buf"] = buf[-7:]
+                return out
+            state["open"] = True
+            state["buf"] = buf[start + len("<think>"):]
+            continue
+
+        end = buf.find("</think>")
+        if end >= 0:
+            part = buf[:end]
+            if part:
+                out.append(part)
+            state["closed"] = True
+            state["buf"] = ""
+            return out
+        if buf:
+            out.append(buf)
+            state["buf"] = ""
+        return out
 
 
 def _with_thinking_extra_body(extra_body: dict[str, Any], enable_thinking: bool) -> dict[str, Any]:
@@ -683,6 +785,9 @@ class _OpenAICompatEngine:
         self._send_tool_choice = send_tool_choice
         self.model_name = model
         self.base_url = base_url
+        # Set once the server has rejected an explicit tool_choice, so the rest
+        # of the run stops paying for a request that will 400.
+        self._no_tool_choice = False
 
     def infer(self, infer_requests: list[dict[str, Any]], request_config: Any = None) -> list[Any]:
         if not infer_requests:
@@ -696,7 +801,7 @@ class _OpenAICompatEngine:
         tools = request.get("tools")
         if tools:
             kwargs["tools"] = tools
-            if self._send_tool_choice:
+            if self._send_tool_choice and not self._no_tool_choice:
                 kwargs["tool_choice"] = "auto"
 
         max_tokens = getattr(request_config, "max_tokens", None)
@@ -722,11 +827,116 @@ class _OpenAICompatEngine:
         repetition_penalty = getattr(request_config, "repetition_penalty", None)
         if repetition_penalty is not None:
             extra_body["repetition_penalty"] = float(repetition_penalty)
+        # Not an OpenAI field, so it can only reach the chat template through
+        # extra_body. Dropping the per-call value is what left `enable_thinking`
+        # with no effect on the cluster: every call reasoned first, which both
+        # slowed drafting down and ate the token budget the prose needed. The
+        # per-call value wins over the configured default; the rest is merged.
+        template_kwargs = request.get("chat_template_kwargs")
+        if template_kwargs:
+            merged = dict(extra_body.get("chat_template_kwargs") or {})
+            merged.update(template_kwargs)
+            extra_body["chat_template_kwargs"] = merged
         if extra_body:
             kwargs["extra_body"] = extra_body
+        stream_callback = request.get("stream_callback")
+        if callable(stream_callback):
+            kwargs["stream"] = True
+            # A streamed response omits usage unless asked for, and the cost
+            # ceiling counts tokens.
+            kwargs["stream_options"] = {"include_usage": True}
 
-        completion = self._client.chat.completions.create(**kwargs)
-        return [completion]
+        while True:
+            try:
+                if callable(stream_callback):
+                    return [self._stream_completion(kwargs, stream_callback)]
+                return [self._client.chat.completions.create(**kwargs)]
+            except Exception as exc:  # noqa: BLE001 - inspected and re-raised
+                if callable(stream_callback):
+                    # Live thinking is a nicety; producing the cut is not. Any
+                    # server that cannot stream falls back to one plain call.
+                    logger.warning("streaming failed, retrying without it: %s", exc)
+                    stream_callback = None
+                    kwargs.pop("stream", None)
+                    kwargs.pop("stream_options", None)
+                    continue
+                if not self._degrade_tool_calling(exc, kwargs):
+                    raise
+
+    def _stream_completion(
+        self,
+        kwargs: dict[str, Any],
+        stream_callback: Callable[[str, str], None],
+    ) -> Any:
+        content_parts: list[str] = []
+        reasoning_parts: list[str] = []
+        usage: Any = None
+        think_state = {"open": False, "closed": False, "buf": ""}
+
+        for chunk in self._client.chat.completions.create(**kwargs):
+            if getattr(chunk, "usage", None) is not None:
+                usage = getattr(chunk, "usage", None)
+            choices = getattr(chunk, "choices", None) or []
+            if not choices:
+                continue
+            delta = getattr(choices[0], "delta", None) or choices[0]
+            reasoning = str(
+                getattr(delta, "reasoning_content", "")
+                or getattr(delta, "reasoning", "")
+                or ""
+            )
+            if reasoning:
+                reasoning_parts.append(reasoning)
+                _safe_stream_callback(stream_callback, reasoning, "reasoning")
+
+            content = str(getattr(delta, "content", "") or "")
+            if content:
+                content_parts.append(content)
+                for part in _streamed_think_deltas(content, think_state):
+                    _safe_stream_callback(stream_callback, part, "content_think")
+
+        msg = SimpleNamespace(
+            content="".join(content_parts),
+            reasoning_content="".join(reasoning_parts),
+            tool_calls=None,
+        )
+        return SimpleNamespace(choices=[SimpleNamespace(message=msg)], usage=usage)
+
+    def _degrade_tool_calling(self, exc: Any, kwargs: dict[str, Any]) -> bool:
+        """Drop ``tool_choice`` and report whether the call is worth retrying.
+
+        Some servers accept ``tools`` but reject an explicit ``tool_choice``,
+        and the policy does not need native tool calling either way: it writes
+        ``<tool_call>`` blocks as ordinary text and the result parser reads them
+        out of the message content. So ``tool_choice`` is expendable.
+
+        ``tools`` is not. The policy was trained with the schemas rendered into
+        the chat template, and the template only renders them when the request
+        carries ``tools`` — drop them and the model stops emitting tool calls
+        altogether, which shows up much later as unparseable output rather than
+        as the configuration problem it is. Better to say so here.
+        """
+        text = f"{getattr(exc, 'message', '') or ''} {exc}".lower()
+        if "tool" not in text:
+            return False
+        # A 400 is the server refusing the request shape. A transport error is
+        # not something re-shaping the request can fix.
+        if getattr(exc, "status_code", None) not in (400, 422) and "400" not in text:
+            return False
+
+        if "tool_choice" in kwargs:
+            kwargs.pop("tool_choice", None)
+            if not self._no_tool_choice:
+                self._no_tool_choice = True
+                logger.warning("服务端拒绝 tool_choice，改为不指定（功能不受影响）")
+            return True
+        if "tools" in kwargs:
+            raise RuntimeError(
+                "推理服务不接受 tools 字段，模型将拿不到工具定义、无法输出 tool_call。"
+                "请在启动 vLLM 时加上 --enable-auto-tool-choice --tool-call-parser hermes"
+                f"（服务端原始报错: {exc}）"
+            ) from exc
+        return False
 
     def shutdown(self) -> None:
         close = getattr(self._client, "close", None)

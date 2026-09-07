@@ -1,10 +1,16 @@
 """Guardrail middleware for the AICut deep agent.
 
 A faithful port of the cost bounds in ``AutonomousOrchestrator.run_autonomous``.
-The philosophy is unchanged: the model's decisions are never rewritten — invalid
-or over-budget calls are *refused* and reported back through the observation
-channel the policy was trained to read, and only hard cost ceilings *terminate*
-the run (by routing the tool node to ``END`` instead of back to the model).
+Decisions the model is still capable of making are left to it: invalid or
+over-budget calls are *refused* and reported back through the observation
+channel the policy was trained to read, rather than being rewritten.
+
+The exception is a decision it has demonstrably stopped making. Re-running a
+step whose product is already in state cannot change anything, so rather than
+spend the run's budget on it and stop at a ceiling with usable footage in hand,
+the harness takes the next required step itself. A repeat that follows a failed
+check is not this case and is never touched — see
+``_next_step_for_dead_repeat``.
 
 Hook layout:
 
@@ -72,7 +78,7 @@ class AICutGuardrailMiddleware(AgentMiddleware):
             "type": "console_log",
             "level": "system",
             "text": (
-                "完全自主模式：不做工具改写 / 不强制收尾，非法调用只作为 observation 回灌给模型"
+                "完全自主模式：非法调用只作为 observation 回灌给模型，由模型自行决策下一步"
                 if rt.orchestrator.fully_autonomous
                 else "兼容模式：保留参考实现的路由校正"
             ),
@@ -105,6 +111,15 @@ class AICutGuardrailMiddleware(AgentMiddleware):
         tool_args = request.tool_call.get("args") or {}
         if not isinstance(tool_args, dict):
             tool_args = {}
+
+        # ---- 0. fixed workflow, ahead of every event this method emits ----
+        corrected = self._next_step_for_fixed_workflow(tool_name)
+        if corrected is not None:
+            tool_name, tool_args = corrected
+        else:
+            corrected = self._next_step_for_dead_repeat(tool_name, tool_args)
+            if corrected is not None:
+                tool_name, tool_args = corrected
         phase = rt.phase_for_tool(tool_name)
 
         # ---- 3. repeat ceiling (cost bound, not a redirect) ----
@@ -147,7 +162,15 @@ class AICutGuardrailMiddleware(AgentMiddleware):
 
         # ---- 5. execute ----
         rt.tool_calls_used += 1
-        result = await handler(request)
+        if corrected is None:
+            result = await handler(request)
+        else:
+            # `handler` runs the tool object LangGraph already resolved from the
+            # model's chosen name, so a corrected call cannot go through it. This
+            # is the same entry point the tool wrapper uses.
+            await rt.execute_tool(tool_name, tool_args)
+            result = self._tool_message(
+                request, rt.last_tool_output if isinstance(rt.last_tool_output, dict) else {})
         output = rt.last_tool_output if isinstance(rt.last_tool_output, dict) else {}
         tool_status = str(output.get("status") or "")
         tool_error = str(output.get("error") or "").strip()
@@ -180,6 +203,124 @@ class AICutGuardrailMiddleware(AgentMiddleware):
                 return stitch_cmd
 
         return result
+
+    # ------------------------------------------------------------------
+    # self-correction
+    # ------------------------------------------------------------------
+    def _next_step_for_fixed_workflow(self, tool_name: str) -> tuple[str, dict[str, Any]] | None:
+        """Replace out-of-order choices with the canonical next runnable step.
+
+        The model is still useful for producing content and arguments, but the
+        long-horizon workflow order is deterministic now: segment, plan, reflect,
+        asset, decorate, check, render, music, stitch. A premature stitch or a
+        repeated repair should never be shown as a blocked tool call; it should
+        silently become the step that can actually advance the run.
+        """
+        rt = self._rt
+        orch = rt.orchestrator
+        try:
+            nxt = orch.next_required_tool(rt.state)
+        except Exception:
+            logger.debug("fixed-workflow probe failed", exc_info=True)
+            return None
+        nxt = str(nxt or "")
+        if not nxt or nxt == tool_name or nxt not in LONG_HORIZON_ACTION_SPACE:
+            return None
+        if rt.check_preconditions(nxt):
+            return None
+
+        rt.silent_corrections += 1
+        rt.repeat_calls.clear()
+        rt.same_tool_count = 0
+        rt.last_tool = ""
+        rt.consecutive_blocked = 0
+        logger.debug("fixed workflow: %s -> %s", tool_name, nxt)
+        return nxt, self._default_args_for(nxt)
+
+    def _next_step_for_dead_repeat(
+        self, tool_name: str, tool_args: dict[str, Any],
+    ) -> tuple[str, dict[str, Any]] | None:
+        """The step to run instead, when this call cannot advance the run.
+
+        Returns ``None`` — leave the model's choice alone — for anything that
+        might still be productive, which includes every repeat driven by a
+        check. Those are exactly the cases ``_agent_tool_already_done`` reports
+        as not-done: a pending reflect generation, open issues from a patch, or
+        shots the Stage4 judge rejected. So a re-render after a failed check
+        never reaches the rewrite here; only a call whose work is already in
+        state does.
+        """
+        rt = self._rt
+        orch = rt.orchestrator
+        if tool_name not in LONG_HORIZON_ACTION_SPACE:
+            return None            # unknown names have their own feedback path
+        if rt.silent_corrections >= rt.max_silent_corrections:
+            return None
+
+        # First attempts are always allowed through: a tool reporting its own
+        # no-op is information the model may well act on. Only once it has
+        # asked twice is it not reading the answer.
+        seen_before = (
+            tool_name == rt.last_tool
+            or rt.repeat_calls.get(rt.args_signature(tool_name, tool_args), 0) >= 1
+        )
+        if not seen_before:
+            return None
+
+        try:
+            if not orch._agent_tool_already_done(tool_name, rt.state):
+                return None
+            nxt = orch.next_required_tool(rt.state)
+        except Exception:
+            # Never let a probe break a run that would otherwise proceed.
+            logger.debug("self-correction probe failed", exc_info=True)
+            return None
+        if not nxt or nxt == tool_name:
+            return None
+        if rt.check_preconditions(nxt):
+            return None            # would trade one dead end for another
+
+        rt.silent_corrections += 1
+        # The ceilings exist to catch a model going nowhere. It is going
+        # somewhere now, so it should not inherit a budget spent while stuck.
+        rt.repeat_calls.clear()
+        rt.same_tool_count = 0
+        rt.last_tool = ""
+        rt.consecutive_blocked = 0
+        # Debug, not info: a normal run's log should read as a clean sequence.
+        logger.debug(
+            "self-correction %d/%d: %s already done, running %s instead",
+            rt.silent_corrections, rt.max_silent_corrections, tool_name, nxt,
+        )
+        return nxt, self._default_args_for(nxt)
+
+    def _next_step_after(self, tool_name: str) -> str:
+        """The next runnable step, or "" if there is none to point at."""
+        rt = self._rt
+        try:
+            nxt = rt.orchestrator.next_required_tool(rt.state)
+        except Exception:
+            logger.debug("next-step probe failed", exc_info=True)
+            return ""
+        if not nxt or nxt == tool_name or rt.check_preconditions(nxt):
+            return ""
+        return nxt
+
+    def _default_args_for(self, tool_name: str) -> dict[str, Any]:
+        """Arguments for a step the harness chose rather than the model.
+
+        Empty is right for the batch tools: each one picks up whatever is still
+        pending in state. Stitching is the exception — it reads the timeline
+        and BGM it is handed.
+        """
+        if tool_name != "Tool_StitchVideo":
+            return {}
+        state = self._rt.state
+        return {
+            "project_id": state.get("project_id", ""),
+            "timeline_path": state.get("timeline_path", ""),
+            "bgm": state.get("bgm_result", {}),
+        }
 
     # ------------------------------------------------------------------
     # guardrail helpers
@@ -298,6 +439,19 @@ class AICutGuardrailMiddleware(AgentMiddleware):
                         "镜头素材与渲染已完成，可在编辑器中直接拼接成片。",
                     )
                 return None
+            # Stopping here loses a run that still has somewhere to go. Point at
+            # the next step instead; if the model ignores it, the pre-execution
+            # hook takes the step itself on the following turn.
+            nxt = self._next_step_after(tool_name)
+            if nxt:
+                rt.repeat_calls[args_sig] = 0
+                rt.set_feedback({
+                    "status": "already_completed",
+                    "tool": tool_name,
+                    "hint": f"该步骤的产物已在 global_state 中，无需重复执行，请调用 {nxt} 继续",
+                    "next_tool": nxt,
+                })
+                return None
             reason = (
                 f"{tool_name} 已被以完全相同的参数执行 {rt.repeat_calls[args_sig]} 次，"
                 f"返回状态为 {tool_status or 'unknown'}，模型未从结果中获得新信息，判定为死循环，停止执行"
@@ -353,15 +507,22 @@ class AICutGuardrailMiddleware(AgentMiddleware):
         return None
 
     async def _maybe_finish_on_stitch(self, request: Any, output: dict[str, Any]) -> Command | None:
-        """End the loop when the model's own stitch produced a final video."""
+        """End the loop once the model's stitch validated the cut.
+
+        With ``render.defer_stitch`` on, that means a manifest rather than a
+        file: the expensive concat runs on export. Either outcome is a
+        successful finish as far as the model is concerned.
+        """
         rt = self._rt
         final_path = str(rt.state.get("final_video_path", "") or "")
-        if final_path:
+        pending = bool(rt.state.get("stitch_pending"))
+        if final_path or pending:
             rt.orchestrator.stitched_done = True
             rt.stitch_succeeded = True
             await rt.broadcast({
                 "type": "console_log", "level": "success",
-                "text": f"模型自主完成收尾，成片: {final_path}",
+                "text": (f"模型自主完成收尾，成片: {final_path}" if final_path
+                         else "模型自主完成收尾，各镜头已校验通过，可直接预览或导出成片"),
             })
             return Command(
                 goto=END,
@@ -390,8 +551,16 @@ class AICutGuardrailMiddleware(AgentMiddleware):
     # termination / message helpers
     # ------------------------------------------------------------------
     async def _terminate(self, request: Any, reason: str) -> Command:
-        """Stop the run at a cost ceiling: route to END with a terminal message."""
+        """Stop the run at a cost ceiling: route to END with a terminal message.
+
+        A ceiling says the model stopped making progress, not that the footage
+        is unusable — so the cut gets delivered first if it can be.
+        """
         rt = self._rt
+        if await rt.deliver_if_possible():
+            logger.debug("ceiling hit (%s), but the cut was deliverable", reason)
+            output = rt.last_tool_output if isinstance(rt.last_tool_output, dict) else {}
+            return Command(goto=END, update={"messages": [self._tool_message(request, output)]})
         rt.terminated_reason = reason
         rt.results["errors"].append(reason)
         await rt.broadcast({"type": "error", "stage": "agent_loop", "message": reason})

@@ -96,6 +96,38 @@ class StudioConfig:
         return _as_dict(self.raw.get("chat_edit"))
 
     @property
+    def auth(self) -> dict[str, Any]:
+        return _as_dict(self.raw.get("auth"))
+
+    @property
+    def auth_enabled(self) -> bool:
+        return bool(self.auth.get("enabled", False))
+
+    @property
+    def auth_passwordless(self) -> bool:
+        """Username-only login: unknown names are registered on first use.
+
+        Isolation still holds because each username gets its own projects, but
+        this mode does not prove identity. Keep it off for shared deployments
+        unless the surrounding environment already authenticates users.
+        """
+        return bool(self.auth.get("passwordless", False))
+
+    @property
+    def auth_admins(self) -> set[str]:
+        raw = self.auth.get("admins")
+        if isinstance(raw, str):
+            raw = [raw]
+        return {str(x).strip() for x in (raw or []) if str(x).strip()}
+
+    @property
+    def users_file(self) -> Path:
+        """Account file. Relative paths resolve next to studio_config.yaml."""
+        raw = str(self.auth.get("users_file", "users.yaml") or "users.yaml")
+        path = Path(raw).expanduser()
+        return path if path.is_absolute() else (self.path.parent / path)
+
+    @property
     def autonomy(self) -> dict[str, Any]:
         return _as_dict(_as_dict(self.raw.get("agent")).get("autonomy"))
 
@@ -444,9 +476,12 @@ def _validate(cfg: StudioConfig) -> None:
         if adapter and not Path(adapter).exists():
             add(Issue("warn", f"model.profiles.{active}.adapter", f"path missing: {adapter}"))
         backend = str(resolved.get("infer_backend", ""))
-        if backend not in {"vllm", "transformers"}:
+        # `openai`/`api` point at an external OpenAI-compatible endpoint, which
+        # is how the multi-GPU router runs. The in-process deployment still uses
+        # `vllm` or `transformers`.
+        if backend not in {"vllm", "transformers", "openai", "api"}:
             add(Issue("error", f"model.profiles.{active}.infer_backend",
-                      f"must be vllm|transformers, got {backend!r}"))
+                      f"must be vllm|transformers|openai|api, got {backend!r}"))
 
     # --- training/inference alignment ---
     if not cfg.system_prompt:

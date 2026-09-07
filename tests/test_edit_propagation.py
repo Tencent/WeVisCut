@@ -206,6 +206,42 @@ def test_subtitles_stay_in_sync_with_the_voice_over(tmp: Path) -> None:
     check("whitespace is not drift", editor.subtitle_drift(proj) == [])
 
 
+def test_narration_edit_regenerates_voice_visual_query_and_footage(tmp_path: Path) -> None:
+    print("\n[set_narration] 改镜头文案会级联重配音、重检索、重渲染")
+    proj = make_project(tmp_path)
+    assets = proj.assets_for("1")
+    assets["audio_path"] = "/old/audio.wav"
+    assets["audio_meta"] = {"duration_sec": 4.0}
+    assets["clip_path"] = "/old/video.mp4"
+    assets["clip_source"] = "retrieval"
+    old_query = str(proj.shot("1").get("visual_query", "") or "")
+
+    result = editor.apply_ops(proj, [{
+        "op": "set_narration",
+        "shot_id": "1",
+        "text": "量子芯片在极低温环境里维持脆弱量子态",
+        "visual_query": "极低温量子芯片实验室特写",
+    }])[0]
+
+    shot = proj.shot("1")
+    dirty = proj.dirty.get("1", set())
+    check("narration updated", shot["vocal_script"] == "量子芯片在极低温环境里维持脆弱量子态")
+    check("visual query updated", shot["visual_query"] == "极低温量子芯片实验室特写")
+    check("visual query changed", shot["visual_query"] != old_query)
+    check("tts marked dirty", "tts" in dirty, str(dirty))
+    check("footage marked dirty", "footage" in dirty, str(dirty))
+    check("render marked dirty", "render" in dirty, str(dirty))
+    check("old audio removed", "audio_path" not in assets and "audio_meta" not in assets)
+    check("old footage removed", "clip_path" not in assets)
+    check("clip source reset to retrieval", assets.get("clip_source") == "retrieval")
+    check("message mentions retrieval", "重新检索" in result.message, result.message)
+
+    tools = [step["tool"] for step in editor.plan_regeneration(proj)]
+    check("visual/audio regenerates before render",
+          tools[:2] == ["Tool_BatchVisualAudio", "Tool_BatchTimelineCompose"],
+          str(tools))
+
+
 def test_production_regression_template_edit_keeps_audio_in_sync(tmp: Path) -> None:
     print("\n[线上回归] 换模板那一轮不应该让字幕和配音脱节")
     proj = make_project(tmp)
@@ -380,6 +416,19 @@ def test_music_search_cache_respects_the_request(tmp: Path) -> None:
          graph_mod._load_cached_json) = orig
 
 
+def test_visual_audio_cache_checks_visual_query() -> None:
+    print("\n[node_visual_audio_batch] 素材缓存必须校验 visual_query")
+    src = (ROOT / "pipeline" / "graph.py").read_text(encoding="utf-8")
+    start = src.index("def _script_matches")
+    block = src[start:start + 1700]
+    check("cache reads cached visual query",
+          "cached_query" in block and "visual_query" in block, block)
+    check("cache reads planned visual query",
+          "planned_query" in block and "visual_query" in block, block)
+    check("cache rejects visual query mismatch",
+          "cached_query != planned_query" in block, block)
+
+
 def test_bgm_settings_survive_reload(tmp: Path) -> None:
     print("\n[final_state.json] bgm_query / bgm_volume 持久化")
     proj = make_project(tmp)
@@ -397,6 +446,39 @@ def test_bgm_settings_survive_reload(tmp: Path) -> None:
           editor.stitch_step(reloaded)["args"]["bgm_volume"] == 0.33)
 
 
+def test_edit_versions_keep_playable_media_snapshots(tmp_path: Path) -> None:
+    print("\n[versions] 每次编辑前的成片效果可独立回看")
+    proj = make_project(tmp_path)
+    final = tmp_path / "final.mp4"
+    clip = tmp_path / "shots" / "1" / "shot.mp4"
+    clip.parent.mkdir(parents=True, exist_ok=True)
+    final.write_bytes(b"old final")
+    clip.write_bytes(b"old clip")
+    proj.state["final_video_path"] = str(final)
+    proj.assets_for("1")["rendered_path"] = str(clip)
+    proj.save()
+
+    editor.apply_ops(proj, [{"op": "set_narration", "shot_id": "1",
+                             "text": "全新的第一句旁白"}])
+    proj.save("manual_edit")
+
+    versions = proj.list_versions()
+    check("version listed", bool(versions), str(versions))
+    first = versions[0]
+    check("version is a mini project", first.get("kind") == "project", str(first))
+    check("version exposes preview video", bool(first.get("final_video_path")), str(first))
+
+    snapshot = Path(first["project_dir"])
+    payload = json.loads((snapshot / "final_state.json").read_text(encoding="utf-8"))
+    snap_final = Path(payload["final_video_path"])
+    snap_clip = Path(payload["shot_assets"]["1"]["rendered_path"])
+    check("final video copied into snapshot", snap_final.is_file() and snap_final.read_bytes() == b"old final")
+    check("shot clip copied into snapshot", snap_clip.is_file() and snap_clip.read_bytes() == b"old clip")
+    check("snapshot paths stay inside version dir",
+          snapshot in snap_final.parents and snapshot in snap_clip.parents,
+          f"{snap_final} / {snap_clip}")
+
+
 def main() -> int:
     import shutil
     import tempfile
@@ -406,12 +488,15 @@ def main() -> int:
         test_template_registry_rejects_invented_ids(tmp / "t1")
         test_subtitle_reaches_the_renderer(tmp / "t2")
         test_subtitles_stay_in_sync_with_the_voice_over(tmp / "t2b")
+        test_narration_edit_regenerates_voice_visual_query_and_footage(tmp / "t2ba")
         test_production_regression_template_edit_keeps_audio_in_sync(tmp / "t2c")
         test_restitch_only_edits_are_scheduled(tmp / "t3")
         test_bgm_volume_reaches_the_stitcher(tmp / "t4")
         test_stitch_dispatch_forwards_mix_args()
         test_music_search_cache_respects_the_request(tmp / "t6")
+        test_visual_audio_cache_checks_visual_query()
         test_bgm_settings_survive_reload(tmp / "t7")
+        test_edit_versions_keep_playable_media_snapshots(tmp / "t8")
     except AssertionError as exc:
         print(f"\n失败: {exc}")
         return 1

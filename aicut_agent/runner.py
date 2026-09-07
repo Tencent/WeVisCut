@@ -79,6 +79,14 @@ async def run_aicut_generation(runtime: AICutRuntime, loader: Any) -> dict[str, 
     # CancelledError propagates so the caller can mark the run cancelled.
     await agent.ainvoke({"messages": [HumanMessage(content=rt.input_script)]})
 
+    # The step ceiling and the parse-failure ceiling live in the chat model and
+    # end the graph without passing through the middleware, so this is the only
+    # point that covers every way a run can stop. A run that reached a complete
+    # set of shots should not be reported as failed over the one step left.
+    if rt.terminated_reason and await rt.deliver_if_possible():
+        logger.debug("run stopped (%s) but the cut was deliverable", rt.terminated_reason)
+        rt.terminated_reason = ""
+
     # Closing events (mirror run_autonomous's tail).
     if rt.terminated_reason:
         await rt.broadcast({"type": "error", "stage": "agent_loop", "message": rt.terminated_reason})

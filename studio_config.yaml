@@ -327,7 +327,31 @@ services:
     ffprobe_path: ${WEDIRECTOR_FFPROBE:-${REPO_ROOT}/external_tool/ffmpeg/ffprobe}
 
 # ───────────────────────────────────────────────────────────────────────────
-#  4. Resource paths
+#  4. Authentication (optional)
+# ───────────────────────────────────────────────────────────────────────────
+# Per-user project isolation. Disabled by default so a fresh local checkout
+# behaves like the original single-user studio.
+#
+# To enable password auth:
+#   cp users.example.yaml users.yaml
+#   python3 scripts/manage_users.py init
+#   set auth.enabled: true
+#
+# `users.yaml` stores PBKDF2 hashes, not plain passwords, and is ignored by git.
+# Projects created before auth is enabled have no owner entry in
+# <workspace_root>/owners.json; only admins can see those unclaimed projects.
+auth:
+  enabled: false
+  users_file: users.yaml
+  session_hours: 72
+  # Username-only login: unknown names are registered on first use. Convenient
+  # behind a trusted gateway, but not identity verification by itself.
+  passwordless: false
+  admins:
+    - admin
+
+# ───────────────────────────────────────────────────────────────────────────
+#  5. Resource paths
 # ───────────────────────────────────────────────────────────────────────────
 paths:
   # Your own video library (used by local_scan / local_folder_video).
@@ -342,7 +366,7 @@ paths:
   instructions_file: ${REPO_ROOT}/external_tool/configs/instructions.yaml
 
 # ───────────────────────────────────────────────────────────────────────────
-#  5. Rendering and subtitles
+#  6. Rendering and subtitles
 # ───────────────────────────────────────────────────────────────────────────
 render:
   # Transparent-layer acceleration: A cacheable base video + B webm alpha

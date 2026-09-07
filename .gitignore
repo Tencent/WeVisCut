@@ -20,6 +20,7 @@ npm-debug.log*
 # ── Credentials: never commit ──
 # Bilibili cookies are account credentials; API keys are keys.
 config.json
+users.yaml
 .env
 .env.*
 !.env.example

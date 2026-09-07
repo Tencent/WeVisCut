@@ -158,6 +158,50 @@ class ModelService:
             system, user, max_tokens=max_tokens, temperature=temperature
         )
 
+    def compose(
+        self,
+        system: str,
+        user: str,
+        *,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> dict[str, Any]:
+        """Long-form prose completion, for writing rather than acting.
+
+        Deliberately not routed through the ``orchestrator`` role that
+        :meth:`generate` uses: that role injects the 12-tool schema into every
+        prompt and stops generation on ``</tool_call>``, neither of which
+        belongs in a narration draft.
+
+        Thinking is off here. Reasoning about a narration draft costs seconds
+        per call and, worse, spends the token budget the prose needs — a long
+        script would get cut off mid-sentence while the model was still
+        deliberating. The writing quality of a direct completion is fine for
+        narration, and the whole budget goes to the script.
+
+        Returns the raw output alongside the cleaned text because a draft that
+        ran out of tokens mid-``<think>`` has no closing tag, so the loader
+        cannot strip it and ``cleaned_output`` is the whole reasoning trace.
+        """
+        loader = self._require_loader()
+        prediction = loader.predict(
+            system, user,
+            role="writer",
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            enable_thinking=False,
+        )
+        completion_tokens = int(getattr(prediction, "completion_tokens", 0) or 0)
+        return {
+            "text": str(getattr(prediction, "cleaned_output", "") or ""),
+            "raw": str(getattr(prediction, "raw_output", "") or ""),
+            "thinking": str(getattr(prediction, "thinking_summary", "") or ""),
+            "completion_tokens": completion_tokens,
+            "truncated": completion_tokens >= max_tokens,
+        }
+
 
 class RemoteModelService:
     """OpenAI-compatible client, for ``chat_edit.backend: openai``.
@@ -208,6 +252,22 @@ class RemoteModelService:
         if not choices:
             return ""
         return str((choices[0].get("message") or {}).get("content", "") or "")
+
+    def compose(
+        self,
+        system: str,
+        user: str,
+        *,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> dict[str, Any]:
+        """Same contract as ``ModelService.compose`` over the remote endpoint."""
+        text = self.generate(system, user, max_tokens=max_tokens, temperature=temperature)
+        return {
+            "text": text, "raw": text, "thinking": "",
+            "completion_tokens": 0, "truncated": False,
+        }
 
 
 def build_chat_backend(

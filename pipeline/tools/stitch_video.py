@@ -721,10 +721,17 @@ def run(
     config: dict[str, Any] | None = None,
     progress_callback: Any | None = None,
     skip_bgm_remix: bool = False,
+    dry_run: bool = False,
 ) -> dict[str, Any]:
     """Stitch all approved shots into a final video.
 
     Attempts real ffmpeg concat first; always produces a manifest.
+
+    With *dry_run* the shots are validated and the manifest is written, but the
+    three expensive steps — per-shot sanitize transcode, ffmpeg concat and the
+    BGM mix — are skipped. The returned ``playlist`` lets a player run the
+    per-shot clips back to back, which is what the studio shows while editing;
+    the real file is produced later on explicit export.
 
     When *skip_bgm_remix* is True and a previous ``final_video_with_bgm.mp4``
     exists, the BGM audio track is copied onto the new concat video via stream
@@ -750,7 +757,9 @@ def run(
     config = config or {}
     stitch_cfg = config.get("stitch", {}) if isinstance(config.get("stitch"), dict) else {}
     recompose_missing = bool(stitch_cfg.get("recompose_missing_shots", False))
-    sanitize_shots = bool(stitch_cfg.get("sanitize_shots", True))
+    # Sanitize transcodes every clip, which is the single most expensive part of
+    # a stitch; a dry run exists precisely to avoid it.
+    sanitize_shots = bool(stitch_cfg.get("sanitize_shots", True)) and not dry_run
     fast_concat_copy = bool(stitch_cfg.get("fast_concat_copy", True))
     concat_timeout_sec = max(60, int(_as_float(stitch_cfg.get("concat_timeout_sec", 600), 600)))
     sanitize_timeout_sec = max(30, int(_as_float(stitch_cfg.get("sanitize_timeout_sec", 240), 240)))
@@ -923,6 +932,33 @@ def run(
     manifest_path = output_dir_path / "stitch_manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    if dry_run:
+        emit("deferred", len(rendered_paths), len(shot_plan), "校验通过，实际合成延后到导出")
+        return {
+            "status": "deferred" if rendered_paths else "validation_failed",
+            "deferred": True,
+            # Empty on purpose: nothing has been written, and anything reading
+            # this key treats a non-empty value as "there is a file to play".
+            "final_video_path": "",
+            "planned_output_path": final_path,
+            # `path` mirrors what /api/project hands the player, so both
+            # producers of a playlist agree on the key.
+            "playlist": [
+                {"shot_id": it["shot_id"], "path": it["rendered_path"],
+                 "duration_sec": it["duration_sec"]}
+                for it in ready_items
+            ],
+            "manifest": manifest,
+            "manifest_path": str(manifest_path),
+            "total_duration_sec": manifest["total_duration_sec"],
+            "total_tts_duration_sec": manifest["total_tts_duration_sec"],
+            "validation_errors": validation_errors,
+            "ready_shot_count": len(rendered_paths),
+            "shot_count": len(shot_plan),
+            "missing_shots": missing,
+            "concat_status": "deferred",
+        }
 
     min_ready_ratio = max(0.5, _as_float(stitch_cfg.get("min_ready_ratio", 0.8), 0.8))
     ready_ratio = len(rendered_paths) / max(1, len(shot_plan))

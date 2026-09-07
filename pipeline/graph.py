@@ -1439,7 +1439,7 @@ def node_visual_audio_batch(state: PipelineState) -> dict[str, Any]:
             return bool(clip_id) or duration_ok
 
         def _script_matches(sid: str) -> bool:
-            """Reject a cached row whose narration no longer matches the plan.
+            """Reject a cached row whose narration or visual query changed.
 
             The cache scope key is the article text, not the shot cut, so the
             same article re-planned into a different number of shots hits the
@@ -1455,11 +1455,20 @@ def node_visual_audio_batch(state: PipelineState) -> dict[str, Any]:
             planned_text = " ".join(
                 str((shot_by_id.get(sid) or {}).get("vocal_script", "") or "").split()
             )
+            cached_query = " ".join(str(asset.get("visual_query", "") or "").split())
+            planned_query = " ".join(
+                str((shot_by_id.get(sid) or {}).get("visual_query", "") or "").split()
+            )
             if not planned_text or not cached_text:
                 return False
             if cached_text != planned_text:
                 logger.warning(
                     "[visual_audio_batch] 缓存镜头 %s 口播稿已变化，放弃复用缓存", sid
+                )
+                return False
+            if cached_query != planned_query:
+                logger.warning(
+                    "[visual_audio_batch] 缓存镜头 %s 视觉检索词已变化，放弃复用缓存", sid
                 )
                 return False
             return True
@@ -1876,6 +1885,7 @@ def node_visual_audio_batch(state: PipelineState) -> dict[str, Any]:
 
         all_assets[sid] = {
             "shot_id": sid,
+            "visual_query": str(shot.get("visual_query", "") or ""),
             "clip_path": vis_result.get("clip_path", ""),
             "clip_meta": vis_result.get("clip_meta", {}),
             "retrieval_candidates": (

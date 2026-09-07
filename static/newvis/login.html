@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WEDirector · 登录</title>
+<link rel="icon" type="image/png" href="/static/newvis/assets/img/logo.png">
+<link rel="stylesheet" href="/static/newvis/newvis.css">
+<style>
+  .login-wrap {
+    position: relative; z-index: 1;
+    min-height: 100vh; display: grid; place-items: center; padding: 24px;
+  }
+  .login-card {
+    width: 100%; max-width: 336px;
+    padding: 30px 28px 26px;
+    border: 1px solid var(--line); border-radius: 18px;
+    background: var(--panel);
+    box-shadow: 0 28px 70px -30px rgba(0, 0, 0, .9);
+    animation: rise .5s cubic-bezier(.2, .8, .3, 1) both;
+  }
+  .login-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; }
+  .login-brand img { height: 24px; width: auto; filter: drop-shadow(0 2px 8px rgba(124,106,245,.45)); }
+  .login-brand b { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+  .login-brand span { font-size: 11.5px; color: var(--text-4); }
+  .login-field { margin-bottom: 12px; }
+  .login-field label {
+    display: block; margin-bottom: 6px;
+    font-size: 11.5px; font-weight: 500; color: var(--text-3);
+  }
+  .login-field input {
+    width: 100%; height: 36px; padding: 0 11px;
+    border: 1px solid var(--line-2); border-radius: 9px;
+    background: rgba(0, 0, 0, .3); color: var(--text);
+    font-family: inherit; font-size: 13px;
+    transition: border-color .16s ease, background .16s ease;
+  }
+  .login-field input:focus {
+    outline: none; border-color: var(--accent-line); background: rgba(0, 0, 0, .45);
+  }
+  .login-submit {
+    width: 100%; height: 37px; margin-top: 8px;
+    border: 0; border-radius: 9px; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: #fff;
+    background: linear-gradient(180deg, #8F7FF9, #6A58E6);
+    box-shadow: 0 8px 22px -10px rgba(124, 106, 245, 1);
+    transition: filter .16s ease, transform .12s ease;
+  }
+  .login-submit:hover:not(:disabled) { filter: brightness(1.08); }
+  .login-submit:active:not(:disabled) { transform: scale(.985); }
+  .login-submit:disabled { opacity: .6; cursor: default; }
+  .login-msg {
+    min-height: 1.3em; margin-top: 11px;
+    font-size: 11.5px; color: var(--err); text-align: center;
+  }
+  .login-foot {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--text-4); line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true"></div>
+
+<div class="login-wrap">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="login-brand">
+      <img src="/static/newvis/assets/img/logo.png" alt="WEDirector">
+      <b>WEDirector</b>
+      <span>创作台</span>
+    </div>
+
+    <div class="login-field">
+      <label for="username">账号</label>
+      <input id="username" name="username" type="text" autocomplete="username"
+             autocapitalize="off" spellcheck="false" required autofocus>
+    </div>
+
+    <div class="login-field" id="pwField" hidden>
+      <label for="password">密码</label>
+      <input id="password" name="password" type="password"
+             autocomplete="current-password">
+    </div>
+
+    <button class="login-submit" id="submitBtn" type="submit">进入</button>
+    <p class="login-msg" id="msg"></p>
+
+    <p class="login-foot" id="foot">
+      每个账号只能看到自己的作品。
+    </p>
+  </form>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var form = document.getElementById('loginForm');
+  var btn = document.getElementById('submitBtn');
+  var msg = document.getElementById('msg');
+  var pwField = document.getElementById('pwField');
+  var pwInput = document.getElementById('password');
+  var foot = document.getElementById('foot');
+  var passwordless = true;   // matches the shipped config; corrected below
+
+  // The password box stays hidden until the server says it wants one, so the
+  // common case renders in its final shape instead of flickering.
+  (async function () {
+    try {
+      var res = await fetch('/api/auth/me');
+      var data = await res.json();
+      passwordless = data.passwordless !== false;
+    } catch (err) { /* keep the default and let submit report the error */ }
+    if (passwordless) {
+      foot.textContent = '输入用户名即可进入，新用户会自动创建。每个账号只能看到自己的作品。';
+    } else {
+      pwField.hidden = false;
+      pwInput.required = true;
+      btn.textContent = '登录';
+      foot.textContent = '每个账号只能看到自己的作品。忘记密码请联系管理员重置。';
+    }
+  })();
+
+  form.addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var username = document.getElementById('username').value.trim();
+    var password = pwInput.value;
+    if (!username || (!passwordless && !password)) return;
+
+    var label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = passwordless ? '进入中…' : '登录中…';
+    msg.textContent = '';
+    try {
+      var res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password }),
+      });
+      if (res.ok) {
+        // `next` lets a redirected deep link come back to where it started.
+        var next = new URLSearchParams(location.search).get('next');
+        location.href = (next && next.charAt(0) === '/') ? next : '/0901_newvis';
+        return;
+      }
+      var data = {};
+      try { data = await res.json(); } catch (e) { /* non-JSON error page */ }
+      msg.textContent = data.detail || ('登录失败（' + res.status + '）');
+    } catch (err) {
+      msg.textContent = '无法连接服务：' + err.message;
+    }
+    btn.disabled = false;
+    btn.textContent = label;
+    if (passwordless) {
+      document.getElementById('username').select();
+    } else {
+      pwInput.select();
+    }
+  });
+})();
+</script>
+</body>
+</html>

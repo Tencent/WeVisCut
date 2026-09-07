@@ -265,7 +265,12 @@ def build_overall_progress(state: dict[str, Any], stats: dict[str, Any] | None =
     total_w = sum(weights.values())
     acc = sum(weights[k] * s.get(k, {}).get("pct", 0) for k in weights)
     pct = int(round(acc / total_w))
-    if state.get("final_video_path"):
+    stitch = _as_dict(state.get("stitch_result"))
+    if (
+        state.get("final_video_path")
+        or state.get("stitch_pending")
+        or stitch.get("deferred")
+    ):
         return 100
     # Reserve the last 2% for a verified final stitch.
     return min(98, pct)

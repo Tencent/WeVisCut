@@ -23,7 +23,9 @@ with.
 from __future__ import annotations
 
 import logging
+import time
 import uuid
+from types import SimpleNamespace
 from typing import Any, Iterator, Sequence
 
 from langchain_core.callbacks import CallbackManagerForLLMRun
@@ -66,6 +68,10 @@ class AICutChatModel(BaseChatModel):
         default_factory=lambda: list(LONG_HORIZON_ACTION_SPACE)
     )
     max_consecutive_parse_failures: int = 4
+    # A model call can fail for reasons unrelated to the run: a restarted vLLM
+    # worker, a router timeout. Retrying costs a second; not retrying ends a run
+    # that may be one step from delivering a film.
+    max_model_call_attempts: int = 3
     default_max_tokens: int = 24576
     default_temperature: float = 0.0
 
@@ -184,12 +190,16 @@ class AICutChatModel(BaseChatModel):
         last_prediction: Any = None
         for _attempt in range(1, self.max_consecutive_parse_failures + 1):
             user_payload = runtime.build_user_payload()
-            prediction = loader.predict_orchestrator(
-                self.system_prompt_text,
-                user_payload,
-                stage="agent_loop",
-                allowed_tools=allowed,
-            )
+            try:
+                prediction = self._predict(loader, user_payload, allowed)
+            except Exception as exc:  # noqa: BLE001 - becomes a clean stop
+                # Do not let this propagate. An exception out of the graph skips
+                # the closing events and the salvage stitch, so a run holding a
+                # complete set of shots would be reported as a bare error
+                # instead of delivering the film it already had.
+                logger.warning("模型调用失败，停止本轮推理", exc_info=True)
+                runtime.terminated_reason = f"模型调用失败: {type(exc).__name__}: {exc}"
+                return self._terminal_chat_result(runtime.terminated_reason, last_prediction)
             last_prediction = prediction
 
             raw_tool = str(getattr(prediction, "tool_name", "") or "")
@@ -204,6 +214,13 @@ class AICutChatModel(BaseChatModel):
                 runtime.last_prediction = prediction
                 runtime.last_tool_name = tool_name
                 return self._agent_chat_result(prediction, tool_name)
+
+            fixed = self._fixed_next_prediction(runtime, allowed)
+            if fixed is not None:
+                runtime.reset_parse_failures()
+                runtime.last_prediction = fixed
+                runtime.last_tool_name = fixed.tool_name
+                return self._agent_chat_result(fixed, fixed.tool_name)
 
             # Invalid / unknown: record the observation and re-predict.
             should_stop = runtime.record_parse_failure(raw_tool, prediction, unknown=unknown)
@@ -220,6 +237,51 @@ class AICutChatModel(BaseChatModel):
         # Defensive: the loop above always returns, but never emit an invalid call.
         runtime.terminated_reason = "模型输出无法解析，停止执行"
         return self._terminal_chat_result(runtime.terminated_reason, last_prediction)
+
+    def _fixed_next_prediction(self, runtime: Any, allowed: list[str]) -> Any | None:
+        """Use the canonical workflow when the model did not emit a tool call."""
+        try:
+            tool_name = runtime.orchestrator.next_required_tool(runtime.state)
+        except Exception:
+            logger.debug("fixed workflow probe failed", exc_info=True)
+            return None
+        tool_name = LONG_HORIZON_TOOL_NAME_ALIASES.get(str(tool_name or ""), str(tool_name or ""))
+        if not tool_name or tool_name not in allowed:
+            return None
+        if runtime.check_preconditions(tool_name):
+            return None
+        return SimpleNamespace(
+            tool_name=tool_name,
+            arguments={},
+            parse_ok=True,
+            raw_output="",
+            cleaned_output="",
+            thinking_summary="",
+            agent_trace={"agent_state": {"phase": runtime.phase_for_tool(tool_name)}},
+        )
+
+    def _predict(self, loader: Any, user_payload: str, allowed: list[str]) -> Any:
+        """One model call, retried through transient failures."""
+        delay = 1.0
+        for attempt in range(1, self.max_model_call_attempts + 1):
+            try:
+                return loader.predict_orchestrator(
+                    self.system_prompt_text,
+                    user_payload,
+                    stage="agent_loop",
+                    allowed_tools=allowed,
+                    stream_callback=getattr(self._runtime, "emit_thinking_delta_sync", None),
+                )
+            except Exception:  # noqa: BLE001 - re-raised on the last attempt
+                if attempt >= self.max_model_call_attempts:
+                    raise
+                logger.warning(
+                    "模型调用失败，%.0fs 后重试 (%d/%d)",
+                    delay, attempt, self.max_model_call_attempts, exc_info=True,
+                )
+                time.sleep(delay)
+                delay *= 2
+        raise RuntimeError("unreachable")   # pragma: no cover
 
     def _agent_chat_result(self, prediction: Any, tool_name: str) -> ChatResult:
         args = getattr(prediction, "arguments", {})

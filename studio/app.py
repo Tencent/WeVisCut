@@ -26,13 +26,16 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse
+from contextvars import ContextVar
+
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from studio import auth as auth_mod
 from studio import config as studio_config
-from studio import chat_agent, editor, project as project_mod, tracks
+from studio import chat_agent, editor, project as project_mod, script_writer, tracks
 from studio.model_client import ModelNotReady, ModelService, build_chat_backend
 from studio.runs import RunStore
 
@@ -62,6 +65,9 @@ class Studio:
         self.chats: dict[str, chat_agent.ChatEditAgent] = {}
         self.load_task: asyncio.Task | None = None
         self.regen_locks: dict[str, asyncio.Lock] = {}
+        self.users: auth_mod.UserStore | None = None
+        self.sessions = auth_mod.SessionStore()
+        self.owners: auth_mod.OwnerIndex | None = None
 
     # -- config-derived helpers --
     @property
@@ -87,9 +93,87 @@ class Studio:
     def regen_lock(self, key: str) -> asyncio.Lock:
         return self.regen_locks.setdefault(key, asyncio.Lock())
 
+    @property
+    def owner_index(self) -> auth_mod.OwnerIndex:
+        if self.owners is None:
+            raise RuntimeError("studio not initialised")
+        return self.owners
+
 
 studio = Studio()
-app = FastAPI(title="AICut Studio", version="1.0.0")
+app = FastAPI(title="WEDirector Studio", version="1.1.0")
+
+# The signed-in user for the request being handled. A context var rather than a
+# FastAPI dependency so that ~30 existing handler signatures stay untouched.
+CURRENT_USER: ContextVar[auth_mod.User | None] = ContextVar("current_user", default=None)
+
+SESSION_COOKIE = "wedirector_session"
+# Paths reachable without a session: the login screen itself, its API, and the
+# static assets that screen needs to render.
+PUBLIC_PREFIXES = ("/login", "/api/auth/", "/static/")
+# The pipeline's own tools call this over loopback with no cookie to offer.
+LOOPBACK_ONLY_PATHS = ("/v1/chat/completions", "/chat/completions")
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
+
+
+def current_user() -> auth_mod.User | None:
+    return CURRENT_USER.get()
+
+
+def require_user() -> auth_mod.User:
+    """The signed-in user, or a synthetic admin when auth is switched off."""
+    user = CURRENT_USER.get()
+    if user is not None:
+        return user
+    if not studio.config.auth_enabled:
+        return auth_mod.User(username="local", role=auth_mod.ADMIN_ROLE,
+                             display_name="本地用户")
+    raise HTTPException(401, "请先登录")
+
+
+def _resolve_user(token: str) -> auth_mod.User | None:
+    username = studio.sessions.resolve(token)
+    if not username or studio.users is None:
+        return None
+    return studio.users.get(username)
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next: Any) -> Any:
+    """Gate every route behind a session when ``auth.enabled``."""
+    if not studio.cfg:
+        CURRENT_USER.set(None)
+        return await call_next(request)
+
+    path = request.url.path
+    if path in LOOPBACK_ONLY_PATHS:
+        host = (request.client.host if request.client else "") or ""
+        if host not in LOOPBACK_HOSTS:
+            return JSONResponse({"detail": "仅允许本机调用"}, status_code=403)
+        CURRENT_USER.set(None)
+        return await call_next(request)
+
+    if not studio.config.auth_enabled:
+        CURRENT_USER.set(None)
+        return await call_next(request)
+
+    if path.startswith(PUBLIC_PREFIXES):
+        CURRENT_USER.set(None)
+        return await call_next(request)
+
+    user = _resolve_user(request.cookies.get(SESSION_COOKIE, ""))
+    if user is None:
+        # HTML navigations get a redirect they can follow; XHR gets a 401 the
+        # frontend turns into a redirect itself.
+        if request.method == "GET" and "text/html" in request.headers.get("accept", ""):
+            return RedirectResponse("/login", status_code=302)
+        return JSONResponse({"detail": "请先登录"}, status_code=401)
+
+    token = CURRENT_USER.set(user)
+    try:
+        return await call_next(request)
+    finally:
+        CURRENT_USER.reset(token)
 
 
 # ---------------------------------------------------------------------------
@@ -113,9 +197,30 @@ async def on_startup() -> None:
         max_events=int(progress_cfg.get("max_events_per_run", 5000) or 5000),
         throttle_ms=int(progress_cfg.get("push_throttle_ms", 120) or 120),
         raw_buffer=int(progress_cfg.get("raw_output_buffer", 400) or 400),
+        journal_root=cfg.workspace_root / "runs",
     )
 
     cfg.workspace_root.mkdir(parents=True, exist_ok=True)
+    # Run history used to live only in this process, so a restart wiped every
+    # conversation and trajectory. Reload what previous processes journalled.
+    studio.store.rehydrate()
+
+    studio.owners = auth_mod.OwnerIndex(cfg.workspace_root / "owners.json")
+    if cfg.auth_enabled:
+        studio.users = auth_mod.UserStore(
+            cfg.users_file, passwordless=cfg.auth_passwordless)
+        studio.sessions = auth_mod.SessionStore(
+            ttl_seconds=float(cfg.auth.get("session_hours", 72) or 72) * 3600)
+        if studio.users.load_error:
+            logger.error(
+                "鉴权已开启但账号不可用: %s。请运行 "
+                "python3 scripts/manage_users.py init", studio.users.load_error)
+        else:
+            admins = [u for u in studio.users.users.values() if u.is_admin]
+            logger.info("鉴权已开启：%d 个账号，%d 个超级管理员",
+                        len(studio.users.users), len(admins))
+    else:
+        logger.warning("鉴权未开启 (auth.enabled=false)：所有人都能看到所有作品")
     _wire_pipeline_runtime(cfg)
 
     studio.model = ModelService(cfg.infer_config, cfg.system_prompt)
@@ -197,6 +302,85 @@ async def index() -> FileResponse:
     return FileResponse(str(STATIC_DIR / "index.html"))
 
 
+@app.get("/0901_newvis")
+async def index_newvis() -> FileResponse:
+    """Conversation-first shell. Served alongside — not instead of — ``/``."""
+    return FileResponse(str(STATIC_DIR / "newvis" / "index.html"))
+
+
+# ---------------------------------------------------------------------------
+# auth
+# ---------------------------------------------------------------------------
+@app.get("/login")
+async def login_page() -> FileResponse:
+    return FileResponse(str(STATIC_DIR / "newvis" / "login.html"))
+
+
+class LoginRequest(BaseModel):
+    username: str = ""
+    password: str = ""
+
+
+@app.post("/api/auth/login")
+async def auth_login(req: LoginRequest) -> JSONResponse:
+    if not studio.config.auth_enabled:
+        return JSONResponse({"detail": "服务未开启鉴权"}, status_code=400)
+    if studio.users is None or studio.users.load_error:
+        detail = studio.users.load_error if studio.users else "账号系统未初始化"
+        return JSONResponse({"detail": detail}, status_code=503)
+
+    if studio.config.auth_passwordless:
+        try:
+            name = auth_mod.normalize_username(req.username)
+            role = (auth_mod.ADMIN_ROLE if name in studio.config.auth_admins
+                    else "user")
+            user = studio.users.ensure(name, role=role)
+        except auth_mod.InvalidUsername as exc:
+            return JSONResponse({"detail": str(exc)}, status_code=400)
+    else:
+        user = studio.users.authenticate(req.username, req.password)
+        if user is None:
+            # One message for both cases so it cannot be used to enumerate
+            # accounts.
+            return JSONResponse({"detail": "账号或密码不对"}, status_code=401)
+
+    token = studio.sessions.issue(user.username)
+    studio.sessions.purge()
+    resp = JSONResponse({"user": user.public()})
+    resp.set_cookie(
+        SESSION_COOKIE, token,
+        max_age=int(studio.sessions.ttl_seconds),
+        httponly=True, samesite="lax",
+        # No `secure`: this is served over plain HTTP on an internal address,
+        # and a secure cookie would simply never be sent back.
+    )
+    logger.info("login: %s (%s)", user.username, user.role)
+    return resp
+
+
+@app.post("/api/auth/logout")
+async def auth_logout(request: Request) -> JSONResponse:
+    studio.sessions.revoke(request.cookies.get(SESSION_COOKIE, ""))
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
+
+
+@app.get("/api/auth/me")
+async def auth_me(request: Request) -> dict[str, Any]:
+    if not studio.config.auth_enabled:
+        return {"auth_enabled": False, "passwordless": False,
+                "user": require_user().public()}
+    user = _resolve_user(request.cookies.get(SESSION_COOKIE, ""))
+    return {
+        "auth_enabled": True,
+        # The login page needs this before anyone is logged in, to know whether
+        # to ask for a password at all.
+        "passwordless": studio.config.auth_passwordless,
+        "user": user.public() if user else None,
+    }
+
+
 # ---------------------------------------------------------------------------
 # status / config
 # ---------------------------------------------------------------------------
@@ -209,6 +393,66 @@ async def get_status() -> dict[str, Any]:
         "agent_mode": studio.config.infer_config.get("agent_mode", ""),
         "autonomy": studio.config.autonomy,
     }
+
+
+_CLUSTER_CACHE: dict[str, Any] = {"at": 0.0, "value": None}
+_CLUSTER_TTL = 2.0
+_cluster_client: Any = None
+
+
+def _router_root() -> str:
+    """Base URL of the GPU router, or '' on a single-GPU deployment."""
+    model = studio.config.infer_config.get("model") or {}
+    base = str(model.get("openai_base_url") or "")
+    if str(model.get("infer_backend") or "") != "openai" or not base:
+        return ""
+    return base.rsplit("/v1", 1)[0].rstrip("/")
+
+
+@app.get("/api/cluster")
+async def get_cluster() -> dict[str, Any]:
+    """Per-GPU load, proxied from the router.
+
+    The router and the vLLM instances bind loopback only, so 8080 is the single
+    way in from outside. Without this the cluster is unobservable off-box.
+    """
+    global _cluster_client
+
+    root = _router_root()
+    if not root:
+        return {"enabled": False, "backends": []}
+
+    # Every open tab polls this on the status timer; one fetch serves them all.
+    now = time.time()
+    if _CLUSTER_CACHE["value"] is not None and now - _CLUSTER_CACHE["at"] < _CLUSTER_TTL:
+        return _CLUSTER_CACHE["value"]
+
+    try:
+        import httpx
+
+        if _cluster_client is None:
+            # trust_env would route a loopback call through a corporate proxy.
+            _cluster_client = httpx.AsyncClient(trust_env=False, timeout=3.0)
+        resp = await _cluster_client.get(f"{root}/router/stats")
+        resp.raise_for_status()
+        stats = resp.json()
+    except Exception as exc:  # router down is a status, not a server error
+        out = {"enabled": True, "reachable": False, "error": str(exc), "backends": []}
+    else:
+        backends = stats.get("backends") or []
+        model = studio.config.infer_config.get("model") or {}
+        out = {
+            "enabled": True,
+            "reachable": True,
+            "model": str(model.get("openai_model") or ""),
+            "healthy": sum(1 for b in backends if b.get("healthy")),
+            "total": len(backends),
+            "inflight": sum(int(b.get("inflight") or 0) for b in backends),
+            "backends": backends,
+        }
+
+    _CLUSTER_CACHE.update(at=now, value=out)
+    return out
 
 
 @app.get("/api/config")
@@ -229,9 +473,12 @@ async def get_config() -> dict[str, Any]:
         "tracks": [
             {"key": t, "label": tracks.TRACK_LABELS.get(t, t)} for t in order
         ],
+        "user": require_user().public(),
         "features": {
             "editor": cfg.editor_enabled,
             "chat_edit": cfg.chat_enabled,
+            "script_draft": True,
+            "auth": cfg.auth_enabled,
             "manual_ops": studio.editor_flags(),
             "services": {
                 "tts": enabled("tts"),
@@ -258,6 +505,45 @@ async def get_config() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# script drafting (brief -> 口播稿)
+# ---------------------------------------------------------------------------
+class ScriptDraftRequest(BaseModel):
+    brief: str = ""
+    temperature: float = 0.7
+
+
+@app.post("/api/script/draft")
+async def draft_script(req: ScriptDraftRequest) -> dict[str, Any]:
+    """Turn a creative brief into a narration script the pipeline can run.
+
+    Deliberately separate from ``/api/runs``: the draft is shown to the user
+    (and kept in the run's input) before the expensive pipeline starts, so a
+    wrong-length or off-topic script is visible immediately rather than after
+    a full render.
+    """
+    brief = (req.brief or "").strip()
+    if not brief:
+        raise HTTPException(400, "创作需求不能为空")
+    if studio.model is None or not studio.model.is_loaded:
+        raise HTTPException(
+            503,
+            studio.model.load_error if studio.model and studio.model.load_error
+            else "模型尚未加载完成，请稍候",
+        )
+
+    backend = build_chat_backend(studio.config.chat_edit, studio.model)
+    try:
+        return await script_writer.draft(backend, brief, temperature=req.temperature)
+    except ModelNotReady as exc:
+        raise HTTPException(503, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except Exception as exc:
+        logger.exception("script draft failed")
+        raise HTTPException(500, f"生成口播稿失败: {type(exc).__name__}: {exc}") from exc
+
+
+# ---------------------------------------------------------------------------
 # runs
 # ---------------------------------------------------------------------------
 class StartRunRequest(BaseModel):
@@ -277,34 +563,55 @@ async def start_run(req: StartRunRequest) -> dict[str, Any]:
         )
 
     run = studio.store.create(text)
+    run.owner = require_user().username
+    studio.store.save_meta(run)
     run.task = asyncio.create_task(_execute_run(run.id, text))
     return {"run_id": run.id, "status": run.status}
 
 
 @app.get("/api/runs")
 async def list_runs() -> dict[str, Any]:
-    return {"runs": studio.store.list()}
+    return {"runs": _visible_runs(require_user())}
 
 
 @app.get("/api/runs/{run_id}")
 async def get_run(run_id: str) -> dict[str, Any]:
-    run = studio.store.get(run_id)
-    if run is None:
-        raise HTTPException(404, "run not found")
-    return run.detail()
+    return _require_run_access(run_id).detail()
+
+
+@app.get("/api/runs/{run_id}/events")
+async def get_run_events(run_id: str) -> dict[str, Any]:
+    """The recorded trajectory, from memory or from the on-disk journal.
+
+    The WebSocket replays this too, but an HTTP read lets the frontend rebuild
+    a finished run's narrative without opening a socket to something that will
+    never emit again.
+    """
+    run = _require_run_access(run_id)
+    events = list(run.events) if run.events else studio.store.read_journal(run_id)
+    return {
+        "run_id": run_id,
+        "events": events,
+        "event_count": len(events),
+        # The input chapter is drawn by the frontend, not emitted by the run, so
+        # a rebuild needs the original text back.
+        "input_text": run.input_text if run is not None else "",
+        "status": run.status if run is not None else "",
+    }
 
 
 @app.delete("/api/runs/{run_id}")
 @app.post("/api/runs/{run_id}/delete")
 async def delete_run(run_id: str) -> dict[str, Any]:
+    _require_run_access(run_id)
     if not studio.store.delete(run_id):
         raise HTTPException(409, "运行中或不存在，无法删除")
     return {"deleted": run_id}
 
 
 def _require_orchestrator(run_id: str) -> Any:
-    run = studio.store.get(run_id)
-    if run is None or run.orchestrator is None:
+    run = _require_run_access(run_id)
+    if run.orchestrator is None:
         raise HTTPException(404, "run not found or already finished")
     return run
 
@@ -328,15 +635,26 @@ async def resume_run(run_id: str) -> dict[str, Any]:
 
 
 @app.post("/api/runs/{run_id}/cancel")
-async def cancel_run(run_id: str) -> dict[str, Any]:
+async def cancel_run(run_id: str, force: bool = False) -> dict[str, Any]:
+    """Stop a run.
+
+    The cooperative path only takes effect between steps, so a click during a
+    long render would appear to do nothing for minutes. ``force`` additionally
+    cancels the driving task, which stops the loop at its next await instead of
+    at its next step boundary. Already-spawned ffmpeg/Chrome children are left
+    to exit on their own — they write into the project dir and killing them
+    mid-write would corrupt a shot that is otherwise reusable.
+    """
     run = _require_orchestrator(run_id)
     run.orchestrator.cancel()
     run.status = "cancelling"
     await studio.store.emit(run_id, {
         "type": "console_log", "level": "warn",
-        "text": "已发送取消请求，当前步骤结束后停止",
+        "text": "已强制中断，正在收尾" if force else "已发送取消请求，当前步骤结束后停止",
     })
-    return {"status": "cancelling"}
+    if force and run.task is not None and not run.task.done():
+        run.task.cancel()
+    return {"status": "cancelling", "forced": bool(force)}
 
 
 # ---------------------------------------------------------------------------
@@ -394,8 +712,15 @@ async def _execute_run(run_id: str, input_text: str) -> None:
         run.status = "completed" if not result.get("errors") else "completed_with_errors"
     except asyncio.CancelledError:
         run.status = "cancelled"
+        # A forced stop cancels this very task. Clearing the pending-cancel
+        # state lets the terminal notification below still go out, which is
+        # what releases the composer in the UI; without it the page would sit
+        # on "正在生成中" until the socket dropped.
+        task = asyncio.current_task()
+        if task is not None and hasattr(task, "uncancel"):
+            task.uncancel()
         await broadcast(run_id, {
-            "type": "console_log", "level": "warn", "text": "管线已被用户取消",
+            "type": "console_log", "level": "warn", "text": "管线已被用户中断",
         })
     except Exception as exc:
         run.status = "error"
@@ -412,6 +737,10 @@ async def _execute_run(run_id: str, input_text: str) -> None:
         run.finished_at = _now_iso()
         if orchestrator.project_dir and not run.project_dir:
             run.project_dir = str(orchestrator.project_dir)
+        # The project directory only exists once the pipeline has created it,
+        # so ownership can only be recorded here, not when the run started.
+        if run.project_dir and run.owner and studio.owners is not None:
+            studio.owner_index.claim(run.project_dir, run.owner)
 
     await store.flush_progress(run_id)
     await broadcast(run_id, {
@@ -434,6 +763,23 @@ def _now_iso() -> str:
 # ---------------------------------------------------------------------------
 @app.websocket("/ws/{run_id}")
 async def run_socket(websocket: WebSocket, run_id: str) -> None:
+    # HTTP middleware does not run for WebSockets, so the session cookie has to
+    # be checked here or the event stream would be readable by anyone.
+    if studio.cfg is not None and studio.config.auth_enabled:
+        user = _resolve_user(websocket.cookies.get(SESSION_COOKIE, ""))
+        if user is None:
+            await websocket.close(code=4401)
+            return
+        run = studio.store.get(run_id)
+        if run is not None and not user.is_admin:
+            owner = getattr(run, "owner", "")
+            allowed = owner == user.username or (
+                run.project_dir
+                and studio.owner_index.can_access(run.project_dir, user))
+            if not allowed:
+                await websocket.close(code=4403)
+                return
+
     await websocket.accept()
     studio.store.subscribe(run_id, websocket)
     try:
@@ -454,8 +800,14 @@ async def run_socket(websocket: WebSocket, run_id: str) -> None:
 # projects
 # ---------------------------------------------------------------------------
 def _load_project(project_dir: str) -> project_mod.Project:
-    """Load (and cache) a project so edits accumulate across requests."""
+    """Load (and cache) a project so edits accumulate across requests.
+
+    The ownership check lives here rather than in each handler: every project
+    route reaches a project through this function, so a new route cannot
+    accidentally ship without isolation.
+    """
     key = str(Path(project_dir).resolve())
+    _require_access(key)
     cached = studio.projects.get(key)
     if cached is not None:
         return cached
@@ -467,14 +819,163 @@ def _load_project(project_dir: str) -> project_mod.Project:
     return proj
 
 
+def _shot_playlist(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """Per-shot clips in cut order, for playback without a stitched file.
+
+    Each clip already carries its narration audio and burned-in subtitles, so
+    playing them back to back previews the cut; only cross-shot transitions are
+    missing, and those arrive with the real export. BGM is not in these clips
+    either — see :func:`_preview_bgm`, which hands the viewer the raw tracks to
+    play alongside.
+    """
+    assets = state.get("shot_assets", {}) or {}
+    out: list[dict[str, Any]] = []
+    for shot in state.get("shot_plan", []) or []:
+        sid = str(shot.get("shot_id", "") or "")
+        item = assets.get(sid) if isinstance(assets.get(sid), dict) else {}
+        path = str((item or {}).get("rendered_path", "") or "")
+        if not path:
+            continue
+        timeline = (item or {}).get("timeline") or {}
+        out.append({
+            "shot_id": sid,
+            "path": path,
+            "duration_sec": timeline.get("duration_sec") or shot.get("duration_sec") or 0,
+        })
+    return out
+
+
+def _preview_bgm(
+    state: dict[str, Any],
+    roots: list[Path],
+    default_volume: float = 0.5,
+) -> dict[str, Any]:
+    """The BGM tracks the viewer can play under a playlist preview.
+
+    The mix into the video only happens at export, so a deferred cut previews
+    as pure narration. Handing the raw tracks to the player and letting it run
+    them in parallel is not the export mix — no ducking, no trim to length —
+    but it is the difference between hearing the music and not.
+
+    Tracks that fall outside ``media_roots`` are dropped here rather than
+    handed over and 403'd one request later.
+    """
+    out: list[dict[str, Any]] = []
+    for track in state.get("bgm_tracks") or []:
+        if not isinstance(track, dict):
+            continue
+        raw = str(track.get("music_path") or "")
+        if not raw:
+            continue
+        try:
+            target = Path(raw).resolve(strict=True)
+        except (OSError, RuntimeError):
+            continue
+        if not target.is_file() or target.suffix.lower() not in ALLOWED_MEDIA_EXT:
+            continue
+        if not any(target == root or root in target.parents for root in roots):
+            continue
+        out.append({
+            "path": str(target),
+            "title": str(track.get("title") or track.get("name") or ""),
+            "duration_sec": float(track.get("duration_sec") or 0) or 0.0,
+        })
+
+    try:
+        volume = float(state.get("bgm_volume") or default_volume)
+    except (TypeError, ValueError):
+        volume = default_volume
+    return {"tracks": out, "volume": max(0.0, min(1.0, volume))}
+
+
+def _run_id_for_project(project_dir: str) -> str:
+    """The generation run that produced a project, if its journal is still around.
+
+    Lets the UI put the original trajectory back on screen when a project is
+    reopened, instead of showing only the finished artefacts.
+    """
+    target = str(project_dir)
+    best: tuple[str, str] = ("", "")
+    for run in studio.store.runs.values():
+        if run.project_dir != target or run.id.startswith(("chat_", "edit_", "export_")):
+            continue
+        if run.started_at > best[1]:
+            best = (run.id, run.started_at)
+    return best[0]
+
+
+def _require_access(project_dir: str | Path) -> auth_mod.User:
+    """Refuse a project the signed-in user does not own.
+
+    404 rather than 403: a user who cannot see a project should not be able to
+    confirm it exists by probing directory names.
+    """
+    user = require_user()
+    if not studio.config.auth_enabled:
+        return user
+    if not studio.owner_index.can_access(project_dir, user):
+        target = Path(project_dir).resolve()
+        inherited = any(
+            (parent / project_mod.STATE_FILENAME).is_file()
+            and studio.owner_index.can_access(parent, user)
+            for parent in target.parents
+        )
+        if not inherited:
+            raise HTTPException(404, "工程不存在或无权访问")
+    return user
+
+
+def _require_run_access(run_id: str) -> Any:
+    run = studio.store.get(run_id)
+    if run is None:
+        raise HTTPException(404, "run not found")
+    user = require_user()
+    if not studio.config.auth_enabled or user.is_admin:
+        return run
+    owner = getattr(run, "owner", "")
+    if owner and owner == user.username:
+        return run
+    if run.project_dir and studio.owner_index.can_access(run.project_dir, user):
+        return run
+    raise HTTPException(404, "run not found")
+
+
+def _visible_runs(user: auth_mod.User) -> list[dict[str, Any]]:
+    if not studio.config.auth_enabled or user.is_admin:
+        return studio.store.list()
+    out = []
+    for run in sorted(studio.store.runs.values(),
+                      key=lambda x: x.started_at, reverse=True):
+        owner = getattr(run, "owner", "")
+        if owner == user.username or (
+                run.project_dir and studio.owner_index.can_access(run.project_dir, user)):
+            out.append(run.summary())
+    return out
+
+
 def _project_payload(proj: project_mod.Project) -> dict[str, Any]:
     snapshot = tracks.build_snapshot(proj.state, studio.track_order())
+    playlist = _shot_playlist(proj.state)
     return {
         "project_id": proj.project_id,
         "project_dir": str(proj.project_dir),
+        "run_id": _run_id_for_project(str(proj.project_dir)),
         "progress": snapshot,
         "digest": proj.digest(),
         "final_video_path": proj.final_video_path,
+        "playlist": playlist,
+        "preview_bgm": _preview_bgm(
+            proj.state,
+            studio.config.media_roots,
+            float((studio.config.pipeline_config.get("music") or {}).get("bgm_volume", 0.5)),
+        ),
+        # True when the cut is validated but never concatenated, i.e. the
+        # viewer should play the playlist and offer an export.
+        "stitch_pending": bool(
+            not proj.final_video_path
+            and playlist
+            and (proj.state.get("stitch_pending")
+                 or (proj.state.get("stitch_result") or {}).get("deferred"))),
         "dirty": {sid: sorted(r) for sid, r in proj.dirty.items()},
         "bgm_dirty": proj.bgm_dirty,
         "restitch_dirty": proj.restitch_dirty,
@@ -488,8 +989,7 @@ def _project_payload(proj: project_mod.Project) -> dict[str, Any]:
     }
 
 
-@app.get("/api/projects")
-async def list_projects() -> dict[str, Any]:
+def _discover_projects() -> list[dict[str, Any]]:
     roots = [studio.config.workspace_root / "projects", studio.config.workspace_root]
     seen: set[str] = set()
     out: list[dict[str, Any]] = []
@@ -500,6 +1000,24 @@ async def list_projects() -> dict[str, Any]:
             seen.add(item["project_dir"])
             out.append(item)
     out.sort(key=lambda x: x["modified_ts"], reverse=True)
+    return out
+
+
+@app.get("/api/projects")
+async def list_projects() -> dict[str, Any]:
+    user = require_user()
+    # The scan stats every project directory and takes over a minute on the
+    # network filesystem. Run in a thread: on the event loop it froze the whole
+    # server — including other users' runs — for the duration.
+    found = await asyncio.to_thread(_discover_projects)
+    out: list[dict[str, Any]] = []
+    for item in found:
+        if studio.config.auth_enabled \
+                and not studio.owner_index.can_access(item["project_dir"], user):
+            continue
+        # Admins see everything, so they need to know whose it is.
+        item["owner"] = studio.owner_index.owner_of(item["project_dir"])
+        out.append(item)
     return {"projects": out}
 
 
@@ -525,6 +1043,7 @@ async def delete_project(dir: str = "", project_dir: str = "") -> dict[str, Any]
     if not target:
         raise HTTPException(400, "必须提供 dir 或 project_dir 参数")
     key = str(Path(target).resolve())
+    _require_access(key)
 
     lock = studio.regen_locks.get(key)
     if lock is not None and lock.locked():
@@ -543,6 +1062,8 @@ async def delete_project(dir: str = "", project_dir: str = "") -> dict[str, Any]
     studio.projects.pop(key, None)
     studio.chats.pop(key, None)
     studio.regen_locks.pop(key, None)
+    if studio.owners is not None:
+        studio.owner_index.release(key)
     for run in studio.store.runs.values():
         if run.project_dir and str(Path(run.project_dir).resolve()) == key:
             run.project_dir = ""
@@ -590,6 +1111,29 @@ class RegenRequest(BaseModel):
     restitch: bool | None = None
 
 
+def _tool_result_event(
+    orchestrator: Any,
+    tool: str,
+    step: int,
+    output: Any,
+) -> dict[str, Any]:
+    status = (output or {}).get("status", "done") if isinstance(output, dict) else "done"
+    observation: dict[str, Any] = {}
+    if isinstance(output, dict):
+        try:
+            observation = orchestrator._make_agent_observation(tool, output)
+        except Exception:
+            observation = {"status": status, "summary": dict(output)}
+    return {
+        "type": "tool_result",
+        "stage": tool,
+        "step": step,
+        "tool_name": tool,
+        "status": status,
+        "observation": observation,
+    }
+
+
 @app.post("/api/project/regenerate")
 async def regenerate(req: RegenRequest) -> dict[str, Any]:
     """Re-run the agent's tools over edited shots, then re-stitch.
@@ -599,6 +1143,9 @@ async def regenerate(req: RegenRequest) -> dict[str, Any]:
     """
     if not studio.config.editor_enabled:
         raise HTTPException(403, "编辑功能已关闭")
+    # Authorise before reporting service state, so the answer for someone
+    # else's project does not depend on whether the model happens to be up.
+    _require_access(req.project_dir)
     if studio.model is None or not studio.model.is_loaded:
         raise HTTPException(503, "模型尚未加载完成，无法重渲染")
 
@@ -624,6 +1171,123 @@ async def regenerate(req: RegenRequest) -> dict[str, Any]:
         "steps": [{"tool": s["tool"], "label": s["label"]} for s in steps],
         "restitch": restitch,
     }
+
+
+class ExportRequest(BaseModel):
+    project_dir: str
+
+
+@app.post("/api/project/export")
+async def export_project(req: ExportRequest) -> dict[str, Any]:
+    """Run the real stitch for a project whose generation deferred it.
+
+    Generation stops at a validated manifest (``render.defer_stitch``), so this
+    is where the per-shot transcode, ffmpeg concat and BGM mix actually happen.
+    Progress streams over ``/ws/{job_id}`` like any other job, which is what
+    puts the export in the conversation and in the run history.
+    """
+    proj = _load_project(req.project_dir)
+
+    job_id = f"export_{uuid.uuid4().hex[:8]}"
+    job = studio.store.create(f"[导出成片] {proj.project_id}", run_id=job_id)
+    job.project_dir = str(proj.project_dir)
+    job.task = asyncio.create_task(_execute_export(job_id, proj))
+    return {"status": "started", "job_id": job_id}
+
+
+async def _execute_export(job_id: str, proj: project_mod.Project) -> None:
+    from pipeline.tools import stitch_video as sv_tool
+
+    store = studio.store
+    job = store.get(job_id)
+    cfg = studio.config
+    loop = asyncio.get_running_loop()
+
+    async def broadcast(event: dict[str, Any]) -> None:
+        await store.emit(job_id, event)
+
+    def on_progress(event: dict[str, Any]) -> None:
+        text = (f"  {event.get('stage', 'stitch')} "
+                f"[{event.get('current', 0)}/{event.get('total', 0)}] "
+                f"{event.get('label', '')}")
+        loop.call_soon_threadsafe(
+            lambda: asyncio.create_task(
+                broadcast({"type": "console_log", "level": "stdout", "text": text})))
+
+    await broadcast({"type": "run_started", "run_id": job_id})
+    await broadcast({
+        "type": "tool_call", "stage": "Tool_StitchVideo", "step": 1,
+        "tool_name": "Tool_StitchVideo",
+    })
+
+    lock = studio.regen_lock(str(proj.project_dir))
+    async with lock:
+        try:
+            music_cfg = cfg.pipeline_config.get("music") or {}
+            state = proj.state
+            result = await asyncio.to_thread(
+                sv_tool.run,
+                state.get("shot_plan", []),
+                state.get("shot_assets", {}),
+                str(proj.project_dir),
+                bgm_tracks=state.get("bgm_tracks", []),
+                bgm_volume=float(state.get("bgm_volume") or music_cfg.get("bgm_volume", 0.5)),
+                duck_under_voice=bool(music_cfg.get("duck_under_voice", True)),
+                config=cfg.pipeline_config,
+                progress_callback=on_progress,
+                dry_run=False,
+            )
+            final_path = str(
+                result.get("final_video_path") or result.get("output_path") or "")
+            state["stitch_result"] = result
+            state["final_video_path"] = final_path
+            state["stitch_pending"] = False
+            proj.save("export")
+
+            if job is not None:
+                job.status = "completed" if final_path else "error"
+                job.result = {
+                    "final_video_path": final_path,
+                    "project_dir": str(proj.project_dir),
+                }
+            await broadcast({
+                "type": "tool_result", "stage": "Tool_StitchVideo", "step": 1,
+                "tool_name": "Tool_StitchVideo",
+                "status": "success" if final_path else "error",
+                "observation": {"summary": {
+                    "final_video_path": final_path,
+                    "shot_count": result.get("ready_shot_count", 0),
+                    "total_duration_sec": result.get("total_duration_sec", 0),
+                }},
+            })
+            if not final_path:
+                await broadcast({
+                    "type": "error", "stage": "export",
+                    "message": f"合成未产出成片 (concat_status="
+                               f"{result.get('concat_status', 'unknown')})",
+                })
+        except asyncio.CancelledError:
+            if job is not None:
+                job.status = "cancelled"
+            await broadcast({"type": "console_log", "level": "warn", "text": "导出已取消"})
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            logger.exception("export %s failed", job_id)
+            if job is not None:
+                job.status = "error"
+                job.errors.append(detail)
+            await broadcast({"type": "error", "stage": "export", "message": detail})
+        finally:
+            if job is not None:
+                job.finished_at = _now_iso()
+
+    await broadcast({
+        "type": "run_complete",
+        "status": job.status if job else "completed",
+        "elapsed_seconds": job.elapsed if job else 0,
+        "result": job.result if job else {},
+        "project_dir": str(proj.project_dir),
+    })
 
 
 async def _execute_regeneration(
@@ -704,13 +1368,7 @@ async def _execute_regeneration(
                 if isinstance(output, dict):
                     orchestrator.update_state_from_respond(tool, output)
                     orchestrator._apply_tool_output(tool, output, proj.state)
-                await broadcast(job_id, {
-                    "type": "tool_result",
-                    "stage": tool,
-                    "step": idx,
-                    "tool_name": tool,
-                    "status": (output or {}).get("status", "done") if isinstance(output, dict) else "done",
-                })
+                await broadcast(job_id, _tool_result_event(orchestrator, tool, idx, output))
                 await progress(job_id, tracks.build_snapshot(proj.state, studio.track_order()))
 
             proj.clear_dirty()
@@ -1059,34 +1717,37 @@ async def reset_chat(dir: str) -> dict[str, Any]:
     return {"reset": True}
 
 
+def _memory_for(proj: project_mod.Project) -> chat_agent.Memory:
+    """Conversation memory for a project, from cache or from disk.
+
+    The read-only endpoints must not go through ``_chat_for``: that builds a
+    chat agent (and needs a model backend) just to answer "what was said". They
+    used to read the in-process cache alone, so reopening a project after a
+    restart showed an empty conversation even though ``chat_memory.json`` was
+    sitting right there.
+    """
+    agent = studio.chats.get(str(proj.project_dir))
+    if agent is not None:
+        return agent.memory
+    return chat_agent.Memory.load(_chat_memory_path(proj), studio.config.chat_edit)
+
+
 @app.get("/api/project/chat/memory")
 async def chat_memory(dir: str) -> dict[str, Any]:
-    proj = _load_project(dir)
-    agent = studio.chats.get(str(proj.project_dir))
-    if agent is None:
-        return {"summary": "", "turns": [], "compressions": 0, "token_estimate": 0}
-    return agent.memory.as_dict()
+    return _memory_for(_load_project(dir)).as_dict()
 
 
 @app.get("/api/project/chat/history")
 async def chat_history(dir: str) -> dict[str, Any]:
     """Return conversation turns for the frontend to re-render on page load."""
-    proj = _load_project(dir)
-    agent = studio.chats.get(str(proj.project_dir))
-    if agent is None:
-        return {"messages": []}
-    msgs: list[dict[str, Any]] = []
-    for turn in agent.memory.turns:
-        msgs.append({
-            "role": turn.role,
-            "content": turn.content,
-            "at": turn.at,
-            "meta": turn.meta,
-        })
+    memory = _memory_for(_load_project(dir))
     return {
-        "messages": msgs,
-        "summary": agent.memory.summary,
-        "compressions": agent.memory.compressions,
+        "messages": [
+            {"role": t.role, "content": t.content, "at": t.at, "meta": t.meta}
+            for t in memory.turns
+        ],
+        "summary": memory.summary,
+        "compressions": memory.compressions,
     }
 
 
@@ -1098,6 +1759,23 @@ ALLOWED_MEDIA_EXT = {
     ".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg",
     ".jpg", ".jpeg", ".png", ".webp",
 }
+
+
+def _media_is_accessible(target: Path, user: auth_mod.User) -> bool:
+    """True when ``target`` is outside the project tree, or inside an owned one.
+
+    Shared assets — the footage library, BGM, cached render output — are not
+    per-user and stay readable; anything under ``<workspace>/projects`` must
+    belong to the caller.
+    """
+    projects_root = (studio.config.workspace_root / "projects").resolve()
+    try:
+        rel = target.resolve().relative_to(projects_root)
+    except ValueError:
+        return True
+    if not rel.parts:
+        return False
+    return studio.owner_index.can_access(projects_root / rel.parts[0], user)
 
 
 @app.get("/api/media")
@@ -1120,6 +1798,14 @@ async def serve_media(path: str) -> FileResponse:
     roots = studio.config.media_roots
     if not any(target == root or root in target.parents for root in roots):
         raise HTTPException(403, "path outside configured media_roots")
+
+    # Containment in a media root is not authorisation: every user's projects
+    # live under the same workspace, so without this a guessed project id would
+    # stream somebody else's cut.
+    if studio.config.auth_enabled:
+        user = require_user()
+        if not user.is_admin and not _media_is_accessible(target, user):
+            raise HTTPException(404, "file not found")
 
     mime = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
     # `no-cache` means "revalidate before reuse", not "never cache": the final cut

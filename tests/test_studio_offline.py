@@ -233,6 +233,12 @@ def test_tracks() -> None:
     mid = tracks.build_snapshot(no_final)
     check("未收尾时总进度 < 100", mid["overall_pct"] < 100, str(mid["overall_pct"]))
 
+    deferred = dict(no_final, stitch_pending=True,
+                    stitch_result={"deferred": True, "status": "pending_export"})
+    done_preview = tracks.build_snapshot(deferred)
+    check("已生成可预览片段但延迟导出时总进度 100",
+          done_preview["overall_pct"] == 100, str(done_preview["overall_pct"]))
+
     empty = tracks.build_snapshot({})
     check("空状态不报错", empty["overall_pct"] == 0 and empty["total_duration"] == 0)
 
@@ -1060,13 +1066,111 @@ def test_scoped_dispatch() -> None:
           str(state4["shot_assets"]["1"]))
 
 
+def test_regeneration_tool_result_event_carries_observation() -> None:
+    section("regeneration tool_result observations")
+    from studio.app import _tool_result_event
+
+    class _Orch:
+        def _make_agent_observation(self, tool, output):
+            return {"status": output.get("status"), "summary": dict(output)}
+
+    ev = _tool_result_event(
+        _Orch(),
+        "Tool_BatchVisualAudio",
+        1,
+        {"status": "success", "tts_success_count": 1, "visual_success_count": 1},
+    )
+    summary = ev.get("observation", {}).get("summary", {})
+    check("visual/audio result keeps real counts",
+          summary.get("tts_success_count") == 1 and summary.get("visual_success_count") == 1,
+          str(summary))
+
+    stitch = _tool_result_event(
+        _Orch(),
+        "Tool_StitchVideo",
+        3,
+        {"status": "success", "final_video_path": "/tmp/final.mp4", "has_final_video": True},
+    )
+    stitch_summary = stitch.get("observation", {}).get("summary", {})
+    check("stitch result keeps final video path",
+          stitch_summary.get("final_video_path") == "/tmp/final.mp4",
+          str(stitch_summary))
+
+    # A deferred stitch has no file by design; without these keys the UI can
+    # only report it as a missing final video.
+    from server.infer_graph import InferenceOrchestrator
+    deferred = InferenceOrchestrator._make_agent_observation(
+        object(), "Tool_StitchVideo",
+        {"status": "deferred", "deferred": True, "final_video_path": "",
+         "ready_shot_count": 6, "shot_count": 6, "total_duration_sec": 61.2},
+    )
+    dsum = deferred.get("summary", {})
+    check("deferred stitch is marked as deferred", dsum.get("deferred") is True, str(dsum))
+    check("deferred stitch reports usable shots",
+          dsum.get("ready_shot_count") == 6, str(dsum))
+    check("deferred stitch claims no final video",
+          dsum.get("has_final_video") is False, str(dsum))
+
+
+def test_preview_bgm_only_offers_reachable_tracks(tmp_path: Path) -> None:
+    """A track the media endpoint would 403 must not reach the player."""
+    section("preview bgm")
+    from studio import app as app_mod
+
+    root = tmp_path / "music"
+    root.mkdir()
+    inside = root / "track.mp3"
+    inside.write_bytes(b"ID3")
+    outside = tmp_path / "elsewhere.mp3"
+    outside.write_bytes(b"ID3")
+
+    out = app_mod._preview_bgm(
+        {
+            "bgm_tracks": [
+                {"music_path": str(inside), "title": "A"},
+                {"music_path": str(outside)},
+                {"music_path": str(root / "missing.mp3")},
+                {"music_path": ""},
+            ],
+            "bgm_volume": 4.0,
+        },
+        [root.resolve()],
+    )
+
+    paths = [t["path"] for t in out["tracks"]]
+    check("reachable track is offered", paths == [str(inside.resolve())], str(paths))
+    check("volume is clamped to a usable range", out["volume"] == 1.0, str(out["volume"]))
+
+
 def test_http(tmp: Path) -> None:
     section("http surface")
     from fastapi.testclient import TestClient
 
+    from studio import app as app_mod
     from studio.app import app
 
     with TestClient(app) as client:
+        # Auth gates the whole API surface. Mint a session rather than depend on
+        # a fixture password living in users.yaml.
+        if app_mod.studio.config.auth_enabled:
+            from studio import auth as auth_mod
+
+            app_mod.studio.users.users.setdefault(
+                "http_test", auth_mod.User(username="http_test", role="admin"))
+            # This account exists only in memory, and every lookup hot-reloads
+            # users.yaml when its mtime moves — which it does whenever anyone
+            # registers. This suite runs for minutes, so without pinning the
+            # store the fixture user disappears mid-run and every later call
+            # 401s. Real accounts are on disk and survive the reload.
+            app_mod.studio.users.maybe_reload = lambda: None
+            client.cookies.set(app_mod.SESSION_COOKIE,
+                               app_mod.studio.sessions.issue("http_test"))
+            r = client.get("/api/status")
+            check("鉴权开启时会话可用", r.status_code == 200, r.text[:200])
+
+            bare = TestClient(app)
+            check("未登录被拒", bare.get("/api/status").status_code == 401)
+
         r = client.get("/api/status")
         check("GET /api/status", r.status_code == 200, r.text[:200])
         body = r.json()
@@ -1175,8 +1279,14 @@ def test_http(tmp: Path) -> None:
             check("媒体接口拒绝越权路径", r.status_code in (403, 404, 415),
                   str(r.status_code))
 
-            r = client.post("/v1/chat/completions", json={
-                "messages": [{"role": "user", "content": "hi"}]})
+            # /v1 is the unauthenticated inference hop for pipeline tools, so
+            # the loopback gate is the only thing keeping it off the internet.
+            payload = {"messages": [{"role": "user", "content": "hi"}]}
+            r = client.post("/v1/chat/completions", json=payload)
+            check("/v1 拒绝非本机调用", r.status_code == 403, str(r.status_code))
+
+            local = TestClient(app, client=("127.0.0.1", 45678))
+            r = local.post("/v1/chat/completions", json=payload)
             check("模型未就绪时 /v1 返回 503", r.status_code == 503, str(r.status_code))
         finally:
             shutil.rmtree(pdir, ignore_errors=True)

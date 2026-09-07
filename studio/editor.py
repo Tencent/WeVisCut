@@ -34,8 +34,8 @@ logger = logging.getLogger("aicut_studio.editor")
 OP_SPEC: dict[str, dict[str, Any]] = {
     "set_narration": {
         "required": ["shot_id", "text"],
-        "optional": [],
-        "label": "改旁白（重新配音）",
+        "optional": ["visual_query"],
+        "label": "改旁白（重新配音并重检索素材）",
         "risk": "low",
     },
     "set_subtitle": {
@@ -325,23 +325,45 @@ def _op_set_narration(project: Project, op: dict[str, Any]) -> OpResult:
     if not text:
         raise EditError("旁白文字不能为空")
     old = str(shot.get("vocal_script", "") or "")
+    old_query = str(shot.get("visual_query", "") or "")
     shot["vocal_script"] = text
+    new_query = str(op.get("visual_query", "") or "").strip() or _visual_query_from_narration(text)
+    if new_query:
+        shot["visual_query"] = new_query
     # A subtitle override was written against the *old* narration, so keeping it
     # would caption the new audio with the previous wording. Narration is the
     # source of truth: drop the override and let subtitles follow the new script.
     stale_subtitle = str(shot.pop("subtitle_text", "") or "")
-    # Invalidate the recorded audio so regeneration cannot silently reuse it.
+    # Invalidate recorded audio and retrieved footage so regeneration cannot
+    # silently reuse assets matched to the previous narration.
     assets = project.assets_for(sid)
     assets.pop("audio_path", None)
     assets.pop("audio_meta", None)
-    project.mark_dirty(sid, "tts")
+    assets.pop("clip_path", None)
+    assets.pop("clip_meta", None)
+    assets.pop("visual_candidates", None)
+    assets["clip_source"] = "retrieval"
+    project.mark_dirty(sid, "tts", "footage")
+    details = {
+        "old": old[:120],
+        "new": text[:120],
+        "old_visual_query": old_query[:120],
+        "visual_query": str(shot.get("visual_query", "") or "")[:120],
+    }
     if stale_subtitle and stale_subtitle != text:
         return OpResult("set_narration", True,
-                        f"{sid} 旁白已更新，将重新配音（原先单独设置的字幕已同步为新旁白）",
-                        sid, {"old": old[:120], "new": text[:120],
-                              "dropped_subtitle": stale_subtitle[:120]})
-    return OpResult("set_narration", True, f"{sid} 旁白已更新，将重新配音", sid,
-                    {"old": old[:120], "new": text[:120]})
+                        f"{sid} 旁白已更新，将重新配音并按新画面描述重新检索素材（原先单独设置的字幕已同步为新旁白）",
+                        sid, {**details, "dropped_subtitle": stale_subtitle[:120]})
+    return OpResult("set_narration", True, f"{sid} 旁白已更新，将重新配音并重新检索素材", sid,
+                    details)
+
+
+def _visual_query_from_narration(text: str, limit: int = 30) -> str:
+    """Deterministic fallback for manual edits that only provide narration."""
+    compact = " ".join(str(text or "").split())
+    if len(compact) <= limit:
+        return compact
+    return compact[:limit]
 
 
 def _op_set_subtitle(project: Project, op: dict[str, Any]) -> OpResult:

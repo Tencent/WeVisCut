@@ -1,6 +1,6 @@
 """Autonomous agent loop for the RL-trained policy.
 
-The reference implementation (``server/infer_graph.py``) wraps its
+The reference implementation (``Infer_Vis_new/server/infer_graph.py``) wraps its
 agent loop in seven "扶正" (hand-holding) redirects that silently rewrite the
 model's chosen tool: precondition failures get redirected, repeats get
 redirected, and once every precondition happens to be satisfied the loop force
@@ -64,6 +64,10 @@ DEFAULT_MAX_STAGE4_ATTEMPTS = 6
 DEFAULT_MAX_STAGE4_REFUSALS = 2
 # Total executed tool calls. A complete flow needs ~12; this is a cost backstop.
 DEFAULT_MAX_TOOL_CALLS = 30
+# How many times a run may be silently put back on track. A complete flow has
+# ~12 steps, so this allows every one of them to need nudging once while still
+# bounding a mis-derived "next step" that would otherwise recur forever.
+DEFAULT_MAX_SILENT_CORRECTIONS = 12
 
 _STAGE4_REPAIR_TOOL = "Tool_Stage4DimensionalRepair"
 _STAGE4_JUDGE_TOOL = "Tool_Stage4DimensionJudge"
@@ -121,6 +125,10 @@ class AutonomousOrchestrator(InferenceOrchestrator):
             self.autonomy.get("max_tool_calls",
                               DEFAULT_MAX_TOOL_CALLS) or DEFAULT_MAX_TOOL_CALLS
         )
+        self.max_silent_corrections = int(
+            self.autonomy.get("max_silent_corrections",
+                              DEFAULT_MAX_SILENT_CORRECTIONS) or DEFAULT_MAX_SILENT_CORRECTIONS
+        )
 
         # Optional side-channel for track snapshots (kept separate from broadcast
         # so the server can throttle high-frequency progress independently).
@@ -142,6 +150,17 @@ class AutonomousOrchestrator(InferenceOrchestrator):
         """
         if self.fully_autonomous:
             return ""
+        return super()._next_missing_agent_tool(state)
+
+    def next_required_tool(self, state: dict[str, Any]) -> str:
+        """The canonical next step, whatever the autonomy setting.
+
+        ``_next_missing_agent_tool`` is blanked above so no inherited call site
+        can rewrite a decision the model is still capable of making. The
+        ordering itself stays correct and is the only thing that can put a
+        stuck run back on track, so self-correction asks for it by name rather
+        than going through the neutralised hook.
+        """
         return super()._next_missing_agent_tool(state)
 
     def _agent_precondition_missing(self, tool_name: str, state: dict[str, Any]) -> list[str]:
@@ -766,12 +785,15 @@ class AutonomousOrchestrator(InferenceOrchestrator):
             # ---------- 6. terminate on the model's own stitch ----------
             if tool_name == "Tool_StitchVideo":
                 final_path = str(state.get("final_video_path", "") or "")
-                if final_path:
+                # `render.defer_stitch` finishes on a validated manifest rather
+                # than a file; the real concat happens on export.
+                if final_path or state.get("stitch_pending"):
                     self.stitched_done = True
                     await self.broadcast(run_id, {
                         "type": "console_log",
                         "level": "success",
-                        "text": f"模型自主完成收尾，成片: {final_path}",
+                        "text": (f"模型自主完成收尾，成片: {final_path}" if final_path
+                                 else "模型自主完成收尾，各镜头已校验通过，可直接预览或导出成片"),
                     })
                     break
 

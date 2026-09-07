@@ -143,7 +143,7 @@
       const text = row.text || '';
       this.el.narration.value = text;
       this.el.subtitle.value = text;
-      this.el.footageQuery.value = '';
+      this.el.footageQuery.value = row.visual_query || clip.visual_query || '';
       this.el.footagePath.value = '';
 
       const isSpot = !!row.is_spotlight;
@@ -191,7 +191,12 @@
       switch (kind) {
         case 'set_narration':
           if (!sid) return null;
-          return { op: 'set_narration', shot_id: sid, text: this.el.narration.value.trim() };
+          return {
+            op: 'set_narration',
+            shot_id: sid,
+            text: this.el.narration.value.trim(),
+            visual_query: this.el.footageQuery.value.trim(),
+          };
 
         case 'set_subtitle':
           if (!sid) return null;

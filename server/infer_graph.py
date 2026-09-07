@@ -2183,7 +2183,18 @@ class InferenceOrchestrator:
         if tool_name == "Tool_Stage4DimensionalRepair":
             summary["repaired_shot_ids"] = list((output.get("shots") or output.get("repairs") or {}).keys())[:20]
         if tool_name == "Tool_StitchVideo":
-            summary["has_final_video"] = bool(output.get("final_video_path"))
+            summary["has_final_video"] = bool(
+                output.get("final_video_path")
+                or output.get("video_path")
+                or output.get("output_path")
+            )
+            # With `render.defer_stitch` the call validates the shots and stops
+            # there, so "no final video" is the expected outcome, not a
+            # failure. Without these keys nothing downstream can tell the two
+            # apart and the run reads as broken.
+            if output.get("deferred"):
+                summary["deferred"] = True
+                summary["ready_shot_count"] = output.get("ready_shot_count", 0)
         raw_status = str(output.get("status") or output.get("concat_status") or "")
         status = raw_status if raw_status else "success"
         return {
@@ -3511,12 +3522,28 @@ class InferenceOrchestrator:
                 tid = str(item.get("template_id", item.get("id", "")))
                 if not tid:
                     continue
+                # The registry carries far more selection signal than the four
+                # fields that used to be forwarded. Without `use_for` and
+                # `family` the model was picking from 90 near-identical looking
+                # ids, which is why whole families never got chosen.
                 candidates.append({
                     "template_id": tid,
-                    "keywords": item.get("keywords", item.get("tags", [])),
+                    "name": item.get("display_name", item.get("name", "")),
                     "category": item.get("category", ""),
-                    "name": item.get("name", ""),
+                    "family": item.get("family", ""),
+                    "use_for": item.get("use_for", []),
+                    "keywords": item.get("keywords", item.get("tags", [])),
+                    "spotlight_level": item.get("spotlight_level", ""),
+                    "duration_range": item.get("duration_range", []),
                 })
+
+                # Prefer the generated slot_schema.json: it carries the real
+                # labels, defaults and max_chars per slot, whereas the registry
+                # only lists slot names and the fallback has to guess.
+                schema = InferenceOrchestrator._load_slot_schema_file(gold_root, tid)
+                if schema:
+                    slot_schemas[tid] = schema
+                    continue
                 slots_raw = item.get("slots", item.get("slot_schema", {}))
                 if isinstance(slots_raw, dict):
                     slot_schemas[tid] = slots_raw
@@ -3533,6 +3560,67 @@ class InferenceOrchestrator:
         except Exception as exc:
             logger.warning("[_load_template_registry] failed: %s", exc)
         return result
+
+    @staticmethod
+    def _nearest_template_id(
+        wanted: str, valid: set[str], already_used: list[str]
+    ) -> str:
+        """Best real template for an id the model invented.
+
+        Fuzzy match first — a hallucination is usually a near-miss of a real id
+        such as ``stat_highlight_card`` for ``stat_highlight`` — and only fall
+        back to an unused generic when there is nothing close.
+        """
+        import difflib
+
+        close = difflib.get_close_matches(wanted, sorted(valid), n=3, cutoff=0.6)
+        for cand in close:
+            if cand not in already_used:
+                return cand
+        if close:
+            return close[0]
+        for generic in ("key_takeaway", "definition_card", "thesis_statement",
+                        "question_hook", "timeline_step"):
+            if generic in valid and generic not in already_used:
+                return generic
+        unused = sorted(valid - set(already_used))
+        return unused[0] if unused else (sorted(valid)[0] if valid else wanted)
+
+    @staticmethod
+    def _load_slot_schema_file(gold_root: Path, template_id: str) -> dict[str, Any]:
+        """Per-slot spec from ``generated/structures/<id>/slot_schema.json``."""
+        path = gold_root / "generated" / "structures" / template_id / "slot_schema.json"
+        try:
+            if not path.is_file():
+                return {}
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        slots = payload.get("slots") if isinstance(payload, dict) else None
+        return slots if isinstance(slots, dict) else {}
+
+    @staticmethod
+    def _clamp_slot_text(slots: dict[str, Any], slot_schema: dict[str, Any]) -> dict[str, Any]:
+        """Enforce each slot's ``max_chars``.
+
+        Overlong slot text does not wrap in the templates — it overflows its box
+        or gets clipped mid-character at render time, so it is cut here where
+        the limit is actually known.
+        """
+        out: dict[str, Any] = {}
+        for name, value in (slots or {}).items():
+            text = value if isinstance(value, str) else value
+            spec = slot_schema.get(name) if isinstance(slot_schema, dict) else None
+            limit = 0
+            if isinstance(spec, dict):
+                try:
+                    limit = int(spec.get("max_chars", 0) or 0)
+                except (TypeError, ValueError):
+                    limit = 0
+            if isinstance(text, str) and limit > 0 and len(text) > limit:
+                text = text[:limit].rstrip("，。、；：,;: ")
+            out[name] = text
+        return out
 
     @staticmethod
     def _parse_skill_json(text: str) -> dict[str, Any]:
@@ -4111,6 +4199,7 @@ class InferenceOrchestrator:
         tool_args: dict[str, Any],
         *,
         candidate_templates: list[dict[str, Any]] | None = None,
+        already_used: list[str] | None = None,
     ) -> dict[str, Any]:
         """Step 1: Retrieve the most suitable template for this spotlight shot.
 
@@ -4139,13 +4228,28 @@ class InferenceOrchestrator:
             "role": "generator",
             "stage_task": "template_retrieve",
             "input_prior_version": "custom_tool_priors_v2",
-            "instruction": "根据口播稿与章节语义，从 candidates 中检索唯一最合适的 spotlight 模版，输出其 template_id、template_type 和简短理由。",
+            "instruction": (
+                "根据口播稿与章节语义，从 candidates 中检索唯一最合适的 spotlight 模版，"
+                "输出其 template_id、template_type 和简短理由。选择规则：\n"
+                "1. 先判断这一镜在讲什么类型的内容——开场钩子、概念解释、因果关系、"
+                "数据对比、叙事过渡还是总结收束，再从对应 category 里挑；\n"
+                "2. 参考每个候选的 use_for 和 family："
+                "narrative 适合讲述，diagram 适合结构与关系，dataviz 适合数字与对比；\n"
+                "3. 有具体数字、比例、对比时优先选 dataviz；"
+                "有步骤、层级、因果时优先选 diagram；\n"
+                "4. 避开 already_used 里已经用过的模版，同一支片子里模版要有变化；\n"
+                "5. template_id 必须是 candidates 里出现过的原文，不能自己造。"
+            ),
             "memory": {"shot": shot_ctx, "segment": segment_ctx},
             "candidates": candidate_templates or [],
+            "already_used": list(already_used or []),
             "constraints": {
                 "select_exactly_one": True,
                 "match_spoken_semantics": True,
                 "prefer_high_spotlight_level": True,
+                "template_id_must_be_from_candidates": True,
+                "prefer_unused_template": True,
+                "match_category_to_content_type": True,
             },
             "output_schema": {
                 "stage_task": "template_retrieve",
@@ -4198,12 +4302,20 @@ class InferenceOrchestrator:
             "stage_task": "template_fill",
             "input_prior_version": "custom_tool_priors_v2",
             "instruction": (
-                "根据选中模版的 slot_schema，把全部槽位填满。规则：\n"
-                "1. 每个槽位的文案必须不同，严禁多个槽位填相同文字；\n"
-                "2. headline/eyebrow 是提炼关键词，不要照抄口播原句；\n"
-                "3. 如果口播稿很短（不足30字），从 segment.narration_excerpt 和 key_points 提炼内容；\n"
-                "4. 遵守各槽位 max_chars 限制；\n"
-                "5. timing.decor_start_sec 在 [0.2, 0.8] 之间，"
+                "根据选中模版的 slot_schema，把全部槽位填满。\n"
+                "核心要求：槽位文字是给观众看的**概念提炼**，不是口播稿的字幕。"
+                "字幕已经单独烧在画面上了，槽位再复述一遍就是重复信息。\n"
+                "规则：\n"
+                "1. 从这一镜在讲的事情里抽出上位概念、判断或结论，"
+                "用观众扫一眼就能记住的短语表达，不要照抄或缩写口播原句；\n"
+                "2. 优先写名词短语和判断句，例如「退相干」「成本被谁承担」"
+                "「三个前提」，而不是「我们先从个税起征点说起」这种口语流水句；\n"
+                "3. 有数字就把数字单独拎出来放进对应槽位，不要把数字埋在句子里；\n"
+                "4. 每个槽位的文案必须不同，严禁多个槽位填相同或高度重叠的文字；\n"
+                "5. 同一槽位不要出现完整句号结尾的长句，短到能当标题；\n"
+                "6. 如果口播稿很短（不足30字），从 segment.summary 和 key_points 提炼；\n"
+                "7. 严格遵守各槽位 max_chars 限制，宁可更短；\n"
+                "8. timing.decor_start_sec 在 [0.2, 0.8] 之间，"
                 f"timing.decor_duration_sec 不超过 {min(4.0, max(2.0, shot_dur * 0.6)):.1f}s"
                 f"（本镜头时长 {shot_dur:.1f}s）。"
             ),
@@ -4212,7 +4324,11 @@ class InferenceOrchestrator:
             "constraints": {
                 "fill_all_slots": True,
                 "respect_max_chars": True,
-                "content_from_vocal_script_or_segment_context": True,
+                # Was `content_from_vocal_script_or_segment_context`, which is
+                # what told the model to lift text out of the narration.
+                "abstract_concept_not_narration_transcript": True,
+                "no_verbatim_from_vocal_script": True,
+                "prefer_noun_phrase_or_claim": True,
                 "avoid_placeholder_or_pipeline_jargon": True,
                 "no_duplicate_slot_values": True,
             },
@@ -4839,8 +4955,17 @@ class InferenceOrchestrator:
                             "candidate_count": len(assets.get("retrieval_candidates", []) or []),
                             "playlist_ready": bool(assets.get("retrieval_candidates")),
                         }
+                        # The TTS node does not always stamp a status onto
+                        # audio_meta, and an empty string counted as a failure —
+                        # which is how a re-dub that produced a real wav still
+                        # reported "0 条配音". Fall back to the artefact.
+                        audio_status = str(
+                            audio_meta.get("status")
+                            or assets.get("status")
+                            or ("success" if assets.get("audio_path") else "error")
+                        )
                         audio_result[sid] = {
-                            "status": audio_meta.get("status", assets.get("status", "")),
+                            "status": audio_status,
                             "audio_path": assets.get("audio_path", ""),
                             "duration_sec": audio_meta.get("duration_sec", 0),
                             "backend": audio_meta.get("backend", ""),
@@ -4932,6 +5057,14 @@ class InferenceOrchestrator:
 
                 # Load template registry for two-step flow
                 _template_registry = self._load_template_registry(state.get("config", {}))
+                _valid_template_ids = {
+                    str(c.get("template_id", ""))
+                    for c in _template_registry.get("candidates", [])
+                    if isinstance(c, dict) and c.get("template_id")
+                }
+                # Shared across shots so one film does not decorate every
+                # spotlight with the same structure.
+                _used_templates: list[str] = []
 
                 async def _decorate_one(shot: dict) -> tuple[str, bool]:
                     """Two-step template decoration: retrieve → fill."""
@@ -4949,6 +5082,7 @@ class InferenceOrchestrator:
                                 retrieve_payload = self._build_skill_payload_template_retrieve(
                                     shot, seg, tool_args,
                                     candidate_templates=_template_registry.get("candidates", []),
+                                    already_used=_used_templates,
                                 )
                                 _ret_str = json.dumps(retrieve_payload, ensure_ascii=False)
                                 ret_pred = await asyncio.to_thread(
@@ -4966,9 +5100,24 @@ class InferenceOrchestrator:
                                 )
                                 if not chosen_id:
                                     raise RuntimeError(f"template_retrieve returned empty template_id")
+                                # A hallucinated id used to sail through and only
+                                # surface at render time as the hardcoded
+                                # key_takeaway fallback, silently flattening the
+                                # whole film onto one template.
+                                if _valid_template_ids and chosen_id not in _valid_template_ids:
+                                    picked = self._nearest_template_id(
+                                        chosen_id, _valid_template_ids, _used_templates)
+                                    await self.broadcast(run_id, {
+                                        "type": "console_log", "level": "warn",
+                                        "text": (f"  ! 镜头 {sid} 选了不存在的模版 "
+                                                 f"{chosen_id}，改用 {picked}"),
+                                    })
+                                    chosen_id = picked
 
                                 # Look up slot_schema for the chosen template
                                 slot_schema = _template_registry.get("slot_schemas", {}).get(chosen_id, {})
+                                if chosen_id not in _used_templates:
+                                    _used_templates.append(chosen_id)
 
                                 # Step 2: template_fill
                                 fill_payload = self._build_skill_payload_template_fill(
@@ -5030,6 +5179,11 @@ class InferenceOrchestrator:
                                                 if ki - 1 < len(fallbacks):
                                                     slots[sk] = fallbacks[ki - 1][:40]
                                             decoration["slots"] = slots
+
+                                    # ── Post-process: honour per-slot max_chars ──
+                                    if isinstance(decoration.get("slots"), dict) and slot_schema:
+                                        decoration["slots"] = self._clamp_slot_text(
+                                            decoration["slots"], slot_schema)
 
                                     if sid not in shot_assets:
                                         shot_assets[sid] = {}
@@ -5270,7 +5424,15 @@ class InferenceOrchestrator:
 
                     # ── Parallel render with retry ──
                     total_shots = len(shot_plan)
-                    _RENDER_CONCURRENCY = min(4, total_shots)
+                    # Each slot runs its own headless Chrome plus ffmpeg, so the
+                    # ceiling is CPU and disk bandwidth rather than the model.
+                    # Tunable because the right number depends on the box.
+                    try:
+                        _want_conc = int(
+                            (config.get("render", {}) or {}).get("shot_concurrency", 4) or 4)
+                    except (TypeError, ValueError):
+                        _want_conc = 4
+                    _RENDER_CONCURRENCY = max(1, min(_want_conc, total_shots))
                     _RENDER_MAX_RETRIES = 2
                     render_sem = asyncio.Semaphore(_RENDER_CONCURRENCY)
                     compose_results: list[dict[str, Any]] = [{}] * total_shots
@@ -5650,6 +5812,11 @@ class InferenceOrchestrator:
                         tool_args.get("duck_under_voice",
                                       music_cfg.get("duck_under_voice", True))
                     )
+                    # Transcode + concat + BGM mix cost minutes and get thrown
+                    # away by the next edit, so generation stops at a validated
+                    # manifest and the real file is built on export instead.
+                    defer_stitch = bool(
+                        (config.get("render", {}) or {}).get("defer_stitch", True))
                     try:
                         result = await asyncio.to_thread(
                             sv_tool.run,
@@ -5662,6 +5829,7 @@ class InferenceOrchestrator:
                             config=config,
                             progress_callback=_stitch_progress,
                             skip_bgm_remix=skip_bgm,
+                            dry_run=defer_stitch,
                         )
                     except Exception as exc:
                         logger.warning("stitch_video.run failed: %s", exc)
@@ -5673,7 +5841,23 @@ class InferenceOrchestrator:
                         or result.get("output_path")
                         or ""
                     )
-                    if state["final_video_path"]:
+                    # The loop's terminal condition is "stitch produced
+                    # something"; with deferral that something is a manifest,
+                    # not a file, so it needs its own flag.
+                    state["stitch_pending"] = bool(
+                        result.get("deferred") and result.get("ready_shot_count"))
+                    if state["stitch_pending"]:
+                        await self.broadcast(run_id, {
+                            "type": "console_log",
+                            "text": (
+                                f"  ✓ 校验通过 {result.get('ready_shot_count', 0)}/"
+                                f"{result.get('shot_count', 0)} 个镜头，"
+                                f"总时长 {result.get('total_duration_sec', 0)}s；"
+                                "实际合成已延后到「导出成片」"
+                            ),
+                            "level": "stdout",
+                        })
+                    elif state["final_video_path"]:
                         await self.broadcast(run_id, {
                             "type": "console_log",
                             "text": f"  ✓ 最终视频: {state['final_video_path']}",

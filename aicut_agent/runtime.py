@@ -23,6 +23,7 @@ model's decision, mirroring ``AutonomousOrchestrator.run_autonomous`` exactly.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from datetime import datetime
@@ -78,6 +79,10 @@ class AICutRuntime:
         self.track_order = list(track_order or tracks.ALL_TRACKS)
         self.broadcast_fn = broadcast_fn
         self.progress_fn = progress_fn
+        try:
+            self._loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._loop = None
 
         # Termination / result bookkeeping (mirrors run_autonomous locals).
         self.results: dict[str, Any] = {
@@ -107,6 +112,10 @@ class AICutRuntime:
         self.tool_calls_used = 0
         self.last_error = ""
         self.step_idx = 0
+        # Self-correction bookkeeping. Capped so a wrong "next step" cannot
+        # turn into its own loop.
+        self.silent_corrections = 0
+        self.salvage_attempted = False
         # Set by the chat model / tools each step for the middleware to consume.
         self.last_prediction: Any = None
         self.last_tool_name = ""
@@ -124,6 +133,7 @@ class AICutRuntime:
         self.max_tool_calls = int(getattr(orch, "max_tool_calls", 30))
         self.max_same_tool = int(getattr(orch, "max_same_tool", 10))
         self.max_agent_steps = int(getattr(orch, "max_agent_steps", 48))
+        self.max_silent_corrections = int(getattr(orch, "max_silent_corrections", 12))
 
         # Initialise the authoritative pipeline state + project directory.
         self.project_id, self.project_dir, self.state = self._init_state(output_dir)
@@ -205,6 +215,22 @@ class AICutRuntime:
             thinking = {"type": "thinking", "step": self.step_idx}
         thinking["tool_name"] = tool_name
         await self.broadcast(thinking)
+
+    def emit_thinking_delta_sync(self, text: str, source: str = "") -> None:
+        """Thread-safe bridge for streaming model reasoning from the sync client."""
+        delta = str(text or "")
+        if not delta.strip() or self._loop is None or self._loop.is_closed():
+            return
+        event = {
+            "type": "thinking_delta",
+            "step": self.step_idx,
+            "delta": delta,
+            "source": source,
+        }
+        try:
+            asyncio.run_coroutine_threadsafe(self.broadcast(event), self._loop)
+        except RuntimeError:
+            logger.debug("failed to schedule thinking delta", exc_info=True)
 
     # ------------------------------------------------------------------
     # feedback (the field the model was trained to read)
@@ -296,6 +322,62 @@ class AICutRuntime:
         })
         self.last_tool_output = tool_output
         return tool_output
+
+    async def deliver_if_possible(self) -> bool:
+        """Stitch now if everything the stitch needs is already in state.
+
+        A run can stop for reasons that say nothing about the footage: a step
+        ceiling, a model that stopped emitting parseable calls, a repeat budget
+        spent going in circles. When the only step left is the mechanical one,
+        taking it is the difference between delivering the film and throwing
+        away a finished cut.
+
+        Emits the same events a model-chosen stitch would, so the run reads as
+        an ordinary finish. Returns True when a cut now exists.
+        """
+        if self.stitch_succeeded or self.salvage_attempted:
+            return False
+        if self.state.get("final_video_path") or self.state.get("stitch_pending"):
+            return False
+        if self.check_preconditions("Tool_StitchVideo"):
+            return False            # the footage genuinely is not ready
+        self.salvage_attempted = True
+
+        args = {
+            "project_id": self.state.get("project_id", ""),
+            "timeline_path": self.state.get("timeline_path", ""),
+            "bgm": self.state.get("bgm_result", {}),
+        }
+        await self.broadcast({
+            "type": "tool_call", "stage": "final_stitch", "step": self.step_idx,
+            "tool_name": "Tool_StitchVideo", "arguments": args,
+            "precondition_missing": [],
+        })
+        try:
+            self.tool_calls_used += 1
+            await self.execute_tool("Tool_StitchVideo", args)
+        except Exception:
+            logger.warning("收尾拼接未成功", exc_info=True)
+            return False
+        output = self.last_tool_output if isinstance(self.last_tool_output, dict) else {}
+        await self.broadcast({
+            "type": "tool_result", "stage": "final_stitch", "step": self.step_idx,
+            "tool_name": "Tool_StitchVideo", "status": output.get("status", "unknown"),
+            "observation": self.orchestrator.last_observation,
+        })
+        await self.emit_progress("final_stitch")
+
+        final_path = str(self.state.get("final_video_path", "") or "")
+        if not (final_path or self.state.get("stitch_pending")):
+            return False
+        self.orchestrator.stitched_done = True
+        self.stitch_succeeded = True
+        await self.broadcast({
+            "type": "console_log", "level": "success",
+            "text": (f"收尾完成，成片: {final_path}" if final_path
+                     else "收尾完成，各镜头已校验通过，可直接预览或导出成片"),
+        })
+        return True
 
     # ------------------------------------------------------------------
     # guardrail hooks (called by the middleware)

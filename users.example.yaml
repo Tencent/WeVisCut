@@ -1,0 +1,23 @@
+# WEDirector 账号文件示例。真实文件叫 users.yaml，不要提交到 git。
+#
+# 不要手写 password_hash，用脚本生成（密码走交互式输入，不进 shell 历史）：
+#
+#   python3 scripts/manage_users.py init            # 建 users.yaml 和超管
+#   python3 scripts/manage_users.py add alice       # 加普通用户
+#   python3 scripts/manage_users.py add bob --admin # 再加一个超管
+#   python3 scripts/manage_users.py passwd alice    # 改密码
+#   python3 scripts/manage_users.py list            # 看有哪些账号
+#
+# role: admin 能看到所有人的作品；role: user 只能看到自己的。
+# 鉴权开启前就存在的历史工程没有归属记录，只有超管可见。
+
+users:
+  - username: admin
+    role: admin
+    display_name: 超级管理员
+    password_hash: "pbkdf2_sha256$210000$<salt>$<hash>"
+
+  - username: alice
+    role: user
+    display_name: Alice
+    password_hash: "pbkdf2_sha256$210000$<salt>$<hash>"

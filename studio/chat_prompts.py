@@ -72,8 +72,9 @@ SYSTEM_PROMPT = """你是 AICut 成片编辑助手。用户已经拿到一条自
 三、可用操作（严格按此 schema，不要发明字段）
 ════════════════════════════════════════════════════════════
 
-1) `set_narration` —— 改口播内容（会重新配音，镜头时长会变）
-   {"op":"set_narration","shot_id":"<id>","text":"<新文字>"}
+1) `set_narration` —— 改口播内容（会重新配音、重新生成视觉检索词并重检索素材，镜头时长会变）
+   {"op":"set_narration","shot_id":"<id>","text":"<新文字>","visual_query":"<新画面描述>"}
+   `visual_query` 要根据新口播重新写，中文 10-30 字，包含场景、主体、动作或氛围；不要照抄整句口播。
    用于："把这句话改成…"、"这里说得太啰嗦，精简一下"、"改个说法"
 
 2) `set_subtitle` —— 只改屏幕字幕，不动配音
@@ -159,7 +160,8 @@ SYSTEM_PROMPT = """你是 AICut 成片编辑助手。用户已经拿到一条自
 - 输入里的 `subtitle_drift` 列出了当前"字幕和配音不一致"的镜头。用户抱怨
   "口播和字幕/配音对不上"时，就用 `set_narration` 把该镜头的口播设为用户想要的文字，
   字幕会自动跟上；或者用 `set_subtitle` 把字幕设回 `narration` 的原文。
-- 改写文字时保持原来的语气和长度量级，不要大幅改变时长。
+- 改写文字时保持原来的语气和长度量级，不要大幅改变时长；同时必须为每条
+  `set_narration` 生成匹配新语义的 `visual_query`，这样系统会同步重配音、重检索素材并重渲染该镜头。
 - `reply` 里说人话，用"开头那句"、"第 3 个镜头"这种说法，不要甩 shot_id 给用户看。
 - 一轮最多输出 `max_ops_per_turn` 条操作；超过就先做最重要的，并在 reply 里说明还剩什么。
 - 操作成功后系统会自动重新渲染改动的镜头并拼成新成片，不需要在 reply 里提醒用户手动操作。
@@ -180,6 +182,7 @@ FEW_SHOT_EXAMPLES: list[dict[str, str]] = [
                 "op": "set_narration",
                 "shot_id": "shot_001",
                 "text": "三年之内，这个行业会被彻底重写。",
+                "visual_query": "高速运转的科技产业线条动画",
             }],
             "confidence": 0.9,
         }, ensure_ascii=False),
@@ -230,9 +233,11 @@ FEW_SHOT_EXAMPLES: list[dict[str, str]] = [
             "targets": ["shot_003", "shot_007"],
             "ops": [
                 {"op": "set_narration", "shot_id": "shot_003",
-                 "text": "虚拟世界的概念最早出现在科幻小说里"},
+                 "text": "虚拟世界的概念最早出现在科幻小说里",
+                 "visual_query": "科幻书页中的虚拟城市概念"},
                 {"op": "set_narration", "shot_id": "shot_007",
-                 "text": "今天的虚拟世界已经走进了现实"},
+                 "text": "今天的虚拟世界已经走进了现实",
+                 "visual_query": "人们佩戴设备体验虚拟空间"},
             ],
             "confidence": 0.85,
         }, ensure_ascii=False),
