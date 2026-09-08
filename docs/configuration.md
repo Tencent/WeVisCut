@@ -23,7 +23,7 @@ process environment.
 
 ```yaml
 paths:
-  asset_library: ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
+  asset_library: ${WEVISIONCUT_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
 ```
 
 `${REPO_ROOT}` is injected automatically and equals the directory containing the
@@ -43,25 +43,25 @@ deliberate: the validator then reports a missing setting, instead of a literal
 | `AICUT_MODEL_PROFILE` | Override `model.active_profile` |
 | `AICUT_STUDIO_SKIP_MODEL` | Serve without loading weights (`--no-model`) |
 | `AICUT_MS_SWIFT_PATH` | ms-swift checkout registering `qwen3_5` |
-| `WEDIRECTOR_WORKSPACE` | Output root |
-| `WEDIRECTOR_MODEL_PATH` / `WEDIRECTOR_LORA_PATH` | Weights / adapter |
-| `WEDIRECTOR_ASSET_LIBRARY` / `WEDIRECTOR_MUSIC_LIBRARY` | Media roots |
-| `WEDIRECTOR_FFMPEG` / `WEDIRECTOR_FFPROBE` | Binaries |
-| `WEDIRECTOR_NODE_BIN` / `WEDIRECTOR_CHROME` | Renderer dependencies |
-| `WEDIRECTOR_GOLD_TEMPLATE` / `WEDIRECTOR_SUBTITLE_FONT` | Templates / font |
-| `WEDIRECTOR_VIDEO_PROVIDER` / `WEDIRECTOR_BGM_PROVIDER` | Provider names |
-| `WEDIRECTOR_VIDEO_API_URL` / `_TOKEN`, `WEDIRECTOR_BGM_API_URL` / `_TOKEN` | HTTP provider endpoints |
-| `WEDIRECTOR_TTS_URL` | TTS service |
-| `WEDIRECTOR_LLM_BASE_URL` / `_MODEL` / `_API_KEY` | Auxiliary LLM when running the pipeline standalone |
+| `WEVISIONCUT_WORKSPACE` | Output root |
+| `WEVISIONCUT_MODEL_PATH` / `WEVISIONCUT_LORA_PATH` | Weights / adapter |
+| `WEVISIONCUT_ASSET_LIBRARY` / `WEVISIONCUT_MUSIC_LIBRARY` | Media roots |
+| `WEVISIONCUT_FFMPEG` / `WEVISIONCUT_FFPROBE` | Binaries |
+| `WEVISIONCUT_NODE_BIN` / `WEVISIONCUT_CHROME` | Renderer dependencies |
+| `WEVISIONCUT_GOLD_TEMPLATE` / `WEVISIONCUT_SUBTITLE_FONT` | Templates / font |
+| `WEVISIONCUT_VIDEO_PROVIDER` / `WEVISIONCUT_BGM_PROVIDER` | Provider names |
+| `WEVISIONCUT_VIDEO_API_URL` / `_TOKEN`, `WEVISIONCUT_BGM_API_URL` / `_TOKEN` | HTTP provider endpoints |
+| `WEVISIONCUT_TTS_URL` | TTS service |
+| `WEVISIONCUT_LLM_BASE_URL` / `_MODEL` / `_API_KEY` | Auxiliary LLM when running the pipeline standalone |
 | `BILIBILI_COOKIE` / `YOUTUBE_API_KEY` | Open-web retrieval credentials |
 | `TTS_APP_ID` / `TTS_CLUSTER` / `TTS_PROXY_URL` | Optional cloud TTS vendor |
 | `MMFINDER_ROOT` | Internal retrieval client |
-| `WEDIRECTOR_KEEP_PROXY=1` | Keep `*_proxy` set (default: cleared, see below) |
+| `WEVISIONCUT_KEEP_PROXY=1` | Keep `*_proxy` set (default: cleared, see below) |
 
 `run_studio.sh` clears `http_proxy` and friends by default. The pipeline talks to
 loopback services and possibly to a private network, and a proxy in the
 environment breaks both — usually as a `403 forbidden host` on `127.0.0.1`. Set
-`WEDIRECTOR_KEEP_PROXY=1` if your services genuinely require one.
+`WEVISIONCUT_KEEP_PROXY=1` if your services genuinely require one.
 
 ---
 

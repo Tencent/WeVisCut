@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════
-#  WeDirector — single configuration entry point
+#  WevisionCut — single configuration entry point
 #
 #  Every external interface (policy model, TTS, footage source, BGM source,
 #  templates, renderer, ffmpeg) is declared here. No other file hardcodes a
@@ -20,11 +20,11 @@
 # ═══════════════════════════════════════════════════════════════════════════
 
 studio:
-  name: WeDirector
+  name: WevisionCut
   # UI language: zh | en
   locale: zh
   # Root for generated cuts and project files (one subdirectory per run).
-  workspace_root: ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}
+  workspace_root: ${WEVISIONCUT_WORKSPACE:-${REPO_ROOT}/workspace}
 
 server:
   host: 0.0.0.0
@@ -32,23 +32,23 @@ server:
   # Directory allow-list for /api/media. Only files under these roots are ever
   # served to the browser, which is what stops path traversal.
   media_roots:
-    - ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}
-    - ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
-    - /tmp/wedirector_hyperframes_outputs
-    - /tmp/wedirector_render_split
+    - ${WEVISIONCUT_WORKSPACE:-${REPO_ROOT}/workspace}
+    - ${WEVISIONCUT_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
+    - /tmp/wevisioncut_hyperframes_outputs
+    - /tmp/wevisioncut_render_split
 
 # ───────────────────────────────────────────────────────────────────────────
 #  1. Policy model — the RL-trained 9B agent
 #
 #  Download the weights first (see docs/external_tools.md):
-#      hf download <org>/WeDirector-9B --local-dir checkpoints/wedirector-9b
+#      hf download <org>/WevisionCut-9B --local-dir checkpoints/wevisioncut-9b
 #
 #  If you train your own policy: DAPO emits sharded verl FSDP checkpoints that
 #  vLLM cannot read, so merge them into HF format before pointing a profile at
 #  them. The released checkpoint is already merged.
 # ───────────────────────────────────────────────────────────────────────────
 model:
-  active_profile: ${WEDIRECTOR_MODEL_PROFILE:-wedirector_9b}
+  active_profile: ${WEVISIONCUT_MODEL_PROFILE:-wevisioncut_9b}
 
   # Custom architecture id. Only a ms-swift build that registers `qwen3_5`
   # can load it — see docs/external_tools.md.
@@ -62,16 +62,16 @@ model:
 
   profiles:
     # In-process vLLM. The production configuration.
-    wedirector_9b:
-      base_model: ${WEDIRECTOR_MODEL_PATH:-${REPO_ROOT}/checkpoints/wedirector-9b}
+    wevisioncut_9b:
+      base_model: ${WEVISIONCUT_MODEL_PATH:-${REPO_ROOT}/checkpoints/wevisioncut-9b}
       adapter: ""
       infer_backend: vllm
 
     # Plain transformers: slower, but works without a vLLM build and accepts a
     # LoRA adapter on top of the base weights.
-    wedirector_9b_hf:
-      base_model: ${WEDIRECTOR_MODEL_PATH:-${REPO_ROOT}/checkpoints/wedirector-9b}
-      adapter: ${WEDIRECTOR_LORA_PATH:-}
+    wevisioncut_9b_hf:
+      base_model: ${WEVISIONCUT_MODEL_PATH:-${REPO_ROOT}/checkpoints/wevisioncut-9b}
+      adapter: ${WEVISIONCUT_LORA_PATH:-}
       infer_backend: transformers
 
   # Qwen3.5 is a hybrid-thinking model. Left off, the chat template injects an
@@ -152,7 +152,7 @@ services:
   # Any OpenAI-style HTTP TTS server. The reference deployment uses Qwen3-TTS.
   tts:
     enabled: true
-    service_url: ${WEDIRECTOR_TTS_URL:-http://127.0.0.1:7865}
+    service_url: ${WEVISIONCUT_TTS_URL:-http://127.0.0.1:7865}
     backend: qwen3_service
     voice: Serena
     language: Chinese
@@ -175,11 +175,11 @@ services:
   #   http_video            — your own HTTP search endpoint, config only.
   #   local_folder_video    — a directory of clips on disk.
   # See docs/providers.md to add your own.
-  retrieval_provider: ${WEDIRECTOR_VIDEO_PROVIDER:-asset_retrieval_tool}
+  retrieval_provider: ${WEVISIONCUT_VIDEO_PROVIDER:-asset_retrieval_tool}
 
   # BGM source. Defaults to retrieval_provider when unset, so footage and music
   # can come from different places (e.g. mmfinder footage + http_bgm music).
-  bgm_provider: ${WEDIRECTOR_BGM_PROVIDER:-}
+  bgm_provider: ${WEVISIONCUT_BGM_PROVIDER:-}
 
   # ─── Pluggable provider settings ─────────────────────────────────────────
   providers:
@@ -190,10 +190,10 @@ services:
     # Config-only HTTP adapters. Fill in `url` and set
     # retrieval_provider: http_video / bgm_provider: http_bgm to use them.
     http_video:
-      url: ${WEDIRECTOR_VIDEO_API_URL:-}
+      url: ${WEVISIONCUT_VIDEO_API_URL:-}
       method: POST
       headers:
-        Authorization: "Bearer ${WEDIRECTOR_VIDEO_API_TOKEN:-}"
+        Authorization: "Bearer ${WEVISIONCUT_VIDEO_API_TOKEN:-}"
       timeout_sec: 30
       # Request field names your endpoint expects.
       query_field: query
@@ -205,10 +205,10 @@ services:
       field_map: {}
 
     http_bgm:
-      url: ${WEDIRECTOR_BGM_API_URL:-}
+      url: ${WEVISIONCUT_BGM_API_URL:-}
       method: POST
       headers:
-        Authorization: "Bearer ${WEDIRECTOR_BGM_API_TOKEN:-}"
+        Authorization: "Bearer ${WEVISIONCUT_BGM_API_TOKEN:-}"
       timeout_sec: 30
       query_field: query
       top_k_field: top_k
@@ -219,13 +219,13 @@ services:
     # directory names, and optional `<name>.json` / `<name>.txt` sidecars.
     local_folder_video:
       roots:
-        - ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}/clips
+        - ${WEVISIONCUT_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}/clips
       # true = drop clips that match no query token at all.
       require_match: false
 
     local_folder_bgm:
       roots:
-        - ${WEDIRECTOR_MUSIC_LIBRARY:-${REPO_ROOT}/workspace/music_library}
+        - ${WEVISIONCUT_MUSIC_LIBRARY:-${REPO_ROOT}/workspace/music_library}
 
   # ─── Footage selection constraints (provider-independent) ───
   visual_retrieval:
@@ -288,14 +288,14 @@ services:
     enabled: true
     mode: cli
     hf_bin: ${REPO_ROOT}/external_tool/hyperframes/cli/hyperframes/dist/cli.js
-    node_bin_dir: ${WEDIRECTOR_NODE_BIN:-${REPO_ROOT}/external_tool/node/bin}
+    node_bin_dir: ${WEVISIONCUT_NODE_BIN:-${REPO_ROOT}/external_tool/node/bin}
     # Self-contained runtime tarball (hyperframes + all node deps). Unpacked
     # once into runtime_cache_dir, then reused — much faster than reading
     # thousands of small files off a network filesystem on every render.
     runtime_archive: ${REPO_ROOT}/external_tool/hyperframes/runtime/hyperframes-runtime.tar.gz
-    runtime_cache_dir: /tmp/wedirector_hyperframes_runtime
-    render_cache_dir: /tmp/wedirector_hyperframes_outputs
-    browser_path: ${WEDIRECTOR_CHROME:-${REPO_ROOT}/external_tool/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell}
+    runtime_cache_dir: /tmp/wevisioncut_hyperframes_runtime
+    render_cache_dir: /tmp/wevisioncut_hyperframes_outputs
+    browser_path: ${WEVISIONCUT_CHROME:-${REPO_ROOT}/external_tool/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell}
     # Local GSAP so template HTML never reaches for a CDN.
     gsap_local_path: ${REPO_ROOT}/external_tool/hyperframes/vendor/gsap.min.js
     render_quality: draft
@@ -313,8 +313,8 @@ services:
       # Wrapper that gives headless Chrome a GPU. Falls back to the plain
       # binary when the machine has no usable GPU.
       browser_path: ${REPO_ROOT}/external_tool/hyperframes/browser-gpu-wrapper.sh
-      browser_source_path: ${WEDIRECTOR_CHROME:-${REPO_ROOT}/external_tool/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell}
-      browser_cache_dir: /tmp/wedirector_chrome_headless_shell
+      browser_source_path: ${WEVISIONCUT_CHROME:-${REPO_ROOT}/external_tool/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell}
+      browser_cache_dir: /tmp/wevisioncut_chrome_headless_shell
       skip_lint: true
       skip_check: true
       nav_timeout_ms: 60000
@@ -323,8 +323,8 @@ services:
   # ─── ffmpeg / ffprobe ───
   ffmpeg:
     # A static build is strongly preferred; setup_external_tools.sh fetches one.
-    ffmpeg_path: ${WEDIRECTOR_FFMPEG:-${REPO_ROOT}/external_tool/ffmpeg/ffmpeg}
-    ffprobe_path: ${WEDIRECTOR_FFPROBE:-${REPO_ROOT}/external_tool/ffmpeg/ffprobe}
+    ffmpeg_path: ${WEVISIONCUT_FFMPEG:-${REPO_ROOT}/external_tool/ffmpeg/ffmpeg}
+    ffprobe_path: ${WEVISIONCUT_FFPROBE:-${REPO_ROOT}/external_tool/ffmpeg/ffprobe}
 
 # ───────────────────────────────────────────────────────────────────────────
 #  4. Authentication (optional)
@@ -355,12 +355,12 @@ auth:
 # ───────────────────────────────────────────────────────────────────────────
 paths:
   # Your own video library (used by local_scan / local_folder_video).
-  asset_library: ${WEDIRECTOR_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
+  asset_library: ${WEVISIONCUT_ASSET_LIBRARY:-${REPO_ROOT}/workspace/asset_library}
   # Gold Template library: structure x motion x visual layers + assemble.py.
-  gold_template_root: ${WEDIRECTOR_GOLD_TEMPLATE:-${REPO_ROOT}/external_tool/gold_template}
+  gold_template_root: ${WEVISIONCUT_GOLD_TEMPLATE:-${REPO_ROOT}/external_tool/gold_template}
   # Pipeline intermediates and rendered output.
-  output_root: ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}/pipeline_out
-  storage_root: ${WEDIRECTOR_WORKSPACE:-${REPO_ROOT}/workspace}/storage
+  output_root: ${WEVISIONCUT_WORKSPACE:-${REPO_ROOT}/workspace}/pipeline_out
+  storage_root: ${WEVISIONCUT_WORKSPACE:-${REPO_ROOT}/workspace}/storage
   # Optional decoration hints. Missing files degrade gracefully.
   gold_template_policies_file: ${REPO_ROOT}/external_tool/configs/gold_template_policies.yaml
   instructions_file: ${REPO_ROOT}/external_tool/configs/instructions.yaml
@@ -375,10 +375,10 @@ render:
   split:
     enabled: true
     overlay_format: webm
-    cache_dir: /tmp/wedirector_render_split
+    cache_dir: /tmp/wevisioncut_render_split
 
   subtitles:
-    fontfile: ${WEDIRECTOR_SUBTITLE_FONT:-${REPO_ROOT}/external_tool/gold_template/fonts/NotoSerifSC-Bold.otf}
+    fontfile: ${WEVISIONCUT_SUBTITLE_FONT:-${REPO_ROOT}/external_tool/gold_template/fonts/NotoSerifSC-Bold.otf}
     font_size: 45
     line_spacing: 56
     bottom_margin: 132
@@ -476,9 +476,9 @@ chat_edit:
 
   # inproc = reuse the already-loaded 9B; openai = call an external /v1 endpoint.
   backend: inproc
-  openai_base_url: ${WEDIRECTOR_CHAT_BASE_URL:-}
-  openai_api_key: ${WEDIRECTOR_CHAT_API_KEY:-}
-  openai_model: ${WEDIRECTOR_CHAT_MODEL:-}
+  openai_base_url: ${WEVISIONCUT_CHAT_BASE_URL:-}
+  openai_api_key: ${WEVISIONCUT_CHAT_API_KEY:-}
+  openai_model: ${WEVISIONCUT_CHAT_MODEL:-}
 
   temperature: 0.2
   max_tokens: 4096

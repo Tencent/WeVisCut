@@ -1,8 +1,8 @@
-# WeDirector
+# WevisionCut
 
 **Long-horizon tool agents for end-to-end video editing.**
 
-WeDirector turns a plain narration script into a finished, multi-minute edited
+WevisionCut turns a plain narration script into a finished, multi-minute edited
 video. A single 9B policy model, trained with SFT then DAPO reinforcement
 learning, drives the whole thing: it segments the script, plans shots,
 synthesises narration, retrieves footage, chooses and fills animated templates,
@@ -114,8 +114,8 @@ been trained to recover is measured on whether it actually does.
 ### 1. Python dependencies
 
 ```bash
-git clone https://git.woa.com/chenyumu/WeDirector.git
-cd WeDirector
+git clone https://git.woa.com/chenyumu/WevisionCut.git
+cd WevisionCut
 
 pip install -r requirements.txt
 
@@ -154,14 +154,14 @@ present are skipped, and each one has manual instructions in the matching
 
 ```bash
 pip install -U "huggingface_hub[cli]"
-hf download <org>/WeDirector-9B --local-dir checkpoints/wedirector-9b
+hf download <org>/WevisionCut-9B --local-dir checkpoints/wevisioncut-9b
 ```
 
-Then either leave the default (`checkpoints/wedirector-9b`) or point at your own
+Then either leave the default (`checkpoints/wevisioncut-9b`) or point at your own
 copy:
 
 ```bash
-export WEDIRECTOR_MODEL_PATH=/data/models/wedirector-9b
+export WEVISIONCUT_MODEL_PATH=/data/models/wevisioncut-9b
 ```
 
 Full details, including sizes and how to skip individual components, are in
@@ -383,7 +383,7 @@ successful stitch terminates the graph, and plain-text conversation still works.
 training system prompt and in the state JSON the model receives. Those strings
 are part of the training distribution and are deliberately left byte-identical —
 renaming them would move inference off-distribution. The public name is
-WeDirector.
+WevisionCut.
 
 `configs/training/` holds the data-preparation and SFT configs behind the
 released checkpoint. They are not read at inference time.

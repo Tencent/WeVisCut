@@ -1,6 +1,6 @@
 """Config-only HTTP providers: `http_video` and `http_bgm`.
 
-These let a deployment plug its own search service into WeDirector without
+These let a deployment plug its own search service into WevisionCut without
 writing any Python. Point them at an endpoint that takes a text query and
 returns JSON, and describe the response shape in `studio_config.yaml`::
 

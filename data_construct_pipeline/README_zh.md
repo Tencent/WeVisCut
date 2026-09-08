@@ -1,8 +1,8 @@
-# WeDirector 数据构造管线
+# WevisionCut 数据构造管线
 
-[English](README.md) · [中文](README_zh.md) · [返回 WeDirector](../README_zh.md)
+[English](README.md) · [中文](README_zh.md) · [返回 WevisionCut](../README_zh.md)
 
-这个包负责 **WeDirector 的训练轨迹落盘**：一份口播稿进去，一条成片加上三份按角色切开的数据流出来。
+这个包负责 **WevisionCut 的训练轨迹落盘**：一份口播稿进去，一条成片加上三份按角色切开的数据流出来。
 
 它是论文的数据构造侧，不是上线用的 Studio。Studio（`aicut_agent/`、`studio/`）跑的是已经训好的策略；这个包 **生产** 那条策略当初吃进去的轨迹。
 
@@ -39,7 +39,7 @@
 
 ## 和仓库其余部分的关系
 
-| 本包 | 发布用的 WeDirector Studio |
+| 本包 | 发布用的 WevisionCut Studio |
 |---|---|
 | 训练时循环，在 `server/infer_graph.py` | `aicut_agent/` 的 deepagents / LangGraph harness |
 | 运行时可以重定向非法 / 重复调用，保证标注跑完 | 护栏只观察，不替换成另一个工具 |
@@ -51,7 +51,7 @@
 
 ## 安装
 
-在 WeDirector 仓库根目录：
+在 WevisionCut 仓库根目录：
 
 ```bash
 pip install -e data_construct_pipeline            # 核心（httpx + pyyaml）
@@ -150,7 +150,7 @@ print(result.summary())
 | `recording` | 落盘位置、是否保留完整 prompt |
 | `batch` | 输入 glob、并发、续跑 |
 
-常用环境变量：`WEDIRECTOR_ROOT`、`AICUT_PIPELINE_ROOT`、`OPENAI_BASE_URL`、`OPENAI_API_KEY`、`LVP_MODEL`、`LVP_PROFILE`、`LVP_OUTPUT_ROOT`、`LVP_INPUT_DIR`。
+常用环境变量：`WEVISIONCUT_ROOT`、`AICUT_PIPELINE_ROOT`、`OPENAI_BASE_URL`、`OPENAI_API_KEY`、`LVP_MODEL`、`LVP_PROFILE`、`LVP_OUTPUT_ROOT`、`LVP_INPUT_DIR`。
 
 ---
 
@@ -175,7 +175,7 @@ cd data_construct_pipeline && PYTHONPATH=src python -m pytest -q
 
 | 现象 | 从哪查 |
 |---|---|
-| `pipeline.root does not exist` | 把 `pipeline.root` 指到本仓库，或导出 `WEDIRECTOR_ROOT` |
+| `pipeline.root does not exist` | 把 `pipeline.root` 指到本仓库，或导出 `WEVISIONCUT_ROOT` |
 | `missing server/infer_graph.py` | checkout 不完整，循环在 `server/infer_graph.py` |
 | `agent_mode=... does not select the long-horizon loop` | 写成 `long_horizon` |
 | 每步都 `parse_ok: false` | served model 不支持原生 tool calling → `native_tool_calls: false` |

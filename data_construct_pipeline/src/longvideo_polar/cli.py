@@ -81,7 +81,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--episode-id", default=None, help="Stable episode id.")
     run.add_argument(
         "--pipeline-root", default=None,
-        help="Override pipeline.root (the WeDirector / environment checkout).",
+        help="Override pipeline.root (the WevisionCut / environment checkout).",
     )
     run.add_argument("--max-steps", type=int, default=None, help="Override agent.max_steps.")
     run.add_argument(
@@ -127,7 +127,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     smoke.add_argument(
         "--pipeline-root", default=None,
-        help="WeDirector / environment checkout (default: pipeline.root from the config).",
+        help="WevisionCut / environment checkout (default: pipeline.root from the config).",
     )
     smoke.add_argument("--config", default=None, help="Config used only to locate pipeline.root.")
     smoke.add_argument(

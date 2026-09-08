@@ -1,4 +1,4 @@
-# WEDirector 账号文件示例。真实文件叫 users.yaml，不要提交到 git。
+# WevisionCut 账号文件示例。真实文件叫 users.yaml，不要提交到 git。
 #
 # 不要手写 password_hash，用脚本生成（密码走交互式输入，不进 shell 历史）：
 #

@@ -65,13 +65,13 @@ class LLMClient:
         # the loaded policy model also serves the pipeline's internal LLM calls.
         # These defaults only apply when the pipeline runs standalone.
         self.base_url = llm_cfg.get("base_url") or os.environ.get(
-            "WEDIRECTOR_LLM_BASE_URL", "http://127.0.0.1:8081/v1"
+            "WEVISIONCUT_LLM_BASE_URL", "http://127.0.0.1:8081/v1"
         )
         self.api_key = llm_cfg.get("api_key") or os.environ.get(
-            "WEDIRECTOR_LLM_API_KEY", "EMPTY"
+            "WEVISIONCUT_LLM_API_KEY", "EMPTY"
         )
         self.model = llm_cfg.get("model") or os.environ.get(
-            "WEDIRECTOR_LLM_MODEL", "wedirector-9b"
+            "WEVISIONCUT_LLM_MODEL", "wevisioncut-9b"
         )
         self.temperature = llm_cfg.get("temperature", 0.3)
         self.max_tokens = llm_cfg.get("max_tokens", 8192)

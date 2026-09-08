@@ -1,6 +1,6 @@
 # Architecture
 
-How WeDirector runs a trained long-horizon policy against a real video-editing
+How WevisionCut runs a trained long-horizon policy against a real video-editing
 environment, and why it is built the way it is.
 
 The short version: a 9B policy model emits one tool call per step; a runtime owns

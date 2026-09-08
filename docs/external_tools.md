@@ -7,7 +7,7 @@ Fast path:
 
 ```bash
 bash scripts/setup_external_tools.sh          # ~1.1 GB of runtimes
-hf download <org>/WeDirector-9B --local-dir checkpoints/wedirector-9b
+hf download <org>/WevisionCut-9B --local-dir checkpoints/wevisioncut-9b
 bash run_studio.sh --check                    # verify every resolved path
 ```
 
@@ -35,8 +35,8 @@ Every default is `${REPO_ROOT}/external_tool/...`, so the layout below works wit
 no configuration at all:
 
 ```
-WeDirector/
-├── checkpoints/wedirector-9b/
+WevisionCut/
+├── checkpoints/wevisioncut-9b/
 └── external_tool/
     ├── ffmpeg/{ffmpeg,ffprobe}
     ├── node/bin/node
@@ -55,21 +55,21 @@ WeDirector/
 
 ```bash
 pip install -U "huggingface_hub[cli]"
-hf download <org>/WeDirector-9B --local-dir checkpoints/wedirector-9b
+hf download <org>/WevisionCut-9B --local-dir checkpoints/wevisioncut-9b
 ```
 
 Somewhere else? Either export a variable or edit the profile:
 
 ```bash
-export WEDIRECTOR_MODEL_PATH=/data/models/wedirector-9b
+export WEVISIONCUT_MODEL_PATH=/data/models/wevisioncut-9b
 ```
 
 ```yaml
 model:
-  active_profile: wedirector_9b
+  active_profile: wevisioncut_9b
   profiles:
-    wedirector_9b:
-      base_model: /data/models/wedirector-9b
+    wevisioncut_9b:
+      base_model: /data/models/wevisioncut-9b
       adapter: ""
       infer_backend: vllm       # or transformers
 ```
@@ -117,11 +117,11 @@ Overrides, if you already have these installed:
 
 | Variable | Points at |
 |---|---|
-| `WEDIRECTOR_FFMPEG` / `WEDIRECTOR_FFPROBE` | ffmpeg / ffprobe binaries |
-| `WEDIRECTOR_NODE_BIN` | Directory containing `node` |
-| `WEDIRECTOR_CHROME` | `chrome-headless-shell` or a Chrome/Chromium binary |
-| `WEDIRECTOR_SUBTITLE_FONT` | Subtitle `.otf` / `.ttf` |
-| `WEDIRECTOR_GOLD_TEMPLATE` | Template library root |
+| `WEVISIONCUT_FFMPEG` / `WEVISIONCUT_FFPROBE` | ffmpeg / ffprobe binaries |
+| `WEVISIONCUT_NODE_BIN` | Directory containing `node` |
+| `WEVISIONCUT_CHROME` | `chrome-headless-shell` or a Chrome/Chromium binary |
+| `WEVISIONCUT_SUBTITLE_FONT` | Subtitle `.otf` / `.ttf` |
+| `WEVISIONCUT_GOLD_TEMPLATE` | Template library root |
 
 ### Subtitle font
 
@@ -167,7 +167,7 @@ See [providers.md](providers.md) to attach your own library.
 severity ranking, slot filling). At startup the studio rewrites `config.llm` to
 its own `/v1` endpoint, so the loaded policy model serves those too and there is
 no second model to deploy. Running the pipeline standalone, set
-`WEDIRECTOR_LLM_BASE_URL` / `WEDIRECTOR_LLM_MODEL`.
+`WEVISIONCUT_LLM_BASE_URL` / `WEVISIONCUT_LLM_MODEL`.
 
 ---
 

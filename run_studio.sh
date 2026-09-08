@@ -1,5 +1,5 @@
 #!/bin/bash
-# WeDirector Studio — autonomous long-form video generation + post editing
+# WevisionCut Studio — autonomous long-form video generation + post editing
 #
 # Usage:
 #   bash run_studio.sh                        # use studio_config.yaml
@@ -83,8 +83,8 @@ fi
 # The pipeline talks to loopback services (TTS, the in-process /v1 endpoint) and
 # to retrieval back ends that may sit on a private network. An HTTP proxy in the
 # environment breaks both, so drop the proxy variables for this process tree.
-# Set WEDIRECTOR_KEEP_PROXY=1 if your services are only reachable via a proxy.
-if [[ "${WEDIRECTOR_KEEP_PROXY:-0}" != "1" ]]; then
+# Set WEVISIONCUT_KEEP_PROXY=1 if your services are only reachable via a proxy.
+if [[ "${WEVISIONCUT_KEEP_PROXY:-0}" != "1" ]]; then
   unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY 2>/dev/null || true
 fi
 
@@ -111,7 +111,7 @@ fi
 "$PYTHON_BIN" -m studio.config --summary --config "$CONFIG" || true
 
 echo "============================================"
-echo "  WeDirector Studio"
+echo "  WevisionCut Studio"
 echo "============================================"
 echo "  Config : $CONFIG"
 echo "  Port   : $PORT"

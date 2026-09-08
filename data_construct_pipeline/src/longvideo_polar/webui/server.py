@@ -277,7 +277,7 @@ def create_app(
         except ValueError as exc:
             logger.warning("skipping bootstrap endpoint %r: %s", address, exc)
 
-    app = FastAPI(title="WeDirector 批量轨迹标注", version="1.0")
+    app = FastAPI(title="WevisionCut 批量轨迹标注", version="1.0")
     app.state.service = service
 
     # -- machines --------------------------------------------------------

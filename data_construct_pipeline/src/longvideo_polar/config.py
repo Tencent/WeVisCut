@@ -32,8 +32,8 @@ _MAX_ENV_PASSES = 3
 
 # <pkg-root>/src/longvideo_polar/config.py -> <pkg-root>/config/longvideo_polar.yaml
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "longvideo_polar.yaml"
-# data_construct_pipeline/src/longvideo_polar/config.py -> WeDirector repo root
-_WEDIRECTOR_REPO_ROOT = Path(__file__).resolve().parents[3]
+# data_construct_pipeline/src/longvideo_polar/config.py -> WevisionCut repo root
+_WEVISIONCUT_REPO_ROOT = Path(__file__).resolve().parents[3]
 _PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -202,15 +202,15 @@ class PipelineSettings:
     def resolved_root(self) -> Path:
         text = str(self.root or "").strip()
         if not text:
-            if (_WEDIRECTOR_REPO_ROOT / "pipeline").is_dir() and (
-                (_WEDIRECTOR_REPO_ROOT / "server" / "infer_graph.py").is_file()
-                or (_WEDIRECTOR_REPO_ROOT / "Infer_Vis_new" / "server" / "infer_graph.py").is_file()
+            if (_WEVISIONCUT_REPO_ROOT / "pipeline").is_dir() and (
+                (_WEVISIONCUT_REPO_ROOT / "server" / "infer_graph.py").is_file()
+                or (_WEVISIONCUT_REPO_ROOT / "Infer_Vis_new" / "server" / "infer_graph.py").is_file()
             ):
-                return _WEDIRECTOR_REPO_ROOT
+                return _WEVISIONCUT_REPO_ROOT
             raise ValueError(
-                "pipeline.root is empty — point it at the WeDirector repo "
+                "pipeline.root is empty — point it at the WevisionCut repo "
                 "(the directory that contains pipeline/ and server/) or export "
-                "AICUT_PIPELINE_ROOT / WEDIRECTOR_ROOT"
+                "AICUT_PIPELINE_ROOT / WEVISIONCUT_ROOT"
             )
         path = Path(text).expanduser()
         if not path.is_dir():

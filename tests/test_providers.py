@@ -419,9 +419,9 @@ class TestConfigIntegration:
 
     def test_env_interpolation(self, monkeypatch):
         from studio.config import interpolate
-        monkeypatch.setenv("WEDIRECTOR_TEST_VAR", "/data/x")
-        assert interpolate("${WEDIRECTOR_TEST_VAR}/y", {}) == "/data/x/y"
-        assert interpolate("${WEDIRECTOR_UNSET_VAR:-/fallback}", {}) == "/fallback"
+        monkeypatch.setenv("WEVISIONCUT_TEST_VAR", "/data/x")
+        assert interpolate("${WEVISIONCUT_TEST_VAR}/y", {}) == "/data/x/y"
+        assert interpolate("${WEVISIONCUT_UNSET_VAR:-/fallback}", {}) == "/fallback"
         assert interpolate("${REPO_ROOT}/z", {"REPO_ROOT": "/repo"}) == "/repo/z"
         # A fallback may itself reference an injected variable.
         assert interpolate("${NOPE:-${REPO_ROOT}/z}", {"REPO_ROOT": "/repo"}) == "/repo/z"

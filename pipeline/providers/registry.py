@@ -1,6 +1,6 @@
 """Asset provider registry: pluggable footage / BGM retrieval back ends.
 
-WeDirector needs two kinds of external assets: **video footage** for each shot
+WevisionCut needs two kinds of external assets: **video footage** for each shot
 and **BGM tracks** for the finished cut. Everything else in the pipeline is
 self-contained, so these two are the only places a deployment has to be wired
 into whatever media source it happens to own.
@@ -21,7 +21,7 @@ as ``url`` / ``path`` / ``title`` / ``duration`` are mapped automatically.
 
 Providers living outside this repo are loaded from
 `services.providers.plugins`, which accepts dotted module names
-(``mypkg.providers``) and plain file paths (``/opt/wedirector/my_provider.py``).
+(``mypkg.providers``) and plain file paths (``/opt/wevisioncut/my_provider.py``).
 
 See `docs/providers.md` for the full contract.
 """
@@ -96,7 +96,7 @@ class VideoQuery:
     #: Longest useful source clip, derived from `max_loop_count`.
     max_duration_sec: float = 0.0
     #: Where a provider may materialise downloads.
-    output_dir: str = "/tmp/wedirector_assets"
+    output_dir: str = "/tmp/wevisioncut_assets"
     #: The provider's own block from `services.providers.<name>`.
     options: dict[str, Any] = field(default_factory=dict)
     #: Full projected pipeline config, for providers that need more context.
@@ -113,7 +113,7 @@ class BgmQuery:
     top_k: int = 10
     #: Total video duration the playlist should cover.
     target_duration_sec: float = 0.0
-    output_dir: str = "/tmp/wedirector_assets"
+    output_dir: str = "/tmp/wevisioncut_assets"
     options: dict[str, Any] = field(default_factory=dict)
     pipeline_config: dict[str, Any] = field(default_factory=dict)
 
@@ -229,7 +229,7 @@ def _load_plugin_file(path: Path) -> None:
     resolved = path.resolve()
     if not resolved.exists():
         raise FileNotFoundError(str(resolved))
-    mod_name = f"wedirector_plugin_{resolved.stem}_{uuid.uuid4().hex[:8]}"
+    mod_name = f"wevisioncut_plugin_{resolved.stem}_{uuid.uuid4().hex[:8]}"
     spec = importlib.util.spec_from_file_location(mod_name, resolved)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load {resolved}")

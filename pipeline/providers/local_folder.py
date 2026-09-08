@@ -1,6 +1,6 @@
 """Offline providers backed by folders on disk: `local_folder_video` / `local_folder_bgm`.
 
-The fastest way to run WeDirector end to end without any external service: drop
+The fastest way to run WevisionCut end to end without any external service: drop
 your own footage and music into a directory tree and describe it in
 `studio_config.yaml`::
 

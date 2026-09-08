@@ -1,4 +1,4 @@
-/* WEDirector 创作台 — conversation-first shell.
+/* WevisionCut 创作台 — conversation-first shell.
  *
  * The backend speaks one event vocabulary for generation runs, chat-triggered
  * regeneration and manual re-renders. This file turns that stream into a
@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  const BRAND = 'WEDirector';
+  const BRAND = 'WevisionCut';
 
   // ─────────────────────────── vocabulary ───────────────────────────
 

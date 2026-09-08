@@ -2,7 +2,7 @@
 #
 # Start the campaign console for batch trajectory annotation.
 #
-#   bash data_construct_pipeline/scripts/launch_wedirector_ui.sh
+#   bash data_construct_pipeline/scripts/launch_wevisioncut_ui.sh
 #
 # First run builds the template slot-schema cache and registers the machine
 # pool; later runs skip that. Open http://<host>:<port> to add workers,
@@ -14,7 +14,7 @@
 #   ENDPOINTS="host-a:8000,host-b:8000"   initial machine pool (optional)
 #   DATASET_ROOT=...                      directory with scripts/ or manifest.jsonl
 #   OUTPUT_ROOT=...                       where episodes land
-#   AICUT_PIPELINE_ROOT=...               WeDirector / environment checkout
+#   AICUT_PIPELINE_ROOT=...               WevisionCut / environment checkout
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,14 +24,14 @@ REPO_ROOT="$(cd "$PKG_ROOT/.." && pwd)"
 DATASET_ROOT="${DATASET_ROOT:-$REPO_ROOT/workspace/scripts}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$REPO_ROOT/workspace/data_construct}"
 CONFIG="${CONFIG:-$PKG_ROOT/config/campaign.example.yaml}"
-GOLD_ROOT="${GOLD_ROOT:-${WEDIRECTOR_GOLD_TEMPLATE:-$REPO_ROOT/external_tool/gold_template}}"
-PIPELINE_ROOT="${AICUT_PIPELINE_ROOT:-${WEDIRECTOR_ROOT:-$REPO_ROOT}}"
+GOLD_ROOT="${GOLD_ROOT:-${WEVISIONCUT_GOLD_TEMPLATE:-$REPO_ROOT/external_tool/gold_template}}"
+PIPELINE_ROOT="${AICUT_PIPELINE_ROOT:-${WEVISIONCUT_ROOT:-$REPO_ROOT}}"
 ENDPOINTS="${ENDPOINTS:-}"
 PORT="${PORT:-8099}"
 HOST="${HOST:-0.0.0.0}"
 
 export AICUT_PIPELINE_ROOT="$PIPELINE_ROOT"
-export WEDIRECTOR_ROOT="${WEDIRECTOR_ROOT:-$REPO_ROOT}"
+export WEVISIONCUT_ROOT="${WEVISIONCUT_ROOT:-$REPO_ROOT}"
 export PYTHONUNBUFFERED=1
 export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}$PKG_ROOT/src"
 export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-${TMPDIR:-/tmp}/longvideo_polar_pycache}"

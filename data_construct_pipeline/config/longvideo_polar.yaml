@@ -1,5 +1,5 @@
 # ============================================================================
-# WeDirector data-construct pipeline — master config
+# WevisionCut data-construct pipeline — master config
 #
 # One file controls the environment root, the three role endpoints, which
 # media tools run, where trajectories land, and how batch annotation works.
@@ -15,15 +15,15 @@
 # ---------------------------------------------------------------------------
 # 1. Environment
 #
-# Drives InferenceOrchestrator.run_agentic_pipeline from this WeDirector
+# Drives InferenceOrchestrator.run_agentic_pipeline from this WevisionCut
 # checkout (pipeline/ + server/). The only substitution is the model loader:
 # RoleRoutedModelClient stands in for UnifiedModelLoader.
 # ---------------------------------------------------------------------------
 pipeline:
-  # WeDirector repo root (the directory that contains pipeline/ and server/).
+  # WevisionCut repo root (the directory that contains pipeline/ and server/).
   # Empty → auto-detect the parent of this package. Override with
-  # AICUT_PIPELINE_ROOT / WEDIRECTOR_ROOT if you keep the environment elsewhere.
-  root: ${AICUT_PIPELINE_ROOT:-${WEDIRECTOR_ROOT:-}}
+  # AICUT_PIPELINE_ROOT / WEVISIONCUT_ROOT if you keep the environment elsewhere.
+  root: ${AICUT_PIPELINE_ROOT:-${WEVISIONCUT_ROOT:-}}
 
   # Runtime document for the training-time loop (not studio_config.yaml).
   pipeline_config: config/pipeline_runtime.yaml

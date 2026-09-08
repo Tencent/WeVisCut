@@ -1,8 +1,8 @@
-# WeDirector
+# WevisionCut
 
 **面向端到端视频剪辑的长程工具智能体。**
 
-WeDirector 把一段纯文本口播稿变成一条剪好的、时长可达数分钟的成片。整个过程由
+WevisionCut 把一段纯文本口播稿变成一条剪好的、时长可达数分钟的成片。整个过程由
 一个 9B 策略模型驱动（先 SFT、再用 DAPO 强化学习训练）：它切分脚本、规划分镜、
 合成口播、检索素材、挑选并填充动画模板、配背景音乐、审查自己的产出、修掉不满意
 的部分，最后拼接成片——一次一个工具调用，没有任何脚本化流水线告诉它下一步该做
@@ -107,8 +107,8 @@ WeDirector 把一段纯文本口播稿变成一条剪好的、时长可达数分
 ### 1. Python 依赖
 
 ```bash
-git clone https://git.woa.com/chenyumu/WeDirector.git
-cd WeDirector
+git clone https://git.woa.com/chenyumu/WevisionCut.git
+cd WevisionCut
 
 pip install -r requirements.txt
 
@@ -145,13 +145,13 @@ bash scripts/setup_external_tools.sh
 
 ```bash
 pip install -U "huggingface_hub[cli]"
-hf download <org>/WeDirector-9B --local-dir checkpoints/wedirector-9b
+hf download <org>/WevisionCut-9B --local-dir checkpoints/wevisioncut-9b
 ```
 
-之后要么用默认路径（`checkpoints/wedirector-9b`），要么指向你自己的副本：
+之后要么用默认路径（`checkpoints/wevisioncut-9b`），要么指向你自己的副本：
 
 ```bash
-export WEDIRECTOR_MODEL_PATH=/data/models/wedirector-9b
+export WEVISIONCUT_MODEL_PATH=/data/models/wevisioncut-9b
 ```
 
 完整说明（含各组件体积、如何跳过某一项）见
@@ -363,7 +363,7 @@ node tests/test_frontend.js                    # 前端（需要 node）
 
 `AICutPipeline` 是这个系统的内部代号，它仍然出现在训练用系统提示词和模型收到的
 状态 JSON 里。这些字符串属于训练分布的一部分，被刻意保持逐字节一致——改名会让推理
-偏离分布。对外名称是 WeDirector。
+偏离分布。对外名称是 WevisionCut。
 
 `configs/training/` 放的是发布 checkpoint 背后的数据准备与 SFT 配置，推理时不会
 读取。

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fetch the third-party runtimes WeDirector needs but does not vendor.
+# Fetch the third-party runtimes WevisionCut needs but does not vendor.
 #
 # Usage:
 #   bash scripts/setup_external_tools.sh              # everything
@@ -81,7 +81,7 @@ install_node() {
       SKIPPED+=(node)
       info "system node $(node --version) is new enough"
       info "set services.hyperframes.node_bin_dir to $(dirname "$(command -v node)")"
-      info "or export WEDIRECTOR_NODE_BIN=$(dirname "$(command -v node)")"
+      info "or export WEVISIONCUT_NODE_BIN=$(dirname "$(command -v node)")"
       return 0
     fi
   fi
@@ -108,7 +108,7 @@ install_hyperframes() {
   need npm || return 1
   mkdir -p "$EXT/hyperframes/cli"
   ( cd "$EXT/hyperframes/cli" \
-    && [[ -f package.json ]] || echo '{"name":"wedirector-hyperframes-host","private":true}' > package.json ) || return 1
+    && [[ -f package.json ]] || echo '{"name":"wevisioncut-hyperframes-host","private":true}' > package.json ) || return 1
   ( cd "$EXT/hyperframes/cli" && npm install --no-audit --no-fund hyperframes ) || return 1
   ln -sfn node_modules/hyperframes "$EXT/hyperframes/cli/hyperframes"
   [[ -f "$EXT/hyperframes/cli/hyperframes/dist/cli.js" ]] || {
@@ -133,7 +133,7 @@ install_chrome() {
   chmod +x "$bin"
   info "installed: $bin"
   if [[ "$bin" != "$EXT/hyperframes/chrome/chrome-headless-shell-linux64/chrome-headless-shell" ]]; then
-    info "this differs from the config default; export WEDIRECTOR_CHROME=$bin"
+    info "this differs from the config default; export WEVISIONCUT_CHROME=$bin"
   fi
 }
 

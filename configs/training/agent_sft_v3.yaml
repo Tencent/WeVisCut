@@ -8,12 +8,12 @@
 # chain-of-thought. The JSON is directly machine-parseable for LangGraph.
 
 input:
-  processed_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed
+  processed_dir: ${WEVISIONCUT_DATA_ROOT}/Training_DATA/processed
   transitions_file: transitions_valid.jsonl
   include_source_kinds: [base, augmented]
 
 output:
-  output_dir: ${WEDIRECTOR_DATA_ROOT}/Training_DATA/processed_agent_v3
+  output_dir: ${WEVISIONCUT_DATA_ROOT}/Training_DATA/processed_agent_v3
 
 limits:
   max_user_chars: 22000

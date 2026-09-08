@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "longvideo-polar"
 version = "0.1.0"
-description = "WeDirector data-construct pipeline: long-horizon 口播稿→成片 trajectory capture, split into orchestrator / generator / critic streams."
+description = "WevisionCut data-construct pipeline: long-horizon 口播稿→成片 trajectory capture, split into orchestrator / generator / critic streams."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
