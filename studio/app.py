@@ -17,6 +17,8 @@ take 30-60s, and the UI should be reachable (showing "loading") the whole time.
 from __future__ import annotations
 
 import asyncio
+import copy
+import json
 import logging
 import mimetypes
 import os
@@ -38,6 +40,11 @@ from studio import config as studio_config
 from studio import chat_agent, editor, project as project_mod, script_writer, tracks
 from studio.model_client import ModelNotReady, ModelService, build_chat_backend
 from studio.runs import RunStore
+from studio.newvis0907 import operations as newvis0907_ops
+from studio.newvis0907 import router as newvis0907_router
+from studio.newvis0907 import schemas as newvis0907_schemas
+from studio.newvis0907.chat_planner import build_model_plan_prompt as _build_model_plan_prompt_0907
+from studio.newvis0907.transactions import TransactionError as Newvis0907TxError
 
 logging.basicConfig(
     level=logging.INFO,
@@ -306,6 +313,12 @@ async def index() -> FileResponse:
 async def index_newvis() -> FileResponse:
     """Conversation-first shell. Served alongside — not instead of — ``/``."""
     return FileResponse(str(STATIC_DIR / "newvis" / "index.html"))
+
+
+@app.get("/0907_newvis")
+async def index_newvis0907() -> FileResponse:
+    """Dedicated 0907 shell, isolated from the 0901 surface."""
+    return FileResponse(str(STATIC_DIR / "newvis0907" / "index.html"))
 
 
 # ---------------------------------------------------------------------------
@@ -660,11 +673,33 @@ async def cancel_run(run_id: str, force: bool = False) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # run execution
 # ---------------------------------------------------------------------------
-async def _execute_run(run_id: str, input_text: str) -> None:
+def _pipeline_config_for_policy(base_config: dict[str, Any] | None, policy_version: str | None) -> dict[str, Any]:
+    """Return a per-run config copy, applying 0907-only runtime policy.
+
+    ``render.defer_stitch`` is deliberately left at its configured value. Forcing
+    a real concat during generation makes ``Tool_StitchVideo`` fail validation
+    whenever any shot has no rendered file yet, and the model then retries the
+    identical call until the loop guard aborts the run. Preview audio is handled
+    by the player instead, which cannot break generation.
+    """
+    if policy_version is None:
+        return base_config or {}
+    pipeline_config = copy.deepcopy(base_config or {})
+    pipeline_config["policy_version"] = str(policy_version)
+    return pipeline_config
+
+
+async def _execute_run(run_id: str, input_text: str, policy_version: str | None = None) -> None:
     """Drive a generation run on the deepagents harness.
 
     The control loop is a ``create_deep_agent`` ReAct graph; the AICut engine
     (state, dispatch, observation, preview) is reused via ``AICutRuntime``.
+
+    ``policy_version`` is opt-in (the 0907 surface passes ``"0907"``). When set,
+    the runtime is handed a *deep copy* of the pipeline config carrying the
+    marker so ``plan_shots`` / ``generate_audio`` / ``decorate_shot`` /
+    ``timeline_compose`` / ``stitch_video`` take their trustworthy-cut branches —
+    without ever mutating the shared global ``studio.config.pipeline_config``.
     """
     from aicut_agent.runner import create_runtime, run_aicut_generation
 
@@ -673,6 +708,8 @@ async def _execute_run(run_id: str, input_text: str) -> None:
         return
     cfg = studio.config
     store = studio.store
+
+    pipeline_config = _pipeline_config_for_policy(cfg.pipeline_config, policy_version)
 
     async def broadcast(rid: str, event: dict[str, Any]) -> None:
         await store.emit(rid, event)
@@ -692,7 +729,7 @@ async def _execute_run(run_id: str, input_text: str) -> None:
     runtime = create_runtime(
         studio.model.loader,
         infer_config=cfg.infer_config,
-        pipeline_config=cfg.pipeline_config,
+        pipeline_config=pipeline_config,
         stage_config=cfg.stage_config,
         system_prompt=cfg.system_prompt,
         input_text=input_text,
@@ -741,6 +778,11 @@ async def _execute_run(run_id: str, input_text: str) -> None:
         # so ownership can only be recorded here, not when the run started.
         if run.project_dir and run.owner and studio.owners is not None:
             studio.owner_index.claim(run.project_dir, run.owner)
+        if policy_version == "0907" and run.project_dir:
+            try:
+                _refresh_quality_report_0907(_load_project(run.project_dir))
+            except Exception:
+                logger.exception("0907 post-generation quality refresh failed")
 
     await store.flush_progress(run_id)
     await broadcast(run_id, {
@@ -864,7 +906,13 @@ def _preview_bgm(
     for track in state.get("bgm_tracks") or []:
         if not isinstance(track, dict):
             continue
-        raw = str(track.get("music_path") or "")
+        raw = str(
+            track.get("music_path")
+            or track.get("path")
+            or track.get("audio_path")
+            or track.get("file_path")
+            or ""
+        )
         if not raw:
             continue
         try:
@@ -1295,12 +1343,19 @@ async def _execute_regeneration(
     proj: project_mod.Project,
     steps: list[dict[str, Any]],
     restitch: bool,
+    strict: bool = False,
+    policy_version: str | None = None,
 ) -> None:
+    """Regenerate ``steps`` for ``proj``.
+
+    ``strict`` is opt-in and used only by the 0907 runner.
+    """
     from studio.orchestrator import AutonomousOrchestrator
 
     store = studio.store
     job = store.get(job_id)
     cfg = studio.config
+    pipeline_config = _pipeline_config_for_policy(cfg.pipeline_config, policy_version)
 
     async def broadcast(rid: str, event: dict[str, Any]) -> None:
         await store.emit(rid, event)
@@ -1318,7 +1373,7 @@ async def _execute_regeneration(
     async with lock:
         orchestrator = AutonomousOrchestrator(
             studio.model.loader,
-            cfg.pipeline_config,
+            pipeline_config,
             cfg.stage_config,
             cfg.system_prompt,
             broadcast,
@@ -1364,6 +1419,13 @@ async def _execute_regeneration(
                         "text": f"  ✗ {tool} 超时 ({regen_timeout}s)，跳过",
                     })
                     output = {"status": "timeout", "error": f"{tool} timed out after {regen_timeout}s"}
+
+                if strict and isinstance(output, dict) \
+                        and str(output.get("status", "")).lower() in {"timeout", "error", "failed"}:
+                    raise RuntimeError(
+                        f"strict regeneration aborted: {tool} status="
+                        f"{output.get('status')} ({output.get('error', '')})"
+                    )
 
                 if isinstance(output, dict):
                     orchestrator.update_state_from_respond(tool, output)
@@ -1443,7 +1505,7 @@ def _invalidate_visual_audio_cache(state: dict[str, Any]) -> None:
         pass
 
 
-_PRESERVED_ASSET_KEYS = ("decoration", "decoration_verify", "template_retrieve")
+_PRESERVED_ASSET_KEYS = ("decoration", "decoration_verify", "template_retrieve", "semantic_animations")
 
 
 async def _dispatch_scoped(
@@ -1503,6 +1565,18 @@ async def _dispatch_scoped(
         sa = full_assets.get(sid)
         if isinstance(sa, dict):
             kept = {k: sa[k] for k in _PRESERVED_ASSET_KEYS if k in sa}
+            clip_meta = sa.get("clip_meta") if isinstance(sa.get("clip_meta"), dict) else {}
+            playlist = (
+                clip_meta.get("visual_playlist")
+                if isinstance(clip_meta.get("visual_playlist"), dict)
+                else None
+            )
+            clips = playlist.get("clips", []) if playlist else []
+            if any(
+                isinstance(clip, dict) and (clip.get("user_override") or clip.get("replaced"))
+                for clip in clips
+            ):
+                kept["_visual_playlist0907"] = copy.deepcopy(playlist)
             if kept:
                 saved_deco[sid] = kept
 
@@ -1521,20 +1595,43 @@ async def _dispatch_scoped(
 
     state["shot_plan"] = scoped_plan
     state["shot_assets"] = scoped_assets
+    old_pipeline_config = getattr(orchestrator, "pipeline_config", None)
+    if (
+        isinstance(old_pipeline_config, dict)
+        and str(old_pipeline_config.get("policy_version") or "") == "0907"
+    ):
+        try:
+            from studio.newvis0907 import footage as footage_0907
+            full_occupancy = footage_0907.build_occupancy(
+                {"shot_plan": full_plan, "shot_assets": full_assets},
+                exclude_shot_ids=list(filter_set),
+            )
+            runtime = dict(old_pipeline_config.get("newvis0907_runtime") or {})
+            runtime["base_occupancy"] = full_occupancy
+            orchestrator.pipeline_config = {
+                **old_pipeline_config,
+                "newvis0907_runtime": runtime,
+            }
+        except Exception:
+            pass
 
     try:
         output = await orchestrator._dispatch_tool(tool, args, state, run_id)
     finally:
+        if isinstance(old_pipeline_config, dict):
+            orchestrator.pipeline_config = old_pipeline_config
         state["shot_plan"] = full_plan
         merged_assets = dict(full_assets)
         merged_assets.update(state.get("shot_assets", {}))
-        # Restore decoration metadata that was wiped by the pipeline node.
-        # Only a non-empty fresh value wins: the node either produced real new
-        # decoration (keep it) or left the `{}` placeholder (restore the old).
         for sid, deco in saved_deco.items():
             sa = merged_assets.get(sid)
             if isinstance(sa, dict):
                 for k, v in deco.items():
+                    if k == "_visual_playlist0907":
+                        clip_meta = sa.get("clip_meta") if isinstance(sa.get("clip_meta"), dict) else {}
+                        sa["clip_meta"] = {**clip_meta, "visual_playlist": v}
+                        sa["visual_playlist"] = v
+                        continue
                     if not sa.get(k):
                         sa[k] = v
         state["shot_assets"] = merged_assets
@@ -1886,3 +1983,283 @@ async def chat_completions(req: ChatCompletionRequest) -> Any:
             ),
         },
     }
+
+
+# newvis0907 dedicated surface (isolated router, additively wired here)
+# ---------------------------------------------------------------------------
+# The 0907 router is configured *after* every legacy helper above is defined, so
+# it can reuse them through injected callbacks without importing this module (no
+# circular import). Nothing above is modified: this is pure addition.
+POLICY_VERSION_0907 = "0907"
+
+
+@app.post("/api/0907/runs")
+async def start_run_0907(req: StartRunRequest) -> dict[str, Any]:
+    """Dedicated 0907 generation endpoint.
+
+    Accepts the same body as the legacy ``POST /api/runs`` and shares the same
+    run store + ``/ws/{run_id}`` fan-out, but binds the job to
+    ``policy_version="0907"`` so the runner drives the trustworthy-cut pipeline
+    from a *config copy*. The global studio config is never mutated, and the
+    legacy ``/api/runs`` path is completely untouched.
+    """
+    text = (req.input_text or "").strip()
+    if not text:
+        raise HTTPException(400, "input_text 不能为空")
+    if studio.model is None or not studio.model.is_loaded:
+        raise HTTPException(
+            503,
+            studio.model.load_error if studio.model and studio.model.load_error
+            else "模型尚未加载完成，请稍候",
+        )
+
+    run = studio.store.create(text)
+    run.owner = require_user().username
+    run.policy_version = POLICY_VERSION_0907
+    studio.store.save_meta(run)
+    run.task = asyncio.create_task(_execute_run(run.id, text, policy_version=POLICY_VERSION_0907))
+    return {"run_id": run.id, "status": run.status, "policy_version": POLICY_VERSION_0907}
+
+
+def _discover_projects_0907() -> list[dict[str, Any]]:
+    """The 0907 library, filtered to the signed-in user like /api/projects."""
+    user = require_user()
+    out: list[dict[str, Any]] = []
+    for item in _discover_projects():
+        if studio.config.auth_enabled \
+                and not studio.owner_index.can_access(item["project_dir"], user):
+            continue
+        item["owner"] = studio.owner_index.owner_of(item["project_dir"])
+        out.append(item)
+    return out
+
+
+def _delete_project_0907(target: str) -> dict[str, Any]:
+    """Delete a project for the 0907 surface, reusing the legacy safeguards."""
+    if not target:
+        raise HTTPException(400, "必须提供 dir 或 project_dir 参数")
+    key = str(Path(target).resolve())
+    _require_access(key)
+
+    lock = studio.regen_locks.get(key)
+    if lock is not None and lock.locked():
+        raise HTTPException(409, "该工程正在重新渲染，请等待结束后再删除")
+    for run in studio.store.runs.values():
+        if run.is_active and run.project_dir and str(Path(run.project_dir).resolve()) == key:
+            raise HTTPException(409, "该工程有任务正在运行，无法删除")
+
+    roots = [studio.config.workspace_root / "projects", studio.config.workspace_root]
+    try:
+        result = project_mod.delete(target, roots)
+    except project_mod.ProjectError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    studio.projects.pop(key, None)
+    studio.chats.pop(key, None)
+    studio.regen_locks.pop(key, None)
+    if studio.owners is not None:
+        studio.owner_index.release(key)
+    for run in studio.store.runs.values():
+        if run.project_dir and str(Path(run.project_dir).resolve()) == key:
+            run.project_dir = ""
+    return {"deleted": True, **result}
+
+
+def _export_project_0907(proj: project_mod.Project) -> dict[str, Any]:
+    """Start the deferred stitch for a project (same job machinery as export)."""
+    job_id = f"export_{uuid.uuid4().hex[:8]}"
+    job = studio.store.create(f"[导出成片] {proj.project_id}", run_id=job_id)
+    job.project_dir = str(proj.project_dir)
+    job.task = asyncio.create_task(_execute_export(job_id, proj))
+    return {"status": "started", "job_id": job_id}
+
+
+def _refresh_quality_report_0907(proj: project_mod.Project) -> dict[str, Any] | None:
+    """Recompute the unified quality report and persist it into project state.
+
+    Stored under the ``quality_report0907`` namespace (kept by
+    ``Project.to_payload``) so the trustworthy-cut UI can show a failed hard
+    quality item without ever letting an unrelated legacy edit be blocked.
+    """
+    try:
+        from studio.newvis0907 import quality as quality_mod
+
+        # Convergence bookkeeping (I2): an auto-fixable issue that survives this
+        # regeneration cycle is one failed fix attempt; resolved ones are cleared.
+        prev_report = proj.state.get("quality_report0907")
+        interim = quality_mod.evaluate_project(proj.state)
+        quality_mod.advance_fix_attempts(proj.state, prev_report, interim)
+        # Re-evaluate so needs_manual reflects the updated attempt counts.
+        report = quality_mod.evaluate_project(proj.state)
+        proj.state["quality_report0907"] = report
+        try:
+            proj.save()
+        except (OSError, project_mod.ProjectError):
+            pass
+        return report
+    except Exception:  # noqa: BLE001 - quality refresh must never crash a runner
+        logger.exception("0907 quality report refresh failed")
+        return None
+
+
+def _capture_dirty_snapshot(proj: project_mod.Project) -> dict[str, Any]:
+    """A restorable copy of every dirty reason (per shot + bgm + restitch)."""
+    return {
+        "shots": {sid: set(reasons) for sid, reasons in proj.dirty.items()},
+        "bgm": bool(proj.bgm_dirty),
+        "restitch": bool(proj.restitch_dirty),
+    }
+
+
+def _restore_dirty_snapshot(proj: project_mod.Project, snapshot: dict[str, Any]) -> None:
+    """Put the dirty flags back exactly, so a retry regenerates the same steps."""
+    proj.dirty.clear()
+    for sid, reasons in (snapshot.get("shots") or {}).items():
+        proj.dirty[str(sid)] = set(reasons)
+    proj.bgm_dirty = bool(snapshot.get("bgm"))
+    proj.restitch_dirty = bool(snapshot.get("restitch"))
+
+
+async def _run_0907_regeneration(
+    manager: Any,
+    transaction: Any,
+    job_id: str,
+) -> None:
+    """Dedicated 0907 background runner: render (strict) then verify.
+
+    A step timeout/error becomes ``render_failed`` and can never slide into
+    ``succeeded`` (``_execute_regeneration`` is called with ``strict=True``).
+    Both a render failure and a verification failure restore the pre-render dirty
+    snapshot so a retry re-generates the same steps. Verification compares real
+    before/after file signals (see ``newvis0907.verification``): the targeted
+    shots' rendered files and the final video must be freshly written.
+    """
+    try:
+        manager.begin_render(transaction)
+    except Newvis0907TxError:
+        return
+
+    proj = manager.project
+    dirty_snapshot = _capture_dirty_snapshot(proj)
+    try:
+        if studio.model is None or not studio.model.is_loaded:
+            _restore_dirty_snapshot(proj, dirty_snapshot)
+            manager.record_render_failure(transaction, "模型尚未加载完成，无法重渲染")
+            return
+
+        scope = str((studio.config.editor.get("rerender") or {}).get("scope", "only_dirty"))
+        steps = editor.plan_regeneration(proj, scope)
+
+        # The run/journal job was created synchronously by ``_schedule_0907_runner``
+        # (so the API response could hand the UI a ``regen_job_id`` to attach to);
+        # here we only stream progress into it.
+        try:
+            await _execute_regeneration(
+                job_id,
+                proj,
+                steps,
+                restitch=True,
+                strict=True,
+                policy_version="0907",
+            )
+        except Exception as exc:  # noqa: BLE001 - any failure => render_failed
+            _restore_dirty_snapshot(proj, dirty_snapshot)
+            manager.record_render_failure(transaction, f"{type(exc).__name__}: {exc}")
+            return
+
+        finished = studio.store.get(job_id)
+        status = getattr(finished, "status", "") if finished is not None else ""
+        if status != "completed":
+            _restore_dirty_snapshot(proj, dirty_snapshot)
+            manager.record_render_failure(transaction, f"重渲染未成功（status={status}）")
+            return
+
+        # Audit record only — verification itself re-reads the files from disk.
+        outputs: list[str] = []
+        for sid in sorted(newvis0907_ops.target_shot_ids(proj, transaction.ops)):
+            assets = proj.shot_assets.get(sid) if isinstance(proj.shot_assets.get(sid), dict) else {}
+            rendered = str((assets or {}).get("rendered_path", "") or "")
+            if rendered:
+                outputs.append(rendered)
+        render_result = {"outputs": outputs, "final_video_path": proj.final_video_path}
+
+        manager.record_render_success(transaction, render_result)
+        if transaction.state == newvis0907_schemas.TransactionState.VERIFICATION_FAILED.value:
+            _restore_dirty_snapshot(proj, dirty_snapshot)
+        elif transaction.state == newvis0907_schemas.TransactionState.SUCCEEDED.value:
+            # Refresh the persisted project quality report after a verified edit.
+            _refresh_quality_report_0907(proj)
+    except Exception as exc:  # noqa: BLE001 - never leak into an optimistic state
+        logger.exception("0907 runner failed for %s", getattr(transaction, "id", "?"))
+        _restore_dirty_snapshot(proj, dirty_snapshot)
+        try:
+            manager.record_render_failure(transaction, f"{type(exc).__name__}: {exc}")
+        except Newvis0907TxError:
+            pass
+
+
+# Fire-and-forget runner tasks are held here so the event loop cannot garbage
+# collect a still-running task; each removes itself on completion.
+_BACKGROUND_0907_TASKS: set[asyncio.Task] = set()
+
+
+def _schedule_0907_runner(manager: Any, transaction: Any) -> str:
+    """Create the regeneration job *synchronously* and return its id.
+
+    A unique id is minted every call (a retry never reuses/overwrites the prior
+    job) and it is never ``tx_tx...`` — the transaction id already starts with
+    ``tx_``, so the job is ``regen_<tx-id>_<rand>``. The id is returned so the
+    HTTP response can hand the frontend a ``regen_job_id`` to ``attachRun`` to,
+    instead of the id being buried inside the async task where the UI never saw
+    it.
+    """
+    proj = manager.project
+    job_id = f"regen_{transaction.id}_{uuid.uuid4().hex[:6]}"
+    job = studio.store.create(f"[0907修改] {proj.project_id}", run_id=job_id)
+    job.project_dir = str(proj.project_dir)
+    job.policy_version = POLICY_VERSION_0907
+    task = asyncio.create_task(_run_0907_regeneration(manager, transaction, job_id))
+    _BACKGROUND_0907_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_0907_TASKS.discard)
+    return job_id
+
+
+def _model_plan_0907(
+    state: dict[str, Any],
+    message: str,
+    previous_targets: Any = None,
+    history: Any = None,
+) -> Any:
+    """Ask the configured LoRA chat backend for a structured 0907 edit plan."""
+    if studio.model is None or not studio.model.is_loaded:
+        raise ModelNotReady(
+            studio.model.load_error if studio.model and studio.model.load_error
+            else "模型尚未加载完成，请稍候"
+        )
+    backend = build_chat_backend(studio.config.chat_edit, studio.model)
+    system, user = _build_model_plan_prompt_0907(
+        state if isinstance(state, dict) else {},
+        message,
+        previous_targets=previous_targets,
+        history=history,
+    )
+    raw = backend.generate(system, user, max_tokens=1400, temperature=0.2)
+    try:
+        return json.loads(str(raw or ""))
+    except json.JSONDecodeError:
+        return raw
+
+
+newvis0907_router.configure_router(
+    newvis0907_router.RouterDeps(
+        load_project=_load_project,
+        project_payload=_project_payload,
+        discover_projects=_discover_projects_0907,
+        delete_project=_delete_project_0907,
+        export_project=_export_project_0907,
+        editor_flags=studio.editor_flags,
+        model_plan=_model_plan_0907,
+        schedule_runner=_schedule_0907_runner,
+    )
+)
+app.include_router(newvis0907_router.router)

@@ -4,9 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WevisionCut · 登录</title>
-<link rel="icon" type="image/png" href="/static/newvis/assets/img/logo.png">
+<link rel="icon" type="image/png" href="/static/newvis0907/assets/logo_aicut.png">
 <link rel="stylesheet" href="/static/newvis/newvis.css">
 <style>
+  :root {
+    --accent: #4E63E6;
+    --accent-2: #20C5D8;
+    --accent-dim: rgba(78, 99, 230, .16);
+    --accent-line: rgba(78, 99, 230, .34);
+  }
   .login-wrap {
     position: relative; z-index: 1;
     min-height: 100vh; display: grid; place-items: center; padding: 24px;
@@ -20,7 +26,7 @@
     animation: rise .5s cubic-bezier(.2, .8, .3, 1) both;
   }
   .login-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; }
-  .login-brand img { height: 24px; width: auto; filter: drop-shadow(0 2px 8px rgba(124,106,245,.45)); }
+  .login-brand img { height: 24px; width: auto; filter: drop-shadow(0 2px 8px rgba(78,99,230,.45)); }
   .login-brand b { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
   .login-brand span { font-size: 11.5px; color: var(--text-4); }
   .login-field { margin-bottom: 12px; }
@@ -42,8 +48,8 @@
     width: 100%; height: 37px; margin-top: 8px;
     border: 0; border-radius: 9px; cursor: pointer;
     font-family: inherit; font-size: 13px; font-weight: 600; color: #fff;
-    background: linear-gradient(180deg, #8F7FF9, #6A58E6);
-    box-shadow: 0 8px 22px -10px rgba(124, 106, 245, 1);
+    background: linear-gradient(180deg, #5B72F0, #3E54D8);
+    box-shadow: 0 8px 22px -10px rgba(78, 99, 230, 1);
     transition: filter .16s ease, transform .12s ease;
   }
   .login-submit:hover:not(:disabled) { filter: brightness(1.08); }
@@ -66,7 +72,7 @@
 <div class="login-wrap">
   <form class="login-card" id="loginForm" autocomplete="on">
     <div class="login-brand">
-      <img src="/static/newvis/assets/img/logo.png" alt="WevisionCut">
+      <img src="/static/newvis0907/assets/logo_aicut.png" alt="WevisionCut">
       <b>WevisionCut</b>
       <span>创作台</span>
     </div>

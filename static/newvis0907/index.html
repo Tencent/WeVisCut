@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WevisionCut · 创作台</title>
+<link rel="icon" type="image/png" href="/static/newvis0907/assets/logo_aicut.png?v=2">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+
+<link rel="stylesheet" href="/static/newvis0907/newvis.css?v=2">
+<link rel="stylesheet" href="/static/newvis0907/navigator.css?v=2">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="brand-mark" src="/static/newvis0907/assets/logo_aicut.png?v=2" alt="WevisionCut">
+    <span class="brand-name">WevisionCut</span>
+    <span class="brand-sub">创作台</span>
+  </div>
+
+  <div class="topbar-center">
+    <span class="status" id="modelPill" title="模型状态">
+      <i class="dot loading" id="modelDot"></i>
+      <span id="modelText">检查模型状态…</span>
+    </span>
+    <span class="timer" id="runTimer" hidden>00:00</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="ghost-btn" id="btnNew">新建创作</button>
+    <button class="ghost-btn" id="btnLibrary">作品库</button>
+    <span class="user-chip" id="userChip" hidden>
+      <span class="user-name" id="userName"></span>
+      <button class="user-out" id="btnLogout" type="button" title="退出登录">退出</button>
+    </span>
+  </div>
+</header>
+
+<main class="shell">
+
+  <section class="convo">
+    <div class="convo-head">
+      <span class="convo-title">执行过程</span>
+      <span class="chip chip-pro">Pro</span>
+      <span class="convo-stat" id="convoStat">等待开始</span>
+      <button class="icon-btn" id="btnFoldAll" title="折叠 / 展开全部阶段">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path d="M3 6.2 8 10.6l5-4.4" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="stream" id="stream">
+      <div class="hero" id="hero">
+        <h1>想拍一支什么样的片子？</h1>
+        <p>描述需求，模型先写出有头有尾的口播稿再开拍；已经有稿子，就切到「口播稿」直接进入制作。</p>
+        <div class="hero-chips" id="heroChips"></div>
+      </div>
+    </div>
+
+    <div class="composer-bar" id="composerBar">
+      <div class="mode-switch" id="modeSwitch">
+        <button class="mode-tab active" data-mode="brief" type="button">创作需求</button>
+        <button class="mode-tab" data-mode="script" type="button">口播稿</button>
+      </div>
+      <span class="mode-desc" id="modeDesc"></span>
+    </div>
+
+    <div class="edit-bar" id="editBar" hidden>
+      <span class="edit-dot" aria-hidden="true"></span>
+      <span class="edit-label" id="editLabel">正在编辑当前成片</span>
+      <button class="mini-btn" id="btnExitEdit" type="button">新建创作</button>
+    </div>
+
+    <div class="composer" id="composer">
+      <div class="mention-picker" id="mentionPicker" hidden role="listbox"
+           aria-label="选择要修改的镜头"></div>
+      <button class="composer-plus" id="btnPlus" title="载入最近的作品">
+        <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+          <path d="M8 3.4v9.2M3.4 8h9.2" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <textarea id="composerInput" rows="1" spellcheck="false"
+        placeholder="描述你想要的片子…"></textarea>
+      <button class="stop-btn" id="btnStop" hidden title="立即中断（不等当前步骤结束）">
+        <svg viewBox="0 0 18 18" width="15" height="15" aria-hidden="true">
+          <rect x="5" y="5" width="8" height="8" rx="1.6" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="send-btn" id="btnSend" disabled title="发送 (Enter)">
+        <svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true">
+          <path d="M2.6 9h12.8M9.6 3.4 15.4 9l-5.8 5.6" fill="none" stroke="currentColor"
+                stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <p class="composer-hint" id="composerHint">等待模型加载完成…</p>
+  </section>
+
+  <section class="stage">
+    <div class="viewer">
+      <div class="viewer-media">
+        <video id="player" controls preload="metadata" hidden></video>
+        <div class="viewer-empty" id="playerEmpty">
+          <span class="viewer-empty-mark" aria-hidden="true"></span>
+          <p>成片生成后在这里预览</p>
+        </div>
+        <div class="viewer-bar" id="viewerBar" hidden>
+          <span class="viewer-tag" id="viewerTag">预览</span>
+          <button class="export-btn" id="btnExport" type="button" hidden>导出成片</button>
+        </div>
+      </div>
+
+      <div class="version-strip" id="versionStrip" hidden>
+        <span class="version-strip-title">历史效果</span>
+        <div class="version-list" id="versionList"></div>
+      </div>
+
+      <div class="viewer-foot">
+        <div class="prog">
+          <div class="prog-head">
+            <span class="prog-label" id="phaseLabel">待启动</span>
+            <span class="prog-pct" id="overallPct">0%</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="overallBar"></div></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><span class="stat-v" id="statDuration">0:00</span><span class="stat-k">时长</span></div>
+          <div class="stat"><span class="stat-v" id="statShots">0</span><span class="stat-k">镜头</span></div>
+          <div class="stat"><span class="stat-v" id="statSpotlight">0</span><span class="stat-k">重点</span></div>
+          <div class="stat"><span class="stat-v" id="statSteps">0</span><span class="stat-k">步数</span></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="fold fold-navigator" id="foldNavigator" open hidden>
+      <summary>
+        <span class="fold-caret" aria-hidden="true"></span>
+        <span class="fold-title">镜头导航</span>
+        <span class="fold-note" id="navigatorNote"></span>
+      </summary>
+      <div class="fold-body">
+        <div class="shot-navigator" id="shotNavigatorMount" hidden></div>
+        <p class="fold-empty" id="navigatorEmpty">成片工程载入后，这里会按章节展示模型镜头与素材子镜。</p>
+      </div>
+    </details>
+
+    <details class="fold" id="foldRail" open>
+      <summary>
+        <span class="fold-caret" aria-hidden="true"></span>
+        <span class="fold-title">制作进度</span>
+        <span class="fold-note" id="railNote"></span>
+      </summary>
+      <div class="fold-body">
+        <div class="rail" id="trackRail"></div>
+        <p class="fold-empty" id="railEmpty">开始创作后，各条轨道的完成度会显示在这里</p>
+      </div>
+    </details>
+
+    <details class="fold fold-timeline" id="foldTimeline">
+      <summary>
+        <span class="fold-caret" aria-hidden="true"></span>
+        <span class="fold-title">时间轴</span>
+        <span class="fold-note" id="timelineNote"></span>
+        <span class="fold-tools" id="timelineTools">
+          <button class="mini-btn" id="zoomOut" title="缩小">−</button>
+          <span class="zoom-label" id="zoomLabel">60 px/s</span>
+          <button class="mini-btn" id="zoomIn" title="放大">+</button>
+          <button class="mini-btn" id="zoomFit" title="适配宽度">适配</button>
+        </span>
+      </summary>
+      <div class="fold-body">
+        <div class="timeline" id="timeline">
+          <div class="tl-labels" id="tlLabels"></div>
+          <div class="tl-scroll" id="tlScroll">
+            <div class="tl-canvas" id="tlCanvas">
+              <div class="tl-ruler" id="tlRuler"></div>
+              <div class="tl-tracks" id="tlTracks"></div>
+            </div>
+          </div>
+        </div>
+        <p class="fold-empty" id="timelineEmpty">时间轴会随模型执行实时填充</p>
+      </div>
+    </details>
+
+    <details class="fold" id="foldLog">
+      <summary>
+        <span class="fold-caret" aria-hidden="true"></span>
+        <span class="fold-title">运行日志</span>
+        <span class="fold-note" id="consoleCount">0</span>
+        <span class="fold-tools">
+          <button class="mini-btn active" data-log="console">日志</button>
+          <button class="mini-btn" data-log="raw">模型输出</button>
+        </span>
+      </summary>
+      <div class="fold-body">
+        <div class="console-body" id="consoleBody"></div>
+      </div>
+    </details>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden>
+  <div class="drawer-head">
+    <h2>作品库</h2>
+    <button class="icon-btn" id="drawerClose" title="关闭">
+      <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor"
+              stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-head"><h3>成片</h3></div>
+      <div class="list" id="projectList"><p class="list-empty">暂无成片</p></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-head">
+        <h3>执行记录</h3>
+        <button class="mini-btn" id="refreshRuns">刷新</button>
+      </div>
+      <div class="list" id="runList"><p class="list-empty">暂无记录</p></div>
+    </div>
+  </div>
+</aside>
+
+<div class="modal" id="confirmModal" hidden>
+  <div class="modal-box">
+    <h3 id="confirmTitle">确认修改</h3>
+    <p id="confirmText"></p>
+    <pre class="op-preview" id="confirmOps"></pre>
+    <div class="modal-actions">
+      <button class="ghost-btn" id="confirmCancel">取消</button>
+      <button class="primary-btn" id="confirmOk">确认执行</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="/static/js/timeline.js"></script>
+<script src="/static/newvis0907/shot_navigator.js"></script>
+<script src="/static/newvis0907/newvis.js"></script>
+</body>
+</html>

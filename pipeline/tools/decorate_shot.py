@@ -470,6 +470,145 @@ def batch_run(
     }
 
 
+def _semantic_autogen_enabled(config: dict[str, Any]) -> bool:
+    """0907 opt-in switch for automatic semantic-anchor generation."""
+    if str((config or {}).get("policy_version", "") or "").strip() == "0907":
+        return True
+    newvis = (config or {}).get("newvis0907")
+    if isinstance(newvis, dict):
+        return bool(newvis.get("semantic_animations", newvis.get("enabled", False)))
+    return False
+
+
+def generate_semantic_animation(
+    shot: dict[str, Any],
+    assets: dict[str, Any],
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """0907 opt-in: build one real-registry semantic anchor for a shot.
+
+    * Only runs when :func:`_semantic_autogen_enabled` (never for legacy runs).
+    * Selects structure/motion/visual from the real Gold Template registry — it
+      never invents an id; if nothing matches it leaves the shot untouched.
+    * Enforces at most one ``primary`` and **preserves a user override**: a
+      pre-existing ``semantic_animations.primary`` with ``source == "user"`` is
+      kept verbatim, so a manual emphasis is never clobbered by regeneration.
+
+    Returns the semantic-animation plan written to ``assets`` (or ``{}``).
+    """
+    config = config or {}
+    if not _semantic_autogen_enabled(config):
+        return {}
+    from studio.newvis0907 import animations as animations_mod
+
+    existing = assets.get("semantic_animations")
+    existing = existing if isinstance(existing, dict) else {}
+    existing_primary = existing.get("primary") if isinstance(existing.get("primary"), dict) else {}
+    if str(existing_primary.get("source") or "") == "user":
+        return existing  # user emphasis is authoritative; do not auto-override
+
+    registry = _semantic_registry(config)
+    applied = _apply_semantic_to_shot(shot, assets, registry, animations_mod)
+    return applied or (existing or {})
+
+
+# Non-spotlight shots carrying strong semantics are worth promoting to a
+# spotlight; weaker signals (a bare proper noun, a lone parallel list) are not.
+_PROMOTE_TYPES = frozenset({"key_point", "statistic", "chart", "timeline"})
+
+
+def _semantic_registry(config: dict[str, Any]) -> dict[str, Any]:
+    from studio.newvis0907 import animations as animations_mod
+
+    root = str((config.get("paths", {}) or {}).get("gold_template_root", "") or "").strip()
+    return animations_mod.registry_from_gold_root(root) if root else {}
+
+
+def _apply_semantic_to_shot(
+    shot: dict[str, Any],
+    assets: dict[str, Any],
+    registry: dict[str, Any],
+    animations_mod,
+) -> dict[str, Any]:
+    """Build one real-registry primary and write semantic_animations+decoration.
+
+    Returns the written plan, or ``{}`` when no phrase both locates in the cues
+    and matches a real template (the shot is then left untouched).
+    """
+    plan = animations_mod.build_semantic_animation(shot, assets, registry)
+    primary = plan.get("primary") or {}
+    if not primary.get("structure_id"):
+        return {}
+    audio_meta = _as_dict(assets.get("audio_meta"))
+    duration = _as_float(audio_meta.get("duration_sec"), None) or _as_float(shot.get("duration_sec"), 0.0)
+    semantic = {
+        "primary": primary,
+        "anchors": plan.get("anchors", []),
+        "quality": plan.get("quality"),
+    }
+    assets["semantic_animations"] = semantic
+    assets["decoration"] = animations_mod.anchor_to_decoration(primary, duration or 0.0)
+    shot["is_spotlight"] = True
+    return semantic
+
+
+def autodecorate_shot_plan_0907(
+    shot_plan: list[dict[str, Any]],
+    shot_assets: dict[str, Any],
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """0907 opt-in: auto-generate semantic anchors across the whole shot plan.
+
+    * Only runs under the 0907 opt-in (never for legacy runs / other policies).
+    * Preserves any ``source == "user"`` primary verbatim.
+    * Decorates spotlight shots directly; also *promotes* a non-spotlight shot to
+      spotlight when its strongest anchor is a strong semantic type
+      (key point / statistic / chart / timeline), so semantic emphasis is never
+      missed just because planning left ``is_spotlight`` off.
+    * Never invents a template id and never touches narration / footage.
+    """
+    config = config or {}
+    if not _semantic_autogen_enabled(config):
+        return {"enabled": False, "results": {}}
+    from studio.newvis0907 import animations as animations_mod
+
+    registry = _semantic_registry(config)
+    assets_map = shot_assets if isinstance(shot_assets, dict) else {}
+    results: dict[str, dict[str, Any]] = {}
+    for shot in shot_plan or []:
+        if not isinstance(shot, dict):
+            continue
+        sid = str(shot.get("shot_id", "") or "")
+        if not sid:
+            continue
+        assets = assets_map.setdefault(sid, {}) if isinstance(assets_map, dict) else {}
+        if not isinstance(assets, dict):
+            continue
+        existing = assets.get("semantic_animations")
+        existing = existing if isinstance(existing, dict) else {}
+        existing_primary = existing.get("primary") if isinstance(existing.get("primary"), dict) else {}
+        if str(existing_primary.get("source") or "") == "user":
+            results[sid] = {"status": "preserved_user"}
+            continue
+        plan = animations_mod.build_semantic_animation(shot, assets, registry)
+        primary = plan.get("primary") or {}
+        if not primary.get("structure_id"):
+            results[sid] = {"status": "no_match"}
+            continue
+        was_spotlight = bool(shot.get("is_spotlight"))
+        if not was_spotlight and primary.get("type") not in _PROMOTE_TYPES:
+            results[sid] = {"status": "skip_weak", "type": primary.get("type")}
+            continue
+        _apply_semantic_to_shot(shot, assets, registry, animations_mod)
+        results[sid] = {
+            "status": "decorated",
+            "promoted": not was_spotlight,
+            "type": primary.get("type"),
+            "structure_id": primary.get("structure_id"),
+        }
+    return {"enabled": True, "results": results}
+
+
 def _global_decoration_plan(
     llm: LLMClient,
     shots: list[dict[str, Any]],

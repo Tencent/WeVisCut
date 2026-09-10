@@ -64,6 +64,10 @@ class Run:
     # Who started it. Kept on the run itself because a run has an owner before
     # it has a project directory to look the owner up from.
     owner: str = ""
+    # Policy marker for the generation pipeline (e.g. ``"0907"``). Empty for the
+    # legacy surface; set by the dedicated ``/api/0907/runs`` endpoint so the run
+    # is bound to the trustworthy-cut pipeline config copy.
+    policy_version: str = ""
 
     task: asyncio.Task | None = None
     orchestrator: Any | None = None
@@ -97,6 +101,7 @@ class Run:
             "overall_pct": self.progress.get("overall_pct", 0),
             "project_dir": self.project_dir,
             "owner": self.owner,
+            "policy_version": self.policy_version,
             "final_video_path": self.result.get("final_video_path", ""),
             "error_count": len(self.errors),
         }
@@ -234,6 +239,7 @@ class RunStore:
             run.errors = list(payload.get("errors") or [])
             run.project_dir = str(payload.get("project_dir") or "")
             run.owner = str(payload.get("owner") or "")
+            run.policy_version = str(payload.get("policy_version") or "")
             run.journal_dir = meta.parent
             run.restored = True
             try:

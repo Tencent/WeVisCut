@@ -1128,11 +1128,34 @@ def run(
         pipeline_config=config,
         shot=shot,
     )
-    selection = select_clip(llm, shot, candidates) if select_with_llm else select_clip_fast(shot, candidates)
+    normalized_query = " ".join(str(shot.get("visual_query", "") or "").split())
+    ordered_candidates: list[dict[str, Any]] = []
+    for idx, item in enumerate(candidates, start=1):
+        row = dict(item)
+        rank = int(_safe_float(row.get("rank", row.get("retrieval_rank", idx)), idx))
+        row["retrieval_rank"] = rank
+        row["query"] = normalized_query
+        row["visual_query"] = normalized_query
+        ordered_candidates.append(row)
+    ordered_candidates.sort(
+        key=lambda item: (
+            int(_safe_float(item.get("retrieval_rank"), 10_000)),
+            -_safe_float(item.get("score"), 0.0),
+            str(item.get("clip_id") or item.get("clip_path") or ""),
+        )
+    )
+    selection = select_clip(llm, shot, ordered_candidates) if select_with_llm else select_clip_fast(shot, ordered_candidates)
+    selected = next(
+        (
+            row for row in ordered_candidates
+            if str(row.get("clip_id", "")) == str(selection.get("selected_clip_id", ""))
+        ),
+        {},
+    )
     return {
         "shot_id": shot.get("shot_id", ""),
-        "candidates_count": len(candidates),
-        "candidates": candidates[:return_candidates],
+        "candidates_count": len(ordered_candidates),
+        "candidates": ordered_candidates[:return_candidates],
         "selection": selection,
         "clip_path": selection.get("clip_path", ""),
         "backend": backend,
@@ -1150,6 +1173,8 @@ def run(
             "orientation": selection.get("orientation", "unknown"),
             "resolution": selection.get("resolution", ""),
             "aspect_ratio": selection.get("aspect_ratio", 0.0),
+            "query": normalized_query,
+            "retrieval_rank": int(_safe_float(selected.get("retrieval_rank"), 0.0)),
             "require_horizontal": require_horizontal,
             "require_duration_coverage": require_duration_coverage,
             "min_aspect_ratio": min_aspect_ratio,

@@ -61,6 +61,14 @@ def _media_subprocess_env() -> dict[str, str]:
     return env
 
 
+def _use_0907(config: dict[str, Any] | None) -> bool:
+    config = config or {}
+    if str(config.get("policy_version", "") or "").strip() == "0907":
+        return True
+    newvis = config.get("newvis0907")
+    return isinstance(newvis, dict) and bool(newvis.get("enabled"))
+
+
 def _ffmpeg_concat(
     shot_paths: list[str],
     output_path: str,
@@ -527,11 +535,23 @@ def _mix_bgm(
     timeout_sec: int = 600,
 ) -> dict[str, Any]:
     """Concatenate a BGM playlist, trim it to the video, then mix under voice."""
-    existing_bgm = [
-        dict(t) for t in bgm_tracks
-        if t.get("music_path") and Path(t["music_path"]).exists()
-        and Path(t["music_path"]).stat().st_size > 0
-    ]
+    existing_bgm: list[dict[str, Any]] = []
+    for track in bgm_tracks:
+        if not isinstance(track, dict):
+            continue
+        raw_path = str(
+            track.get("music_path")
+            or track.get("path")
+            or track.get("audio_path")
+            or track.get("file_path")
+            or ""
+        )
+        if not raw_path:
+            continue
+        candidate = Path(raw_path).expanduser()
+        if not candidate.exists() or candidate.stat().st_size <= 0:
+            continue
+        existing_bgm.append({**track, "music_path": str(candidate)})
     if not existing_bgm or not Path(video_path).exists():
         return {"status": "skipped", "output_path": video_path}
 
@@ -1110,7 +1130,34 @@ def run(
         if effective_path != concat_result.get("output_path", ""):
             _mirror_to_stable(effective_path, bgm_stable_path)
 
-    return {
+    loudness_result: dict[str, Any] | None = None
+    narration_target: dict[str, Any] | None = None
+    if _use_0907(config) and effective_path and Path(effective_path).exists():
+        try:
+            from studio.newvis0907 import loudness as loudness_mod
+            narration_target = loudness_mod.target_profile()
+            loudness_result = loudness_mod.measure_loudness(
+                effective_path,
+                ffmpeg_binary=_ffmpeg_binary(),
+            )
+        except Exception as exc:  # noqa: BLE001
+            loudness_result = {
+                "ok": False,
+                "status": "failed",
+                "target": narration_target or {
+                    "integrated_lufs": -16.0,
+                    "true_peak_dbtp": -1.5,
+                    "tolerance_lu": 1.0,
+                    "lra_lu": 11.0,
+                },
+                "error": {
+                    "code": "loudness_measure_exception",
+                    "message": str(exc),
+                    "path": effective_path,
+                },
+            }
+
+    result = {
         "manifest": manifest,
         "manifest_path": str(manifest_path),
         "final_video_path": effective_path,
@@ -1133,7 +1180,17 @@ def run(
         "status": "success" if concat_result.get("status") == "success" else (
             "manifest_only" if not missing else "partial"
         ),
+        "bgm_ducking": {
+            "configured": bool(duck_under_voice),
+            "enabled": bool((bgm_tracks or []) and duck_under_voice),
+            "bgm_track_count": len(bgm_tracks or []),
+        },
     }
+    if narration_target is not None:
+        result["narration_target"] = narration_target
+    if loudness_result is not None:
+        result["loudness"] = loudness_result
+    return result
 
 
 def _as_float(value: Any, default: float) -> float:

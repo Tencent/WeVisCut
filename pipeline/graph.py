@@ -914,6 +914,35 @@ def node_segment_article(state: PipelineState) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Node: plan_shots
 # ---------------------------------------------------------------------------
+def _estimate_plan_total_duration(state: PipelineState, shots: list[Any]) -> float:
+    """Best-effort total video duration at plan time (no TTS has run yet).
+
+    ``postprocess_shot_plan_0907`` needs a *reliable* duration so the 20+ model
+    shot floor fires for 4-5min scripts. At plan time there is no audio, so we
+    take ``max(sum of planned shot durations, TTS estimate of the full source
+    narration)`` — the sum guards short-but-many plans, the text estimate guards
+    plans whose per-shot durations are unset/placeholder.
+    """
+    shot_sum = 0.0
+    for s in shots:
+        if isinstance(s, dict):
+            try:
+                shot_sum += float(s.get("duration_sec") or 0.0)
+            except (TypeError, ValueError):
+                pass
+
+    text = str(state.get("input_text", "") or "")
+    if not text:
+        parts: list[str] = []
+        for seg in state.get("segments", []) or []:
+            if isinstance(seg, dict):
+                parts.append(str(seg.get("text") or seg.get("content")
+                                 or seg.get("narration") or seg.get("vocal_script") or ""))
+        text = "".join(parts)
+    text_estimate = generate_audio.estimate_duration(text) if text.strip() else 0.0
+    return max(shot_sum, text_estimate)
+
+
 def node_plan_shots(state: PipelineState) -> dict[str, Any]:
     """Tool_PlanShots: Generate shot plan from segments (+ video shots if available)."""
     segments = state.get("segments", [])
@@ -977,6 +1006,12 @@ def node_plan_shots(state: PipelineState) -> dict[str, Any]:
     if not shots and segments:
         raise RuntimeError("plan_shots strict validation failed: no usable shots returned")
 
+    plan_total_duration = _estimate_plan_total_duration(state, shots)
+    result = plan_shots.postprocess_shot_plan_0907(
+        result, config=state.get("config", {}), total_duration=plan_total_duration
+    )
+    shots = result.get("shots", shots)
+
     mode = result.get("mode", "segments")
     logger.info("[plan_shots] 完成: 生成 %d 个镜头 (mode=%s)", len(shots), mode)
     artifact_path = _save_json_artifact(
@@ -1008,11 +1043,15 @@ def node_plan_shots(state: PipelineState) -> dict[str, Any]:
         ),
     )
 
-    return {
+    node_out: dict[str, Any] = {
         "shot_plan": shots,
         "current_stage": "stage2_planning",
         "trajectory": entries,
     }
+    if result.get("pacing_postprocessed"):
+        node_out["minimum_model_shots"] = result.get("minimum_model_shots", 0)
+        node_out["shot_pacing"] = result.get("pacing_analysis", {})
+    return node_out
 
 
 # ---------------------------------------------------------------------------
@@ -1401,6 +1440,56 @@ def node_reflect_failed(state: PipelineState) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Node: visual_audio_batch
 # ---------------------------------------------------------------------------
+def _audio_cache_tts_speed_matches(
+    shot: Any, cached_asset: Any, config: dict[str, Any] | None
+) -> bool:
+    """Whether a cached stage3 audio row is still valid w.r.t. TTS speed.
+
+    0907 lets ``set_shot_duration`` write a per-shot ``tts_speed``; reusing audio
+    rendered at a different speed would ship the wrong narration timing, so the
+    cache must miss on a speed change. Legacy has no per-shot ``tts_speed`` field,
+    so this always returns ``True`` and legacy cache behaviour is unchanged.
+    """
+    if not _is_0907_compose(config):
+        return True
+    cached = cached_asset if isinstance(cached_asset, dict) else {}
+    audio_meta = cached.get("audio_meta") if isinstance(cached.get("audio_meta"), dict) else {}
+    planned = generate_audio._effective_tts_speed(shot if isinstance(shot, dict) else {}, config)
+    try:
+        cached_speed = float(audio_meta.get("speed", 1.0) if audio_meta.get("speed") is not None else 1.0)
+    except (TypeError, ValueError):
+        cached_speed = 1.0
+    return abs(cached_speed - float(planned)) <= 1e-6
+
+
+def _audio_cache_loudness_matches(
+    shot: Any, cached_asset: Any, config: dict[str, Any] | None
+) -> bool:
+    """Whether a cached stage3 audio row is valid w.r.t. 0907 loudness target.
+
+    Legacy has no loudness normalization requirement, so its cache behaviour is
+    unchanged. For 0907 we only reuse a cached narration when it carries
+    loudness metadata for the current target and the measured output is still in
+    range; otherwise an older pre-normalized audio file could be silently reused.
+    """
+    if not _is_0907_compose(config):
+        return True
+    cached = cached_asset if isinstance(cached_asset, dict) else {}
+    audio_meta = cached.get("audio_meta") if isinstance(cached.get("audio_meta"), dict) else {}
+    loudness = audio_meta.get("loudness") if isinstance(audio_meta.get("loudness"), dict) else {}
+    if not loudness:
+        return False
+    try:
+        from studio.newvis0907 import loudness as loudness_mod
+    except Exception:
+        return False
+    if not loudness_mod.target_matches(loudness.get("target")):
+        return False
+    if str(loudness.get("status", "")).lower() not in {"normalized", "skipped"}:
+        return False
+    return loudness_mod.payload_is_within_target(loudness)
+
+
 def node_visual_audio_batch(state: PipelineState) -> dict[str, Any]:
     """Process all shots: retrieve visual clips + generate TTS audio."""
     shot_plan = state.get("shot_plan", [])
@@ -1469,6 +1558,20 @@ def node_visual_audio_batch(state: PipelineState) -> dict[str, Any]:
             if cached_query != planned_query:
                 logger.warning(
                     "[visual_audio_batch] 缓存镜头 %s 视觉检索词已变化，放弃复用缓存", sid
+                )
+                return False
+            if not _audio_cache_tts_speed_matches(
+                shot_by_id.get(sid), asset, state.get("config", {})
+            ):
+                logger.warning(
+                    "[visual_audio_batch] 缓存镜头 %s TTS 语速已变化，放弃复用缓存", sid
+                )
+                return False
+            if not _audio_cache_loudness_matches(
+                shot_by_id.get(sid), asset, state.get("config", {})
+            ):
+                logger.warning(
+                    "[visual_audio_batch] 缓存镜头 %s loudness 未达 0907 目标，放弃复用缓存", sid
                 )
                 return False
             return True
@@ -2199,8 +2302,30 @@ def node_decorate_spotlights(state: PipelineState) -> dict[str, Any]:
         summary=f"完成 {spotlight_count} 个 spotlight 镜头，校验通过 {passed_count} 个",
     )
 
+    try:
+        auto_summary = decorate_shot.autodecorate_shot_plan_0907(shot_plan, all_assets, config)
+    except Exception as exc:
+        logger.warning("[decorate_spotlights] 0907 语义自动接线失败: %s", exc)
+        auto_summary = {"enabled": False, "results": {}}
+    if auto_summary.get("enabled"):
+        decorated = [sid for sid, r in auto_summary.get("results", {}).items()
+                     if r.get("status") == "decorated"]
+        promoted = [sid for sid, r in auto_summary.get("results", {}).items()
+                    if r.get("status") == "decorated" and r.get("promoted")]
+        logger.info("[decorate_spotlights] 0907 语义自动装饰 %d 个镜头（新增 spotlight %d 个）",
+                    len(decorated), len(promoted))
+        all_entries.append({
+            "role": "thought",
+            "content": (
+                f"0907 语义锚点自动装饰 {len(decorated)} 个镜头"
+                + (f"，其中 {len(promoted)} 个由强语义提升为 spotlight" if promoted else "")
+            ),
+            "metadata": {"stage": "stage3_decoration", "ts": datetime.now().isoformat()},
+        })
+
     return {
         "shot_assets": all_assets,
+        "shot_plan": shot_plan,
         "current_stage": "stage3_decoration_done",
         "trajectory": all_entries,
     }
@@ -2757,6 +2882,39 @@ def node_compose_and_judge(state: PipelineState) -> dict[str, Any]:
     }
 
 
+def _is_0907_compose(config: dict[str, Any] | None) -> bool:
+    config = config or {}
+    if str(config.get("policy_version", "") or "").strip() == "0907":
+        return True
+    newvis = config.get("newvis0907")
+    return isinstance(newvis, dict) and bool(newvis.get("enabled"))
+
+
+def _compose_config_with_occupancy(
+    config: dict[str, Any],
+    sid: str,
+    all_assets: dict[str, Any],
+) -> dict[str, Any]:
+    """For 0907, hand the composer a config *copy* carrying this run's private
+    global occupancy (all other shots' chosen footage) so playlists never reuse
+    a source across the film / adjacent shots. Runtime occupancy is never written
+    into the global studio config. Legacy composes are returned unchanged."""
+    if not _is_0907_compose(config):
+        return config
+    try:
+        from studio.newvis0907 import footage as _footage
+        occ = _footage.build_occupancy(
+            {"shot_plan": [], "shot_assets": all_assets}, exclude_shot_ids=[sid]
+        )
+        runtime = config.get("newvis0907_runtime")
+        base = runtime.get("base_occupancy") if isinstance(runtime, dict) else None
+        if isinstance(base, _footage.Occupancy):
+            occ = _footage.Occupancy(list(base.identities) + list(occ.identities))
+    except Exception:
+        return config
+    return {**config, "newvis0907_runtime": {"occupancy": occ}}
+
+
 def _process_text_routed_batch(
     state: PipelineState,
     items: list[dict[str, Any]],
@@ -2802,7 +2960,10 @@ def _process_text_routed_batch(
         else:
             _log_progress(i + 1, len(items), "stage4 compose")
             _emit_progress("Tool_BatchTimelineCompose", "合成渲染", i + 1, len(items), f"镜头合成: {sid}", "stage4_compose")
-            compose_result = timeline_compose.run(shot, assets, output_dir, config=config)
+            compose_result = timeline_compose.run(
+                shot, assets, output_dir,
+                config=_compose_config_with_occupancy(config, sid, all_assets),
+            )
             assets["timeline"] = compose_result.get("timeline", {})
             assets["rendered_path"] = compose_result.get("rendered_path", "")
 
@@ -3407,7 +3568,10 @@ def _stage4_compose_after_repair(
     if is_fake:
         compose_result = fake_utils.fake_render_success(shot, assets, output_dir)
     else:
-        compose_result = timeline_compose.run(shot, assets, output_dir, config=config)
+        compose_result = timeline_compose.run(
+                shot, assets, output_dir,
+                config=_compose_config_with_occupancy(config, sid, all_assets),
+            )
     return {
         **compose_result,
         "partial_reuse": {
@@ -4220,7 +4384,10 @@ def _process_non_spotlight_track(
         else:
             _emit_progress("Tool_BatchTimelineCompose", "合成渲染", i + 1, len(items),
                        f"非Spotlight 镜头 {sid}: 时间线合成", "stage4_compose")
-            compose_result = timeline_compose.run(shot, assets, output_dir, config=config)
+            compose_result = timeline_compose.run(
+                shot, assets, output_dir,
+                config=_compose_config_with_occupancy(config, sid, all_assets),
+            )
         assets["timeline"] = compose_result.get("timeline", {})
         assets["rendered_path"] = compose_result.get("rendered_path", "")
         assets["compose_result"] = compose_result

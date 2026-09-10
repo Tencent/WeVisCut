@@ -54,6 +54,29 @@ def estimate_duration(text: str, speed: float = 1.0) -> float:
     return max(1.0, round(len(text) / 4.5 / speed, 2))
 
 
+def _use_0907(config: dict[str, Any] | None) -> bool:
+    config = config or {}
+    if str(config.get("policy_version", "") or "").strip() == "0907":
+        return True
+    newvis = config.get("newvis0907")
+    return isinstance(newvis, dict) and bool(newvis.get("enabled"))
+
+
+def _effective_tts_speed(shot: dict[str, Any], config: dict[str, Any] | None) -> float:
+    """0907 honours a per-shot ``tts_speed`` (set by ``set_shot_duration``);
+    legacy always uses the config speed so its behaviour is unchanged."""
+    tts_cfg = (config or {}).get("tts", {}) if isinstance((config or {}).get("tts"), dict) else {}
+    base = tts_cfg.get("speed", 1.0)
+    if _use_0907(config) and isinstance(shot, dict):
+        shot_speed = shot.get("tts_speed")
+        try:
+            if shot_speed is not None and float(shot_speed) > 0:
+                return float(shot_speed)
+        except (TypeError, ValueError):
+            pass
+    return base
+
+
 def _shot_tts_text(shot: dict[str, Any]) -> str:
     """Return the narration text, tolerating model-emitted field aliases."""
     for key in (
@@ -717,29 +740,78 @@ def run(
     tts_cfg = config.get("tts", {})
 
     out_path = str(Path(output_dir) / "shots" / shot_id / "narration.wav")
+    speed = _effective_tts_speed(shot, config)
     result = run_tts(
         text=text,
         output_path=out_path,
         voice=tts_cfg.get("voice", "default"),
-        speed=tts_cfg.get("speed", 1.0),
+        speed=speed,
         backend=tts_cfg.get("backend", "auto"),
         service_url=tts_cfg.get("service_url", ""),
         language=tts_cfg.get("language", "Chinese"),
         instruct=tts_cfg.get("instruct", ""),
         qwen3_timeout_sec=int(tts_cfg.get("timeout_sec", 0) or 0) or None,
     )
+    loudness_result = _normalize_generated_audio(result, config)
+    audio_meta = {
+        "duration_sec": result.get("duration_sec", 0.0),
+        "voice": result.get("voice", ""),
+        "backend": result.get("backend", ""),
+        "status": result.get("status", "unknown"),
+        "message": result.get("message", ""),
+        "attempts": result.get("attempts", []),
+        "text": text,
+        "text_length": len(text),
+        "speed": result.get("speed", speed),
+    }
+    _attach_loudness_metadata(audio_meta, loudness_result)
     return {
         "shot_id": shot_id,
         "audio_path": result.get("audio_path", out_path),
-        "audio_meta": {
-            "duration_sec": result.get("duration_sec", 0.0),
-            "voice": result.get("voice", ""),
-            "backend": result.get("backend", ""),
-            "status": result.get("status", "unknown"),
-            "message": result.get("message", ""),
-            "attempts": result.get("attempts", []),
-            "text": text,
-            "text_length": len(text),
-        },
+        "audio_meta": audio_meta,
         "status": result.get("status", "unknown"),
     }
+
+
+def _normalize_generated_audio(
+    result: dict[str, Any],
+    config: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not _use_0907(config):
+        return None
+    if str(result.get("status", "")) != "success":
+        return None
+    audio_path = str(result.get("audio_path", "") or "")
+    if not audio_path:
+        return None
+    try:
+        from studio.newvis0907 import loudness as loudness_mod
+    except Exception:
+        return {
+            "input": None,
+            "output": None,
+            "status": "failed",
+            "normalized": False,
+            "target": {
+                "integrated_lufs": -16.0,
+                "true_peak_dbtp": -1.5,
+                "tolerance_lu": 1.0,
+                "lra_lu": 11.0,
+            },
+            "error": {
+                "code": "loudness_import_failed",
+                "message": "failed to import studio.newvis0907.loudness",
+            },
+        }
+    return loudness_mod.normalize_narration(audio_path)
+
+
+def _attach_loudness_metadata(audio_meta: dict[str, Any], loudness_result: dict[str, Any] | None) -> None:
+    if not isinstance(audio_meta, dict) or not isinstance(loudness_result, dict):
+        return
+    audio_meta["loudness"] = loudness_result
+    quality = loudness_result.get("quality_issue")
+    if quality is None:
+        quality = loudness_result.get("error")
+    if quality:
+        audio_meta["loudness_quality"] = quality

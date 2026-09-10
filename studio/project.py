@@ -23,6 +23,15 @@ logger = logging.getLogger("aicut_studio.project")
 STATE_FILENAME = "final_state.json"
 VERSIONS_DIRNAME = "versions"
 
+# The *only* newvis0907-namespaced state keys that are persisted / restored.
+NAMESPACE_0907_KEYS: tuple[str, ...] = (
+    "quality_report0907",
+    "quality_overrides0907",
+    "quality_requests0907",
+    "quality_fix_attempts0907",
+)
+QUALITY_REQUESTS_0907_MAX = 100
+
 
 class ProjectError(RuntimeError):
     """Project could not be loaded or saved."""
@@ -210,7 +219,7 @@ class Project:
 
     # ---------------- persistence ----------------
     def to_payload(self) -> dict[str, Any]:
-        return {
+        payload = {
             "schema_version": 1,
             "project_id": self.project_id,
             "input_text": self.state.get("input_text", ""),
@@ -228,6 +237,14 @@ class Project:
             "edit_history": self.history[-200:],
             "saved_at": datetime.now().isoformat(),
         }
+        for key in NAMESPACE_0907_KEYS:
+            if key not in self.state or key in payload:
+                continue
+            value = self.state[key]
+            if key == "quality_requests0907" and isinstance(value, list):
+                value = value[-QUALITY_REQUESTS_0907_MAX:]
+            payload[key] = value
+        return payload
 
     def save(self, snapshot_label: str = "", max_versions: int = 10) -> Path:
         """Write state back, optionally snapshotting the previous version first."""
@@ -337,6 +354,11 @@ class Project:
                 self.state["bgm_volume"] = float(payload["bgm_volume"])
             except (TypeError, ValueError):
                 pass
+        for key in NAMESPACE_0907_KEYS:
+            if key in payload:
+                self.state[key] = payload[key]
+            else:
+                self.state.pop(key, None)
         self.clear_dirty()
 
 
@@ -415,6 +437,10 @@ def load(project_dir: str | Path, pipeline_config: dict[str, Any] | None = None)
             state["bgm_volume"] = float(payload["bgm_volume"])
         except (TypeError, ValueError):
             pass
+
+    for key in NAMESPACE_0907_KEYS:
+        if key in payload and key not in state:
+            state[key] = payload[key]
 
     return Project(
         project_id=project_id,

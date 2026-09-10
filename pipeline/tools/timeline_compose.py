@@ -20,6 +20,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from studio.newvis0907 import footage as footage_mod
+from studio.newvis0907 import pacing as pacing_mod
+from studio.newvis0907.subtitles import build_subtitle_cues
+
 logger = logging.getLogger("aicut_pipeline")
 TARGET_WIDTH = 1920
 TARGET_HEIGHT = 1080
@@ -191,6 +195,14 @@ def _subtitle_cfg(config: dict[str, Any] | None) -> dict[str, Any]:
     return cfg
 
 
+def _use_0907_subtitles(config: dict[str, Any] | None) -> bool:
+    config = config or {}
+    if str(config.get("policy_version", "") or "").strip() == "0907":
+        return True
+    newvis = config.get("newvis0907")
+    return isinstance(newvis, dict) and bool(newvis.get("enabled"))
+
+
 def _split_subtitle_clauses(text: str) -> list[str]:
     text = " ".join(str(text or "").split())
     text = re.sub(r"\s*([，。！？；：、])\s*", r"\1", text)
@@ -244,6 +256,15 @@ def build_subtitle_track(
     if not vocal_script:
         return []
     cfg = _subtitle_cfg(config)
+    if _use_0907_subtitles(config):
+        max_chars_per_line = max(8, int(cfg.get("max_chars_per_line", 14) or 14))
+        max_lines = max(1, int(cfg.get("max_lines", 2) or 2))
+        return build_subtitle_cues(
+            vocal_script,
+            duration,
+            max_chars_per_line=max_chars_per_line,
+            max_lines=max_lines,
+        )["cues"]
     max_chars_per_line = max(8, int(cfg.get("max_chars_per_line", 18) or 18))
     max_lines = max(1, int(cfg.get("max_lines", 2) or 2))
     max_chars = max(10, max_chars_per_line * max_lines)
@@ -282,8 +303,14 @@ def _render_shot_ffmpeg(
     timeout_sec: int = 300,
     decoration: dict[str, Any] | None = None,
     config: dict[str, Any] | None = None,
+    allow_stream_loop: bool = True,
 ) -> dict[str, Any]:
-    """Render one shot by compositing video + audio plus lightweight visible text."""
+    """Render one shot by compositing video + audio plus lightweight visible text.
+
+    ``allow_stream_loop=False`` (the 0907 path) forbids the ``-stream_loop``
+    fallback: the visual has already been planned to exactly cover ``duration``
+    via slow motion, so looping/holding the last frame is never acceptable.
+    """
     clip_exists = clip_path and Path(clip_path).exists() and Path(clip_path).stat().st_size > 0
     audio_exists = audio_path and Path(audio_path).exists() and Path(audio_path).stat().st_size > 0
 
@@ -297,7 +324,10 @@ def _render_shot_ffmpeg(
     cmd = [text_binary, "-y"]
 
     # Loop short retrieval clips so the visual stream can never end before TTS.
-    cmd += ["-stream_loop", "-1", "-i", clip_path]
+    # 0907 disables this: the playlist render already spans the full duration.
+    if allow_stream_loop:
+        cmd += ["-stream_loop", "-1"]
+    cmd += ["-i", clip_path]
     text_filters = _build_text_filters(subtitles, decoration or {}, config=config)
 
     if audio_exists:
@@ -524,6 +554,260 @@ def _prepare_visual_playlist_for_render(
         return {"status": "ffmpeg_not_found", "playlist": playlist, "clip_path": primary_clip_path}
 
 
+def _preserved_visual_playlist_0907(
+    clip_meta: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    duration: float,
+    shot_id: str,
+) -> dict[str, Any] | None:
+    """Keep an explicitly edited playlist authoritative during re-render."""
+    raw_playlist = clip_meta.get("visual_playlist")
+    if not isinstance(raw_playlist, dict) or not isinstance(raw_playlist.get("clips"), list):
+        return None
+    raw_clips = [dict(c) for c in raw_playlist["clips"] if isinstance(c, dict)]
+    if not raw_clips or not any(c.get("user_override") or c.get("replaced") for c in raw_clips):
+        return None
+
+    used_paths = {
+        str(c.get("clip_path") or c.get("path") or "")
+        for c in raw_clips if c.get("clip_path") or c.get("path")
+    }
+    available = [dict(c) for c in candidates if isinstance(c, dict)]
+    clips: list[dict[str, Any]] = []
+    cursor = 0.0
+    for idx, clip in enumerate(raw_clips, start=1):
+        path = str(clip.get("clip_path") or clip.get("path") or "").strip()
+        if clip.get("needs_retrieval") or not _existing_file(path):
+            query = str(clip.get("query") or "").strip().casefold()
+            replacement = next(
+                (
+                    c for c in available
+                    if _existing_file(str(c.get("clip_path") or c.get("path") or ""))
+                    and str(c.get("clip_path") or c.get("path") or "") not in used_paths
+                    and (not query or query in str(c.get("query") or c.get("visual_query") or "").casefold())
+                ),
+                None,
+            )
+            if replacement is None:
+                return None
+            path = str(replacement.get("clip_path") or replacement.get("path") or "")
+            used_paths.add(path)
+            clip.update({
+                "clip_id": replacement.get("clip_id") or path,
+                "clip_path": path,
+                "path": path,
+                "fingerprint": replacement.get("fingerprint", ""),
+                "score": replacement.get("score", 0.0),
+                "needs_retrieval": False,
+            })
+
+        final = _as_float(
+            clip.get("final_duration_sec", clip.get("used_duration_sec", clip.get("duration_sec"))),
+            0.0,
+        )
+        source_used = _as_float(
+            clip.get("source_used_duration_sec", clip.get("source_duration_sec", final)),
+            final,
+        )
+        rate = _as_float(clip.get("playback_rate"), source_used / final if final > 0 else 1.0)
+        if not _existing_file(path) or final < 2.0 - 1e-6 or rate < (1.0 / 3.0) - 1e-6:
+            return None
+        clip.update({
+            "subclip_id": clip.get("subclip_id") or f"{shot_id}::subclip::{idx}",
+            "clip_id": clip.get("clip_id") or path,
+            "clip_path": path,
+            "path": path,
+            "source_used_duration_sec": round(source_used, 4),
+            "final_duration_sec": round(final, 4),
+            "playback_rate": round(rate, 6),
+            "offset_sec": round(cursor, 4),
+            "start_sec": round(cursor, 4),
+            "end_sec": round(cursor + final, 4),
+        })
+        clips.append(clip)
+        cursor += final
+
+    if abs(cursor - duration) > 0.05:
+        return None
+    return {
+        "clips": clips,
+        "target_duration_sec": round(duration, 4),
+        "covered_duration_sec": round(cursor, 4),
+        "coverage_status": "covered",
+        "deficit_sec": 0.0,
+        "needs_retrieval": False,
+        "needs_split": False,
+        "uses_multiple_clips": len(clips) > 1,
+        "quality_warning": False,
+        "warnings": [],
+    }
+
+
+def _prepare_visual_playlist_0907(
+    *,
+    primary_clip_path: str,
+    clip_meta: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    shot_dir: Path,
+    duration: float,
+    config: dict[str, Any],
+    shot_id: str,
+    shot_query: str,
+) -> dict[str, Any]:
+    """0907 opt-in visual playlist: pacing-planner + slow-motion render.
+
+    Unlike the legacy path this never loops/holds a frame; it slows sources with
+    ``setpts`` (down to the 1/3 floor) and returns ``coverage_status`` honestly
+    so ``run`` can fail closed instead of shipping a static/looped shot.
+    """
+    occupancy = None
+    runtime = config.get("newvis0907_runtime") if isinstance(config, dict) else None
+    if isinstance(runtime, dict):
+        occupancy = runtime.get("occupancy")
+
+    normalized_query = " ".join(str(shot_query or clip_meta.get("query") or "").split())
+    primary: dict[str, Any] | None = None
+    if primary_clip_path and _existing_file(primary_clip_path):
+        pdur = _as_float(clip_meta.get("duration_sec", clip_meta.get("duration")), 0.0)
+        if pdur <= 0:
+            pdur = _probe_media_duration(primary_clip_path)
+        primary = {
+            "clip_id": clip_meta.get("clip_id") or primary_clip_path,
+            "clip_path": primary_clip_path,
+            "source_duration_sec": pdur,
+            "score": clip_meta.get("match_score", clip_meta.get("score", 0.0)),
+            "query": normalized_query or clip_meta.get("query", ""),
+            "fingerprint": clip_meta.get("fingerprint", ""),
+        }
+
+    src_candidates: list[dict[str, Any]] = []
+    for raw in candidates or []:
+        path = str(raw.get("clip_path") or raw.get("path") or "").strip()
+        if not _existing_file(path):
+            continue
+        raw_query = " ".join(str(raw.get("query") or raw.get("visual_query") or "").split())
+        if normalized_query and raw_query and raw_query.casefold() != normalized_query.casefold():
+            # Keep one-query-per-model-shot contract for 0907 visual units.
+            continue
+        dur = _as_float(raw.get("source_duration_sec", raw.get("duration_sec")), 0.0)
+        if dur <= 0:
+            dur = _probe_media_duration(path)
+        src_candidates.append({
+            **raw,
+            "clip_path": path,
+            "source_duration_sec": dur,
+            "query": normalized_query or raw_query,
+        })
+
+    playlist = _preserved_visual_playlist_0907(
+        clip_meta, src_candidates, duration, shot_id,
+    )
+    if playlist is None:
+        playlist = pacing_mod.plan_visual_playlist(
+            primary,
+            src_candidates,
+            duration,
+            occupied=occupancy,
+            shot_id=shot_id,
+            prefer_retrieval_order=True,
+        )
+    coverage = playlist.get("coverage_status", "short")
+    if coverage in ("short", "invalid"):
+        # Fail closed *before* spending any ffmpeg render: a short/invalid
+        # playlist must never be padded, frozen or looped, so we skip the render
+        # subprocess entirely and report the deficit for Stage4 to act on.
+        return {
+            "status": "coverage_short",
+            "playlist": playlist,
+            "clip_path": "",
+            "coverage_status": coverage,
+            "deficit_sec": playlist.get("deficit_sec", 0.0),
+            "needs_retrieval": playlist.get("needs_retrieval", False),
+            "needs_split": playlist.get("needs_split", False),
+        }
+    render = _render_visual_playlist_0907(
+        playlist=playlist, shot_dir=shot_dir, duration=duration,
+    )
+    return {
+        "status": render.get("status", "unknown"),
+        "playlist": playlist,
+        "clip_path": render.get("clip_path", ""),
+        "coverage_status": coverage,
+        "deficit_sec": playlist.get("deficit_sec", 0.0),
+        "needs_retrieval": playlist.get("needs_retrieval", False),
+        "needs_split": playlist.get("needs_split", False),
+    }
+
+
+def _render_visual_playlist_0907(
+    *,
+    playlist: dict[str, Any],
+    shot_dir: Path,
+    duration: float,
+    timeout_sec: int = 240,
+) -> dict[str, Any]:
+    """Render a 0907 playlist: trim each source by ``source_used_duration`` and
+    ``setpts``-stretch to ``final_duration`` (slow motion), then concat. No
+    ``stream_loop`` — every segment's length equals ``final_duration_sec``."""
+    clips = [c for c in playlist.get("clips", []) if _existing_file(str(c.get("clip_path") or c.get("path") or ""))]
+    if not clips:
+        return {"status": "playlist_no_clips", "clip_path": ""}
+
+    shot_dir.mkdir(parents=True, exist_ok=True)
+    output_path = shot_dir / "source_1920x1080_playlist0907.mp4"
+    vf = (
+        f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
+        f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2:black,setsar=1"
+    )
+    cmd = [_ffmpeg_binary(), "-y"]
+    for item in clips:
+        cmd += ["-i", str(item.get("clip_path") or item.get("path"))]
+    filters: list[str] = []
+    labels: list[str] = []
+    for idx, item in enumerate(clips):
+        used = max(0.05, _as_float(item.get("source_used_duration_sec"),
+                                   _as_float(item.get("used_duration_sec"), 0.0)))
+        final = max(0.05, _as_float(item.get("final_duration_sec"), used))
+        source_in = max(0.0, _as_float(item.get("source_in_sec"), 0.0))
+        # setpts factor stretches the trimmed segment to its final duration:
+        # factor = final/used = 1/playback_rate. factor==1 is natural speed.
+        factor = final / used if used > 0 else 1.0
+        label = f"v{idx}"
+        filters.append(
+            f"[{idx}:v:0]{vf},fps=24,"
+            f"trim=start={source_in:.3f}:duration={used:.3f},"
+            f"setpts=PTS-STARTPTS,setpts={factor:.6f}*PTS[{label}]"
+        )
+        labels.append(f"[{label}]")
+    filters.append(f"{''.join(labels)}concat=n={len(labels)}:v=1:a=0[vout]")
+    total = sum(max(0.05, _as_float(c.get("final_duration_sec"), 0.0)) for c in clips)
+    cmd += [
+        "-filter_complex", ";".join(filters),
+        "-map", "[vout]",
+        "-an",
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "22",
+        "-pix_fmt", "yuv420p",
+        "-movflags", "+faststart",
+        "-t", f"{max(duration, total):.3f}",
+        str(output_path),
+    ]
+    try:
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout_sec,
+            env=_media_subprocess_env(),
+        )
+        if proc.returncode == 0 and output_path.exists() and output_path.stat().st_size > 0:
+            return {"status": "playlist0907_rendered", "clip_path": str(output_path)}
+        return {"status": "playlist0907_render_failed", "clip_path": "",
+                "stderr": (proc.stderr or "")[-500:]}
+    except subprocess.TimeoutExpired:
+        return {"status": "playlist0907_render_timeout", "clip_path": ""}
+    except FileNotFoundError:
+        return {"status": "ffmpeg_not_found", "clip_path": ""}
+
+
 def run(
     shot: dict[str, Any],
     assets: dict[str, Any],
@@ -567,32 +851,75 @@ def run(
             Path(raw_clip_path).exists() if raw_clip_path else False,
             Path(raw_clip_path).stat().st_size if raw_clip_path and Path(raw_clip_path).exists() else "N/A",
         )
-    visual_playlist = _prepare_visual_playlist_for_render(
-        primary_clip_path=raw_clip_path,
-        clip_meta=clip_meta,
-        candidates=candidates,
-        shot_dir=work_shot_dir,
-        duration=round(duration, 2),
-    )
-    source_clip_path = str(visual_playlist.get("clip_path") or raw_clip_path or "")
-    normalized_clip = _normalize_clip_for_render(
-        clip_path=source_clip_path,
-        shot_dir=work_shot_dir,
-        duration=round(duration, 2),
-    )
-    clip_path_for_render = normalized_clip.get("clip_path", raw_clip_path)
-    clip_meta_for_render = {
-        **clip_meta,
-        "render_clip_path": clip_path_for_render,
-        "render_target_resolution": f"{TARGET_WIDTH}x{TARGET_HEIGHT}",
-        "render_clip_status": normalized_clip.get("status", "unknown"),
-        "visual_playlist_status": visual_playlist.get("status", "unknown"),
-        "visual_playlist": visual_playlist.get("playlist", {}),
-    }
-    if normalized_clip.get("normalized"):
-        clip_meta_for_render["original_clip_path"] = str(assets.get("clip_path", "") or "")
-        clip_meta_for_render["original_resolution"] = normalized_clip.get("original_resolution", "")
-        clip_meta_for_render["normalized_resolution"] = f"{TARGET_WIDTH}x{TARGET_HEIGHT}"
+    use_0907 = _use_0907_subtitles(config)
+    allow_stream_loop = True
+    coverage_short_0907 = False
+    playlist_payload_0907: dict[str, Any] = {}
+    if use_0907:
+        # 0907 opt-in: pacing planner + slow-motion (setpts) render, never loop.
+        visual_playlist = _prepare_visual_playlist_0907(
+            primary_clip_path=raw_clip_path,
+            clip_meta=clip_meta,
+            candidates=candidates,
+            shot_dir=work_shot_dir,
+            duration=round(duration, 2),
+            config=config,
+            shot_id=str(shot_id),
+            shot_query=str(shot.get("visual_query", "") or ""),
+        )
+        allow_stream_loop = False
+        # Persist the planned playlist so hierarchy / UI can read every subclip.
+        playlist_payload = visual_playlist.get("playlist", {})
+        playlist_payload_0907 = playlist_payload
+        if isinstance(assets, dict):
+            base_meta = assets.get("clip_meta") if isinstance(assets.get("clip_meta"), dict) else {}
+            merged_meta = {**base_meta, "visual_playlist": playlist_payload}
+            assets["clip_meta"] = merged_meta
+            assets["visual_playlist"] = playlist_payload
+        coverage_short_0907 = visual_playlist.get("coverage_status") in ("short", "invalid")
+        # When coverage is short we still build subtitles / timeline below, but
+        # fail the render closed (no static/looped shot is ever shipped).
+        source_clip_path = str(visual_playlist.get("clip_path") or "")
+        if not coverage_short_0907 and not source_clip_path:
+            source_clip_path = str(raw_clip_path or "")
+        # The 0907 playlist render is already 1920x1080 and exactly ``duration``
+        # long, so skip the stream_loop normalize path entirely.
+        clip_path_for_render = source_clip_path
+        clip_meta_for_render = {
+            **clip_meta,
+            "render_clip_path": clip_path_for_render,
+            "render_target_resolution": f"{TARGET_WIDTH}x{TARGET_HEIGHT}",
+            "render_clip_status": "playlist0907",
+            "visual_playlist_status": visual_playlist.get("status", "unknown"),
+            "visual_playlist": playlist_payload,
+        }
+    else:
+        visual_playlist = _prepare_visual_playlist_for_render(
+            primary_clip_path=raw_clip_path,
+            clip_meta=clip_meta,
+            candidates=candidates,
+            shot_dir=work_shot_dir,
+            duration=round(duration, 2),
+        )
+        source_clip_path = str(visual_playlist.get("clip_path") or raw_clip_path or "")
+        normalized_clip = _normalize_clip_for_render(
+            clip_path=source_clip_path,
+            shot_dir=work_shot_dir,
+            duration=round(duration, 2),
+        )
+        clip_path_for_render = normalized_clip.get("clip_path", raw_clip_path)
+        clip_meta_for_render = {
+            **clip_meta,
+            "render_clip_path": clip_path_for_render,
+            "render_target_resolution": f"{TARGET_WIDTH}x{TARGET_HEIGHT}",
+            "render_clip_status": normalized_clip.get("status", "unknown"),
+            "visual_playlist_status": visual_playlist.get("status", "unknown"),
+            "visual_playlist": visual_playlist.get("playlist", {}),
+        }
+        if normalized_clip.get("normalized"):
+            clip_meta_for_render["original_clip_path"] = str(assets.get("clip_path", "") or "")
+            clip_meta_for_render["original_resolution"] = normalized_clip.get("original_resolution", "")
+            clip_meta_for_render["normalized_resolution"] = f"{TARGET_WIDTH}x{TARGET_HEIGHT}"
 
     subtitle_duration = audio_duration if audio_duration > 0 else duration
     # `subtitle_text` is written by the editor's `set_subtitle`, which exists so
@@ -600,7 +927,36 @@ def run(
     # therefore override the spoken script here — the narration audio keeps
     # using `vocal_script`.
     subtitle_source = str(shot.get("subtitle_text") or "").strip() or vocal_script
-    subtitles = build_subtitle_track(subtitle_source, subtitle_duration, config=config)
+    if _use_0907_subtitles(config):
+        max_chars_per_line = max(8, int(_subtitle_cfg(config).get("max_chars_per_line", 14) or 14))
+        max_lines = max(1, int(_subtitle_cfg(config).get("max_lines", 2) or 2))
+        subtitle_payload = build_subtitle_cues(
+            subtitle_source,
+            subtitle_duration,
+            max_chars_per_line=max_chars_per_line,
+            max_lines=max_lines,
+        )
+        subtitles = subtitle_payload["cues"]
+        # 0907 treats subtitle punctuation/layout as a derived display artifact:
+        # keep the original subtitle/narration source unchanged, but write back
+        # the formatted display text and cue plan so hierarchy/UI/render all see
+        # the same on-screen text without introducing subtitle drift.
+        shot["subtitle_display_text"] = subtitle_payload["display_text"]
+        shot["subtitle_cues"] = [
+            {
+                **cue,
+                "lines": list(cue.get("lines", [])),
+            }
+            for cue in subtitles
+        ]
+    else:
+        subtitles = build_subtitle_track(subtitle_source, subtitle_duration, config=config)
+
+    # 0907 semantic animation: read the shot's primary anchor and keep the
+    # decoration timing in sync with the spoken phrase interval (user overrides
+    # win), then expose the whole semantic plan on the timeline tracks so the
+    # hierarchy / renderer can drive per-phrase playback.
+    semantic_track = _sync_semantic_decoration(shot, assets, duration)
 
     timeline = {
         "shot_id": shot_id,
@@ -620,6 +976,7 @@ def run(
             },
             "subtitles": subtitles,
             "decoration": assets.get("decoration", {}),
+            "semantic_animations": semantic_track,
         },
         "transition": {
             "type": "crossfade",
@@ -634,6 +991,38 @@ def run(
     # Attempt real render. Spotlight shots can use the HyperFrames accelerated
     # path; ordinary shots keep the lightweight ffmpeg path.
     rendered_path = str(work_shot_dir / "shot.mp4")
+    if use_0907 and coverage_short_0907:
+        # Fail closed BEFORE any ffmpeg render subprocess: an insufficient visual
+        # playlist must never be padded/looped, and we must not waste a render.
+        # Timeline + subtitles are already built above so Stage4 can still repair.
+        render_result = {
+            "status": "visual_coverage_short",
+            "coverage_status": visual_playlist.get("coverage_status", "short"),
+            "deficit_sec": visual_playlist.get("deficit_sec", 0.0),
+            "needs_retrieval": visual_playlist.get("needs_retrieval", False),
+            "needs_split": visual_playlist.get("needs_split", False),
+            "visual_playlist": playlist_payload_0907,
+            "output_path": "",
+        }
+        return {
+            "shot_id": shot_id,
+            "timeline": timeline,
+            "timeline_path": str(out_path),
+            "duration_sec": round(duration, 2),
+            "has_decoration": bool(assets.get("decoration")),
+            "subtitle_count": len(subtitles),
+            "rendered_path": "",
+            "render_status": "visual_coverage_short",
+            "render_success": False,
+            "render_backend": "none",
+            "render_report": render_result,
+            "audio_policy": "tts_only" if assets.get("audio_path") else "silent",
+            "original_audio_removed": False,
+            "text_overlay_rendered": False,
+            "subtitle_overlay": {"status": "skipped", "applied": False},
+            "compose_status": "success",
+            "status": "render_incomplete",
+        }
     selected_backend = _select_render_backend(shot, assets, config, render_backend)
     render_assets = dict(assets)
     render_assets["clip_path"] = clip_path_for_render
@@ -660,6 +1049,7 @@ def run(
                 duration=round(duration, 2),
                 decoration=assets.get("decoration", {}),
                 config=config,
+                allow_stream_loop=allow_stream_loop,
             )
             if fallback_result.get("status") == "rendered":
                 render_result = {
@@ -679,6 +1069,7 @@ def run(
             duration=round(duration, 2),
             decoration=assets.get("decoration", {}),
             config=config,
+            allow_stream_loop=allow_stream_loop,
         )
         render_success = render_result.get("status") == "rendered"
 
@@ -716,6 +1107,7 @@ def run(
             subtitles=subtitles,
             duration=round(duration, 2),
             config=config,
+            allow_stream_loop=allow_stream_loop,
         )
         if subtitle_overlay.get("status") == "ok":
             render_result["output_path"] = subtitle_overlay.get("output_path", rendered_path)
@@ -744,6 +1136,22 @@ def run(
         else:
             render_result["rendered_duration_sec"] = round(final_rendered_duration, 3)
 
+    # 0907 fails closed on insufficient visual coverage: never ship a static or
+    # looped shot. The render (if any) is discarded in favour of an explicit
+    # coverage-short report so Stage4 retrieves more footage or splits the shot.
+    if use_0907 and coverage_short_0907:
+        render_success = False
+        render_result = {
+            **render_result,
+            "status": "visual_coverage_short",
+            "coverage_status": "short",
+            "deficit_sec": visual_playlist.get("deficit_sec", 0.0),
+            "needs_retrieval": visual_playlist.get("needs_retrieval", False),
+            "needs_split": visual_playlist.get("needs_split", False),
+            "visual_playlist": playlist_payload_0907,
+            "output_path": "",
+        }
+
     return {
         "shot_id": shot_id,
         "timeline": timeline,
@@ -763,6 +1171,52 @@ def run(
         "compose_status": "success",
         "status": "success" if render_success else "render_incomplete",
     }
+
+
+def _sync_semantic_decoration(
+    shot: dict[str, Any],
+    assets: dict[str, Any],
+    duration: float,
+) -> dict[str, Any]:
+    """Return the shot's semantic-animation plan, syncing decoration timing.
+
+    The primary anchor's ``start_sec``/``end_sec`` (from the subtitle cues) drive
+    ``decoration.timing`` so the ffmpeg ``drawtext`` overlay and HyperFrames
+    assemble step both play the decoration during the spoken phrase — but a
+    user-authored emphasis (``source == "user"``) keeps whatever timing the user
+    settled on, so a manual edit is never silently retimed.
+    """
+    semantic = assets.get("semantic_animations")
+    if not isinstance(semantic, dict) or not semantic.get("primary"):
+        semantic = shot.get("semantic_animations")
+    if not isinstance(semantic, dict):
+        return {}
+    primary = semantic.get("primary")
+    if not isinstance(primary, dict) or not primary.get("phrase"):
+        return semantic
+
+    decoration = assets.get("decoration")
+    if not isinstance(decoration, dict):
+        return semantic
+    is_user = str(primary.get("source") or "") == "user"
+    start = primary.get("start_sec")
+    end = primary.get("end_sec")
+    if not is_user and start is not None and end is not None:
+        try:
+            start_f = max(0.0, float(start))
+            end_f = float(end)
+        except (TypeError, ValueError):
+            return semantic
+        if duration and duration > 0:
+            start_f = min(start_f, duration)
+            end_f = min(end_f, duration)
+        if end_f > start_f:
+            timing = dict(decoration.get("timing") or {})
+            timing["decor_start_sec"] = round(start_f, 3)
+            timing["decor_duration_sec"] = round(end_f - start_f, 3)
+            decoration = {**decoration, "timing": timing}
+            assets["decoration"] = decoration
+    return semantic
 
 
 def _select_render_backend(
@@ -1230,8 +1684,7 @@ def _localize_gsap_cdn(index_path: Path, config: dict[str, Any]) -> dict[str, An
 
     local_gsap = str(
         _cfg_get(config, ("services", "hyperframes", "gsap_local_path"), "")
-        or Path(__file__).resolve().parents[2]
-        / "external_tool" / "hyperframes" / "vendor" / "gsap.min.js"
+        or "/mnt/shang2cephfs/mm-base-vision-ascend/chenyumu/DATA/Online_test_hyperframes/my-video6/vendor/gsap.min.js"
     )
     if not Path(local_gsap).exists():
         return {"status": "skipped", "reason": f"local gsap not found: {local_gsap}"}
@@ -1725,6 +2178,7 @@ def _burn_subtitles_on_rendered_shot(
     duration: float,
     timeout_sec: int = 180,
     config: dict[str, Any] | None = None,
+    allow_stream_loop: bool = True,
 ) -> dict[str, Any]:
     """Burn subtitles on rendered shot to keep all backends consistent."""
     if not subtitles:
@@ -1740,11 +2194,10 @@ def _burn_subtitles_on_rendered_shot(
     tmp_path = src.with_suffix(".subtitle_tmp.mp4")
     has_audio = _video_has_audio_stream(src)
     text_binary = _text_ffmpeg_binary()
-    cmd = [
-        text_binary,
-        "-y",
-        "-stream_loop",
-        "-1",
+    cmd = [text_binary, "-y"]
+    if allow_stream_loop:
+        cmd += ["-stream_loop", "-1"]
+    cmd += [
         "-i",
         str(src),
         "-vf",

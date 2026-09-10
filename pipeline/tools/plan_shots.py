@@ -140,6 +140,53 @@ def run(
     return result
 
 
+def _is_0907(config: dict[str, Any] | None) -> bool:
+    config = config or {}
+    if str(config.get("policy_version", "") or "").strip() == "0907":
+        return True
+    newvis = config.get("newvis0907")
+    return isinstance(newvis, dict) and bool(newvis.get("enabled"))
+
+
+def postprocess_shot_plan_0907(
+    result: dict[str, Any],
+    config: dict[str, Any] | None = None,
+    total_duration: float | None = None,
+) -> dict[str, Any]:
+    """0907-only post-process on ``run``'s output — never touches legacy.
+
+    The training/inference schema is left unchanged; this runs *after* the model
+    output to (a) split any shot planned longer than the 15s model-shot band on
+    semantic/punctuation boundaries (character-conserving) and (b) attach the
+    expected minimum model-shot count + a pacing analysis so downstream stages
+    can enforce the 20+ rule. When 0907 is not opted in the result is returned
+    verbatim.
+    """
+    if not _is_0907(config):
+        return result
+    if not isinstance(result, dict):
+        return result
+    from studio.newvis0907 import pacing as _pacing
+
+    shots = result.get("shots", [])
+    if not isinstance(shots, list):
+        return result
+    new_shots = _pacing.split_long_shot_plan({"shot_plan": shots})
+    duration = float(total_duration or 0.0)
+    analysis = _pacing.analyze_shot_pacing({
+        "shot_plan": new_shots,
+        "total_duration_sec": duration,
+    })
+    return {
+        **result,
+        "shots": new_shots,
+        "num_shots": len(new_shots),
+        "minimum_model_shots": _pacing.minimum_model_shots(duration),
+        "pacing_analysis": analysis,
+        "pacing_postprocessed": True,
+    }
+
+
 def _run_with_video_shots(
     llm: LLMClient,
     segments: list[dict[str, Any]],

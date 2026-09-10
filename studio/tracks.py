@@ -167,16 +167,25 @@ def build_clips(state: dict[str, Any]) -> dict[str, Any]:
             )
 
     raw_segments = [s for s in _as_list(state.get("segments")) if isinstance(s, dict)]
-    segments: list[dict[str, Any]] = []
+    segment_meta: dict[str, dict[str, Any]] = {}
     for idx, seg in enumerate(raw_segments):
         seg_id = str(seg.get("segment_id", "") or f"seg_{idx + 1:02d}")
-        members = by_segment.get(seg_id, [])
+        if seg_id in segment_meta:
+            continue
+        segment_meta[seg_id] = {
+            "title": str(seg.get("title") or seg.get("structure_label") or seg_id),
+            "summary": str(seg.get("summary", "") or ""),
+        }
+
+    segments: list[dict[str, Any]] = []
+    for seg_id, members in by_segment.items():
+        meta = segment_meta.get(seg_id, {"title": seg_id, "summary": ""})
         start = min((m[0] for m in members), default=0.0)
         end = max((m[1] for m in members), default=0.0)
         segments.append({
             "segment_id": seg_id,
-            "title": str(seg.get("title") or seg.get("structure_label") or seg_id),
-            "summary": str(seg.get("summary", "") or ""),
+            "title": str(meta.get("title", seg_id) or seg_id),
+            "summary": str(meta.get("summary", "") or ""),
             "start": round(start, 2),
             "end": round(end, 2),
             "duration": round(end - start, 2),
@@ -184,6 +193,7 @@ def build_clips(state: dict[str, Any]) -> dict[str, Any]:
             "shot_ids": [m[2] for m in members],
             "ready": bool(members),
         })
+    segments.sort(key=lambda row: (row["start"], row["end"], row["segment_id"]))
 
     # ---- bgm ----
     bgm: list[dict[str, Any]] = []

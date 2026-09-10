@@ -1,19 +1,29 @@
 # WevisionCut
 
+<p align="center">
+  <img src="assets/wevisioncut_logo.png" alt="WevisionCut logo" width="420" />
+</p>
+
 **Long-horizon tool agents for end-to-end video editing.**
 
-WevisionCut turns a plain narration script into a finished, multi-minute edited
-video. A single 9B policy model, trained with SFT then DAPO reinforcement
-learning, drives the whole thing: it segments the script, plans shots,
-synthesises narration, retrieves footage, chooses and fills animated templates,
-picks background music, reviews its own output, repairs what it does not like,
-and stitches the final cut — one tool call at a time, with no scripted pipeline
-telling it what to do next.
+WevisionCut turns a plain narration script into a polished, multi-minute edited
+video. A single 9B policy model, trained with SFT and then DAPO reinforcement
+learning, drives the full process: segmenting the script, planning shots,
+synthesizing narration, retrieving footage, selecting and filling animated
+templates, choosing background music, reviewing outputs, repairing issues, and
+stitching the final cut. It does this one tool call at a time, with no scripted
+pipeline telling it what to do next.
 
 A typical run is around 12 tool calls over several minutes of video. There is no
 hand-written state machine: the trajectory is the model's.
 
 [English](README.md) · [中文](README_zh.md)
+
+## Model Overview
+
+![WevisionCut model overview](assets/overview.png)
+
+[Download the full model overview (PDF)](../论文/figures/overview.pdf)
 
 ---
 
@@ -306,7 +316,8 @@ filters treat your results, and how to test a provider offline.
 1. **Generate.** Paste a narration script, press start. Eight live tracks
    (segments, shots, narration, subtitles, footage, spotlight, BGM, render) fill
    in as the agent works, alongside its thinking, tool calls, and raw output.
-   Pause, resume, or cancel at any point.
+   Pause, resume, or cancel at any point. The isolated trustworthy-cut UI lives
+   at `/0907_newvis` (legacy conversation shell remains at `/0901_newvis`).
 2. **Timeline.** Multi-track view of every shot: position, duration, footage,
    template. Click to select.
 3. **Manual editing.** On a selected shot: rewrite narration (re-runs TTS),
