@@ -1,8 +1,9 @@
-# WevisionCut
 
 <p align="center">
   <img src="assets/wevisioncut_logo.png" alt="WevisionCut logo" width="420" />
 </p>
+
+# WevisionCut
 
 **A long-horizon tool agent that turns a knowledge article / narration script into a multi-minute edited video.**
 
