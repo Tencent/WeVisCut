@@ -33,6 +33,30 @@ class PreviewBgmCompatTest(unittest.TestCase):
         self.assertEqual(len(out["tracks"]), 1, out)
         self.assertEqual(out["tracks"][0]["path"], str(inside.resolve()), out)
 
+    def test_music_library_is_playable_so_preview_bgm_is_not_silent(self) -> None:
+        # The music hub is not under media_roots, so every track used to be
+        # dropped here and the shot-by-shot preview played with no music at all
+        # — while export sounded fine, because ffmpeg reads the file directly.
+        library = Path("/tmp/aicut_preview_music_hub")
+        library.mkdir(parents=True, exist_ok=True)
+        track = library / "hopeful.mp3"
+        track.write_bytes(b"ID3")
+
+        app_mod._music_library_roots.cache_clear()
+        stub_studio = SimpleNamespace(config=SimpleNamespace(media_roots=[]))
+        with mock.patch.object(app_mod, "studio", stub_studio), \
+                mock.patch.object(app_mod, "_music_library_roots",
+                                  return_value=(library.resolve(),)):
+            roots = app_mod._playable_roots()
+            self.assertIn(library.resolve(), roots)
+            out = app_mod._preview_bgm(
+                {"bgm_tracks": [{"music_path": str(track)}], "bgm_volume": 0.5},
+                roots,
+            )
+        app_mod._music_library_roots.cache_clear()
+        self.assertEqual(len(out["tracks"]), 1, out)
+        self.assertEqual(out["tracks"][0]["path"], str(track.resolve()), out)
+
     def test_0907_policy_copy_keeps_configured_stitch_deferral(self) -> None:
         # Forcing a real concat during generation aborts the run whenever a shot
         # has no rendered file yet, so the policy copy must not touch it.

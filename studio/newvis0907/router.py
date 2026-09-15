@@ -23,7 +23,7 @@ from typing import Any, Callable
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from studio.newvis0907 import operations, schemas
+from studio.newvis0907 import conversation, operations, schemas
 from studio.newvis0907.chat_planner import plan_edit as _plan_edit
 from studio.newvis0907.hierarchy import build_hierarchy as _build_hierarchy
 from studio.newvis0907.transactions import TransactionError, TransactionManager
@@ -169,11 +169,46 @@ def _invoke_model_plan(
     *,
     previous_targets: Any,
     history: list[dict[str, str]],
-) -> Any:
+    memory: Any = None,
+) -> tuple[Any, str]:
+    """Call the model-plan hook, tolerating older/simpler signatures.
+
+    Returns ``(plan, thinking)``: a hook may hand back the plan alone, or a
+    ``(plan, reasoning_text)`` pair when the backend exposed the model's
+    reasoning stream.
+    """
+    attempts = (
+        lambda: fn(state, message, previous_targets=previous_targets, history=history, memory=memory),
+        lambda: fn(state, message, previous_targets=previous_targets, history=history),
+        lambda: fn(state, message, previous_targets=previous_targets),
+    )
+    result: Any = None
+    for attempt in attempts:
+        try:
+            result = attempt()
+            break
+        except TypeError:
+            continue
+    if isinstance(result, tuple) and len(result) == 2:
+        return result[0], str(result[1] or "")
+    return result, ""
+
+
+def _invoke_plan_edit(
+    fn: Callable[..., Any],
+    state: dict[str, Any],
+    message: str,
+    *,
+    previous_targets: Any,
+    model_plan: Any,
+    memory: Any,
+) -> dict[str, Any]:
+    """Call the planner, tolerating a hook that predates conversation memory."""
     try:
-        return fn(state, message, previous_targets=previous_targets, history=history)
+        return fn(state, message, previous_targets=previous_targets,
+                  model_plan=model_plan, memory=memory)
     except TypeError:
-        return fn(state, message, previous_targets=previous_targets)
+        return fn(state, message, previous_targets=previous_targets, model_plan=model_plan)
 
 
 def _recent_targets(project: Any, manager: TransactionManager) -> list[dict[str, Any]] | None:
@@ -375,25 +410,34 @@ async def project_chat_0907(body: ChatBody) -> dict[str, Any]:
         }
 
     deps = _require_deps()
-    previous_targets = _recent_targets(project, manager)
+    memory = conversation.Memory.load(project.project_dir)
+    # Fold the conversation into this one message: a reply of「是的」arrives at
+    # the planner as「@镜头03 改一下动画」, so the planner never has to guess
+    # what an answer to its own question meant.
+    turn = memory.interpret(body.message)
+    previous_targets = turn.previous_targets or _recent_targets(project, manager)
     history = _recent_chat_turns(project)
     model_plan = None
+    thinking = ""
     if deps.model_plan is not None:
         try:
-            model_plan = _invoke_model_plan(
+            model_plan, thinking = _invoke_model_plan(
                 deps.model_plan,
                 project.state,
-                body.message,
+                turn.message,
                 previous_targets=previous_targets,
                 history=history,
+                memory=memory,
             )
         except Exception:
             model_plan = None
-    payload = deps.plan_edit(
+    payload = _invoke_plan_edit(
+        deps.plan_edit,
         project.state,
-        body.message,
+        turn.message,
         previous_targets=previous_targets,
         model_plan=model_plan,
+        memory=memory,
     )
     _append_chat(project, "user", body.message, {})
 
@@ -402,6 +446,10 @@ async def project_chat_0907(body: ChatBody) -> dict[str, Any]:
     needs_confirm = list(payload.get("needs_confirm") or [])
     reply = str(payload.get("reply") or "")
     plan_targets = list(payload.get("targets") or [])
+    # When memory (not the user's words) chose the target, say so up front so a
+    # wrong guess is visible and correctable in one sentence.
+    if turn.note and intent == "edit":
+        reply = f"{turn.note}\n{reply}".strip()
 
     transaction = None
     applied = False
@@ -420,8 +468,15 @@ async def project_chat_0907(body: ChatBody) -> dict[str, Any]:
                 results = transaction.applied_results
                 regen_job_id = _maybe_schedule(manager, transaction)
 
+    payload["intent"] = intent
+    memory.record(turn, payload)
+    memory.save()
+
+    candidates = list(payload.get("candidates") or [])
     _append_chat(project, "assistant", reply,
                  {"intent": intent, "targets": plan_targets,
+                  "candidates": candidates,
+                  "thinking": thinking,
                   "scope": payload.get("scope", {})})
 
     return {
@@ -429,7 +484,18 @@ async def project_chat_0907(body: ChatBody) -> dict[str, Any]:
         "reply": reply,
         "ops": ops,
         "needs_confirm": needs_confirm,
-        "candidates": payload.get("candidates", []),
+        "candidates": candidates,
+        "choices": [
+            {
+                "token": conversation.candidate_token(item),
+                "label": conversation.candidate_label(item),
+                "shot_id": str(item.get("shot_id") or ""),
+            }
+            for item in candidates[:3]
+            if conversation.candidate_token(item)
+        ],
+        "thinking": thinking,
+        "understood_as": turn.message if turn.message != turn.original else "",
         "scope": payload.get("scope", {}),
         "targets": plan_targets,
         "applied": applied,
@@ -541,6 +607,21 @@ async def regenerate_0907(body: RegenBody) -> dict[str, Any]:
 async def chat_history_0907(dir: str) -> dict[str, Any]:
     project = _load(dir)
     return {"messages": _load_chat(project).get("messages", []), "policy_version": POLICY_VERSION}
+
+
+@router.post("/api/0907/project/chat/reset")
+async def chat_reset_0907(body: TxBody) -> dict[str, Any]:
+    """Drop the conversation context without touching the film or its history.
+
+    Useful when a thread has gone sideways: the next message is planned from a
+    clean slate rather than against a stale pending question. Distilled user
+    preferences survive, since they are about taste, not about this thread.
+    """
+    project = _load(body.project_dir)
+    memory = conversation.Memory.load(project.project_dir)
+    memory.reset()
+    memory.save()
+    return {"reset": True, "policy_version": POLICY_VERSION}
 
 
 def _filter_report(report: dict[str, Any], scope: str, shot_ids: list[str] | None) -> dict[str, Any]:

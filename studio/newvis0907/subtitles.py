@@ -247,6 +247,68 @@ def _split_greedy(text: str, limit: int) -> list[str]:
     return parts
 
 
+def _split_clauses(text: str) -> list[str]:
+    """Break text at clause punctuation, keeping each mark with its clause.
+
+    Unlike :func:`_split_sentences` this also breaks at ``，；：`` — a comma ends
+    a readable unit even though it does not end a sentence. Splits inside
+    brackets or quotes are suppressed so a quoted line is never cut in half.
+    """
+    compact = _compact_text(text)
+    if not compact:
+        return []
+    parts: list[str] = []
+    stack: list[str] = []
+    start = 0
+    for idx, ch in enumerate(compact):
+        if ch in OPENERS:
+            stack.append(ch)
+        elif ch in CLOSERS and stack and stack[-1] == CLOSERS[ch]:
+            stack.pop()
+        if not stack and (ch in HARD_PUNCT or ch in SOFT_PUNCT):
+            part = compact[start:idx + 1].strip()
+            if part:
+                parts.append(part)
+            start = idx + 1
+    tail = compact[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def _pack_clauses(text: str, limit: int) -> list[str]:
+    """Group whole clauses into cues of at most ``limit`` characters.
+
+    A cue is built from complete clauses so a line never appears on screen as
+    the first half of a thought with the rest arriving in the next cue. Only a
+    single clause that is itself longer than a cue has to be broken, and that
+    falls back to the scored split.
+    """
+    clauses = _split_clauses(text)
+    if not clauses:
+        return []
+    packed: list[str] = []
+    current = ""
+    for clause in clauses:
+        if len(clause) > limit:
+            # Too long to ever be a cue on its own: flush, then split it.
+            if current:
+                packed.append(current)
+                current = ""
+            packed.extend(_split_greedy(clause, limit))
+            continue
+        if not current:
+            current = clause
+        elif len(current) + len(clause) <= limit:
+            current += clause
+        else:
+            packed.append(current)
+            current = clause
+    if current:
+        packed.append(current)
+    return packed
+
+
 def _split_sentences(text: str) -> list[str]:
     compact = _compact_text(text)
     if not compact:
@@ -383,7 +445,11 @@ def build_subtitle_cues(
     sentence_units = _split_sentences(display_text) or ([display_text] if display_text else [])
     cue_texts: list[str] = []
     for unit in sentence_units:
-        for part in _split_greedy(unit, max_chars_per_cue):
+        # Clause-first: fill each cue with whole clauses, and only fall back to
+        # the scored character split for a clause too long to be a cue by
+        # itself. Splitting on length first is what used to strand half a
+        # thought in one cue and the rest in the next.
+        for part in _pack_clauses(unit, max_chars_per_cue):
             cue_texts.extend(_normalize_cue_capacity(part, max_chars_per_line, max_lines))
 
     times = _allocate_cue_times(cue_texts, duration)

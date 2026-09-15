@@ -631,6 +631,7 @@
 
     _thinkBlock(text, opts) {
       const wrap = el('div', 'step-think');
+      wrap.appendChild(el('span', 'step-think-head', '模型思考'));
       const body = el('div', 'step-think-text', text);
       wrap._body = body;
       wrap.appendChild(body);
@@ -678,6 +679,22 @@
       this.pendingThought = this.pendingThought ? this.pendingThought + '\n' + t : t;
     }
 
+    /** Show reasoning that no tool call ever came to claim.
+     *
+     *  `beginStep` hangs a buffered thought under the step it precedes, so a
+     *  final round of reasoning — the model deciding it is finished — would
+     *  otherwise never be rendered at all.
+     */
+    flushThought() {
+      const thought = this.pendingThought.trim();
+      this.pendingThought = '';
+      if (!thought) return;
+      const last = this.groups[this.groups.length - 1];
+      const block = this._thinkBlock(thought);
+      if (last) last.body.appendChild(block);
+      else this._append(block);
+    }
+
     settle() {
       // A block still marked "思考中" when nothing follows it would sit there
       // spinning forever, so close it out here too.
@@ -687,6 +704,7 @@
         if (badge) badge.remove();
         this.liveThought = null;
       }
+      this.flushThought();
       const last = this.groups[this.groups.length - 1];
       if (last) last.node.classList.replace('active', 'done');
     }
@@ -725,6 +743,7 @@
         'composerInput', 'btnSend', 'btnStop', 'btnPlus', 'composerHint',
         'composer', 'mentionPicker',
         'composerBar', 'modeSwitch', 'modeDesc', 'editBar', 'editLabel', 'btnExitEdit',
+        'btnResetChat',
         'modelDot', 'modelText', 'modelPill', 'runTimer',
         'btnNew', 'btnLibrary', 'userChip', 'userName', 'btnLogout',
         'player', 'playerEmpty', 'phaseLabel', 'overallBar', 'overallPct',
@@ -799,6 +818,9 @@
       this.el.btnExport.onclick = () => this.exportVideo();
       this.el.btnPlus.onclick = () => this.openDrawer();
       this.el.btnExitEdit.onclick = () => this.newSession();
+      if (this.el.btnResetChat) {
+        this.el.btnResetChat.onclick = () => this.resetChatContext();
+      }
       this.el.player.addEventListener('timeupdate', () => {
         if (this.navigator) this.navigator.syncTime(this._timelineCurrentTime());
       });
@@ -1364,12 +1386,52 @@
       }
     }
 
+    /** Clear the conversation context without touching the film. */
+    async resetChatContext() {
+      if (!this.projectDir) return;
+      try {
+        await api.post('/api/0907/project/chat/reset', { project_dir: this.projectDir });
+        this.stream.note('已清空对话上下文，下一句会从头理解');
+      } catch (err) {
+        toast('清空上下文失败: ' + err.message, 'err');
+      }
+    }
+
     _renderChatReply(data) {
       const intent = data.intent || 'clarify';
       const cls = intent === 'reject' ? 'reject' : (intent === 'edit' ? '' : 'muted');
       const bubble = this.stream.botMessage(data.reply || '', {
         cls, tag: INTENT_LABEL[intent] || intent,
       });
+
+      // What the assistant actually planned against, when memory rewrote a
+      // short follow-up like "是的" into a full instruction. Showing it is what
+      // makes a wrong assumption correctable in one sentence.
+      if (data.understood_as) {
+        bubble.appendChild(el('div', 'msg-understood', '理解为：' + data.understood_as));
+      }
+      if (data.thinking) {
+        bubble.appendChild(this.stream._thinkBlock(String(data.thinking)));
+      }
+
+      // Candidates the backend offered: make them one click instead of asking
+      // the user to retype a reference the assistant already knows about.
+      const choices = data.choices || [];
+      if (choices.length && intent === 'clarify') {
+        const picks = el('div', 'msg-actions');
+        choices.forEach((choice) => {
+          const btn = el('button', 'mini-btn', choice.label || choice.token);
+          btn.type = 'button';
+          btn.onclick = async () => {
+            picks.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+            this.stream.userMessage(choice.token);
+            await this._sendEdit(choice.token);
+            this._syncComposer();
+          };
+          picks.appendChild(btn);
+        });
+        bubble.appendChild(picks);
+      }
 
       const ops = data.ops || [];
       if (ops.length) {
@@ -1925,12 +1987,14 @@
       if (!item) return;
       this._playIndex = index;
       this.el.player.src = '/api/media?path=' + encodeURIComponent(item.path);
-      this._bgmSeekTo(index);
       const base = Number(item.start);
       const relative = Number.isFinite(base)
         ? Math.max(0, (Number(absoluteSeconds) || 0) - base)
         : 0;
       this.el.player.currentTime = relative;
+      // Where the cut is, not where the shot begins: jumping to a subclip in
+      // the middle of a shot should land the music at that moment too.
+      this._bgmSeekAbsolute(this._playlistOffset(index) + relative);
     }
 
     _setVideo(path, opts) {

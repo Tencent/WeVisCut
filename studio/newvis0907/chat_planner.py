@@ -6,6 +6,7 @@ import json
 import re
 from typing import Any
 
+from . import conversation
 from .hierarchy import build_hierarchy
 from .locator import resolve_targets
 
@@ -231,6 +232,29 @@ def _after_change_marker(message: str) -> str:
     return text[best_index + len(best_marker):].strip(" 。！!，,、")
 
 
+#: Clauses that qualify *how* to apply an edit rather than forming its content.
+#: 「改成今晚早点睡，不重新配音」— the second clause is an instruction to us, not
+#: words to put on screen.
+_TRAILING_QUALIFIERS = (
+    "不重新配音", "不用重新配音", "不改配音", "不动配音", "配音不变",
+    "只改字幕", "只改显示", "只改文字", "仅字幕", "其他不动", "别的不用改",
+)
+
+
+def _strip_trailing_qualifier(text: str) -> str:
+    """Drop trailing how-to-apply clauses from user-authored content."""
+    value = _as_text(text).strip()
+    changed = True
+    while changed:
+        changed = False
+        for qualifier in _TRAILING_QUALIFIERS:
+            stripped = value.rstrip(" 。.!！")
+            if stripped.endswith(qualifier):
+                value = stripped[: -len(qualifier)].rstrip(" ，,、；;。.")
+                changed = True
+    return value.strip()
+
+
 def _extract_json_dict(raw: Any) -> dict[str, Any]:
     if isinstance(raw, dict):
         return raw
@@ -393,6 +417,103 @@ def validate_model_plan(raw: Any, allowed_target_ids: set[str] | list[str] | tup
     }
 
 
+# ---------------------------------------------------------------------------
+# intent consistency
+# ---------------------------------------------------------------------------
+# The model reads intent; this layer only checks that the ops it produced are
+# about the same *kind of thing* the user asked about. It is not a second
+# intent parser — it never decides what the edit is, it only refuses an edit
+# that answers a different question ("换个动画" answered with a footage search
+# for「更加醒目的动画装饰」).
+_OP_CATEGORY = {
+    "set_emphasis": "animation",
+    "remove_animation": "animation",
+    "swap_template": "animation",
+    "set_spotlight_slots": "animation",
+    "replace_footage": "footage",
+    "replace_subclip": "footage",
+    "set_narration": "script",
+    "set_subtitle": "script",
+    "set_bgm": "audio",
+    "set_shot_duration": "timing",
+    "set_subclip_timing": "timing",
+    "optimize_cut": "timing",
+    "delete_shot": "structure",
+    "reorder_shots": "structure",
+}
+# Words that name a *kind* of change. Target words ("镜头"/"分镜") are absent on
+# purpose: they say where to edit, not what to edit.
+_CATEGORY_WORDS = {
+    "animation": ("动画", "动效", "特效", "花字", "hyperframes", "hyperframe",
+                  "装饰", "强调", "重点突出", "模板", "包装"),
+    "footage": ("画面", "素材", "视频", "片段", "空镜", "b-roll", "broll", "配图"),
+    "script": ("字幕", "文案", "口播", "旁白", "解说", "台词", "配音", "念"),
+    "audio": ("bgm", "配乐", "背景音乐", "音乐"),
+    "timing": ("时长", "节奏", "快一点", "慢一点", "拖沓", "秒"),
+    "structure": ("删掉", "删除", "顺序", "重排", "调换", "挪到"),
+}
+#: A footage search query is a description of a *picture*. These words mean the
+#: model turned an animation or caption request into a stock-footage search.
+_NON_FOOTAGE_QUERY_WORDS = (
+    "动画", "动效", "特效", "花字", "装饰", "hyperframes", "模板", "字幕", "配乐", "音乐",
+)
+#: The user asking for captions only, with the voice-over left alone.
+_DISPLAY_ONLY_WORDS = (
+    "只改字幕", "只改显示", "不重新配音", "不用重新配音", "不改配音", "不动配音",
+    "配音不变", "只改文字", "仅字幕",
+)
+
+
+def _message_categories(message: str) -> set[str]:
+    """The kinds of change this message unambiguously mentions."""
+    text = _as_text(message).lower()
+    return {
+        name for name, words in _CATEGORY_WORDS.items()
+        if any(word in text for word in words)
+    }
+
+
+def wants_display_only_subtitle(message: str) -> bool:
+    """True when the user explicitly wants captions to diverge from the audio."""
+    text = _as_text(message)
+    return any(word in text for word in _DISPLAY_ONLY_WORDS)
+
+
+def _op_conflicts(op: dict[str, Any], wanted: set[str]) -> bool:
+    name = _as_text(op.get("op"))
+    category = _OP_CATEGORY.get(name)
+    if category is None:
+        return False
+    if category == "footage":
+        query = _as_text(op.get("query")).lower()
+        if any(word in query for word in _NON_FOOTAGE_QUERY_WORDS):
+            return True
+    if not wanted:
+        return False
+    return category not in wanted
+
+
+def reconcile_ops(message: str, ops: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+    """Drop ops that answer a different question than the user asked.
+
+    Returns the surviving ops and a human-readable note per dropped op. A
+    caption edit is also upgraded to a narration edit unless the user asked for
+    captions only, because「把字幕改成…」normally means the line as spoken, and
+    silently leaving the voice-over saying the old words is the worst outcome.
+    """
+    wanted = _message_categories(message)
+    kept: list[dict[str, Any]] = []
+    dropped: list[str] = []
+    for op in ops:
+        if _op_conflicts(op, wanted):
+            dropped.append(_as_text(op.get("op")))
+            continue
+        if _as_text(op.get("op")) == "set_subtitle" and not wants_display_only_subtitle(message):
+            op = {"op": "set_narration", "shot_id": op.get("shot_id"), "text": op.get("text")}
+        kept.append(op)
+    return kept, dropped
+
+
 def _extract_allowed_ids(locator_result: dict[str, Any]) -> set[str]:
     allowed: set[str] = set()
     for bucket in ("targets", "candidates"):
@@ -442,6 +563,39 @@ SYSTEM_PROMPT = """你是 WevisionCut 的剪辑助手。用户已经有一支成
 · clarify —— 他确实想改，但目标不唯一或缺关键信息。给 2-3 个具体候选让他挑，ops 留空。
 判不准时优先 clarify，不要瞎改；但只要能合理确定目标，就直接 edit，别为了保险反复追问。
 输入里的「系统定位参考」只是一个粗略提示，可能是错的，最终以用户原话和片子结构为准。
+
+【绝对不要重复提问】这是最重要的一条。
+输入里的「对话记忆」告诉你：上一轮你问了什么、用户原本想做什么、已经问过几次。
+· 目标已经确定（「已锁定镜头」非空，或用户用 @ 指定过）时，永远不要再问「你指的是哪个镜头」。
+  这时候缺的是改动内容，就问「这个镜头你想怎么改」，并给出可以照着说的例子。
+· 用户回「是的」「对」「就是这个」「第2个」「镜头03」时，那是在回答你上一个问题，
+  不是新的请求。把它和「用户原本想做的事」拼起来，直接给出 ops。
+· 「已经问过几次」≥2 时禁止再 clarify：挑最像的那个镜头直接 edit，
+  并在 reply 里说明「我先按镜头 XX 改，不对的话告诉我序号」。
+· 用户只说了目标没说改法（例如「@镜头03 这个镜头改一下动画」里的「改一下动画」
+  已经足够），能自己决定的就自己决定，不要为了保险再问一轮。
+
+【先分清用户要改的是哪一类东西，选错类别比选错镜头更严重】
+· 动画/动效/特效/花字/装饰/hyperframes/模板 → set_emphasis 或 remove_animation。
+· 画面/素材/视频/片段/空镜 → replace_footage 或 replace_subclip。
+· 字幕/文案/口播/旁白/台词 → set_narration（或 set_subtitle）。
+· 配乐/BGM/背景音乐 → set_bgm。
+· 时长/节奏 → set_shot_duration / set_subclip_timing / optimize_cut。
+绝对不要跨类别：用户说「换一个更醒目的动画装饰」，那是要换动画模板，
+不是去搜一段叫「更醒目的动画装饰」的视频素材。replace_footage 的 query 里
+永远不该出现「动画」「装饰」「特效」「字幕」这类词——出现了就说明你选错了操作。
+
+【动画类请求】
+· 「加动画/加个动画/加 hyperframes 动画/改一下动画/换个动画/换个更醒目的动画」
+  → set_emphasis，phrase 从该镜头的口播原文里挑一句最值得强调的
+  （必须是原文里真实出现的字），emphasis_type 用 key_point。系统会自动换一套
+  与当前不同的模板，所以「换一个」也用这个操作。
+· 「去掉动画/删掉动画」→ remove_animation，不带 phrase 表示清掉该镜头全部动画。
+
+【字幕和配音是一件事】
+用户说「把字幕改成…」「改一下文案」，默认用 set_narration —— 它会同时更新
+口播文案、重新配音、并让字幕跟着新文案走。只有用户明确说「只改字幕」
+「不重新配音」「配音不变」时，才用 set_subtitle。
 
 【怎么定位目标】
 用户可能用这些方式指镜头，都要认得：
@@ -569,6 +723,7 @@ def build_model_plan_prompt(
     message: str,
     previous_targets: Any = None,
     history: Any = None,
+    memory: Any = None,
 ) -> tuple[str, str]:
     """Prompt the LoRA model to read the user's intent and answer or plan."""
     chapters, shots = _shot_context(state)
@@ -582,10 +737,13 @@ def build_model_plan_prompt(
         if role in {"user", "assistant"} and content:
             turns.append({"role": role, "content": content[:400]})
 
+    memory_context = memory.prompt_context() if hasattr(memory, "prompt_context") else _as_dict(memory)
+
     user = json.dumps(
         {
             "用户这句话": message,
             "最近对话": turns,
+            "对话记忆": memory_context,
             "上次改过的目标": previous_targets or [],
             "系统定位参考": {
                 "status": locator.get("status"),
@@ -624,17 +782,11 @@ def _needs_confirm(ops: list[dict[str, Any]], state: dict[str, Any]) -> list[str
     return flags
 
 
-def _candidate_label(item: dict[str, Any]) -> str:
-    number = _as_text(item.get("display_number"))
-    chapter = _as_text(item.get("chapter_title"))
-    line = _as_text(item.get("matched_text"))
-    if len(line) > 24:
-        line = line[:24] + "…"
-    parts = [part for part in (f"镜头 {number}" if number else "", chapter, line) if part]
-    return " · ".join(parts)
+_candidate_label = conversation.candidate_label
 
 
 def _clarify_from_locator(message: str, locator_result: dict[str, Any]) -> dict:
+    """Ask *which shot* — only ever used when the target is genuinely unknown."""
     status = locator_result.get("status")
     candidates = _as_list(locator_result.get("candidates"))
     labels = [_candidate_label(item) for item in candidates[:3]]
@@ -642,7 +794,7 @@ def _clarify_from_locator(message: str, locator_result: dict[str, Any]) -> dict:
     if labels:
         head = "这几个镜头都对得上，你要改哪一个？" if status == "multiple" \
             else "我还不能确定你指的是哪个镜头，最接近的是这几个："
-        reply = head + "\n" + "\n".join(f"· {label}" for label in labels)
+        reply = head + "\n" + "\n".join(f"· {label}" for label in labels) + "\n直接点一个，或者回我序号就行。"
     else:
         reply = (
             "我还没定位到你要改的地方。可以这样说：\n"
@@ -656,21 +808,61 @@ def _clarify_from_locator(message: str, locator_result: dict[str, Any]) -> dict:
         "ops": [],
         "targets": [],
         "candidates": candidates,
+        "located": None,
         "confidence": locator_result.get("confidence", 0.0),
         "needs_confirm": [],
         "scope": locator_result.get("scope", {}),
     }
 
 
+def _clarify_missing_action(message: str, target: dict[str, Any], scope: Any = None) -> dict:
+    """Ask *what to change* on a shot we have already pinned down.
+
+    Re-asking "which shot?" once the shot is known is what turns a two-turn
+    exchange into a loop: the user answers the question, the answer carries no
+    new target reference, and the same question comes back.
+    """
+    label = _candidate_label(target)
+    reply = (
+        f"已经定位到{label}。这个镜头你想怎么改？\n"
+        "· 换画面：「换成海边落日」\n"
+        "· 调时长：「调到 5 秒」\n"
+        "· 加动画：「加个强调动画」或指定要强调的那句话\n"
+        "· 改文案：「口播改成…」"
+    )
+    return {
+        "intent": "clarify",
+        "reply": reply,
+        "ops": [],
+        "targets": [],
+        "candidates": [target],
+        "located": target,
+        "confidence": 0.95,
+        "needs_confirm": [],
+        "scope": _as_dict(scope),
+    }
+
+
+class _Blanks(dict):
+    """Format map that renders a missing field as empty rather than raising.
+
+    ``remove_animation`` without a phrase means "clear every animation on this
+    shot", so the sentence template must survive the absent field.
+    """
+
+    def __missing__(self, key: str) -> str:
+        return ""
+
+
 _OP_SENTENCE = {
     "replace_footage": "换成「{query}」的画面素材",
     "replace_subclip": "把子镜素材换成「{query}」",
-    "remove_animation": "去掉「{phrase}」上的动画",
+    "remove_animation": "去掉动画「{phrase}」",
     "set_emphasis": "把「{phrase}」做成重点强调",
     "set_shot_duration": "时长调整为 {duration_sec} 秒",
     "set_subclip_timing": "子镜时长调整为 {duration_sec} 秒",
-    "set_narration": "改写口播文案",
-    "set_subtitle": "改写字幕",
+    "set_narration": "改写口播文案并重新配音",
+    "set_subtitle": "只改屏幕字幕（配音不变）",
     "optimize_cut": "对整体节奏做一次优化",
 }
 
@@ -687,7 +879,11 @@ def _describe_plan(ops: list[dict[str, Any]], locator_result: dict[str, Any]) ->
     for op in ops:
         name = _as_text(op.get("op"))
         template = _OP_SENTENCE.get(name)
-        action = template.format(**{k: _as_text(v) for k, v in op.items()}) if template else name
+        action = (
+            template.format_map(_Blanks({k: _as_text(v) for k, v in op.items()})).replace("「」", "").strip()
+            if template
+            else name
+        )
         shot_id = _as_text(op.get("shot_id"))
         label = numbers.get(shot_id) or _as_text(op.get("subclip_id")) or shot_id
         lines.append(f"· {('镜头 ' + label + '：') if label else ''}{action}")
@@ -703,6 +899,71 @@ def _append_scope(message: str, scope: dict[str, Any]) -> str:
 
 def _resolve_for_phrase(state: dict[str, Any], message: str, scope: dict[str, Any], previous_targets: Any) -> dict:
     return resolve_targets(state, _append_scope(message, scope), previous_targets=previous_targets)
+
+
+_ANIMATION_WORDS = ("动画", "动效", "特效", "花字", "hyperframes", "hyperframe")
+_ANIMATION_REMOVE_WORDS = ("删", "删掉", "删除", "去掉", "取消", "不要", "拿掉", "关掉")
+_ANIMATION_ADD_WORDS = (
+    "加", "添加", "增加", "来个", "来一个", "做个", "做一个", "上个", "配个",
+    "换", "改", "换个", "换一个", "重做", "调整", "优化", "弄个", "搞个",
+)
+
+
+def _wants_animation(message: str) -> bool:
+    text = _as_text(message).lower()
+    return any(word in text for word in _ANIMATION_WORDS)
+
+
+def _shot_text(state: dict[str, Any], shot_id: str) -> str:
+    for shot in _as_list(_as_dict(state).get("shot_plan")):
+        if isinstance(shot, dict) and _as_text(shot.get("shot_id")) == shot_id:
+            for key in ("vocal_script", "subtitle_text", "subtitle_display_text"):
+                text = _as_text(shot.get(key)).strip()
+                if text:
+                    return text
+    return ""
+
+
+def _auto_emphasis_phrase(state: dict[str, Any], shot_id: str) -> tuple[str, str]:
+    """Pick the phrase worth animating on a shot the user named without quoting.
+
+    「@镜头03 加一个动画」names a shot but no phrase, and ``set_emphasis``
+    refuses a phrase that is not really in the narration. Running the same
+    classifier the generation pipeline uses keeps the choice consistent with
+    how the film was decorated in the first place.
+    """
+    from . import animations as animations_mod
+
+    text = _shot_text(state, shot_id)
+    if not text:
+        return "", ""
+    for item in animations_mod.classify_semantics(text):
+        phrase = _as_text(_as_dict(item).get("phrase")).strip()
+        if phrase and phrase in text:
+            return phrase, _as_text(item.get("type")) or "key_point"
+    clauses = [part.strip() for part in re.split(r"[，,。！？!?；;：:\n、]", text) if part.strip()]
+    return (max(clauses, key=len) if clauses else text.strip()), "key_point"
+
+
+def _animation_ops(state: dict[str, Any], message: str, target: dict[str, Any]) -> list[dict[str, Any]]:
+    """Turn a bare animation request on a known shot into a real op."""
+    shot_id = _as_text(_as_dict(target).get("shot_id"))
+    if not shot_id:
+        return []
+    text = _as_text(message)
+    if any(word in text for word in _ANIMATION_REMOVE_WORDS):
+        return [{"op": "remove_animation", "shot_id": shot_id}]
+    if not any(word in text for word in _ANIMATION_ADD_WORDS):
+        return []
+    phrase, kind = _auto_emphasis_phrase(state, shot_id)
+    if not phrase:
+        return []
+    return [{
+        "op": "set_emphasis",
+        "shot_id": shot_id,
+        "phrase": phrase,
+        "emphasis_type": kind or "key_point",
+    }]
 
 
 def _rule_ops(state: dict[str, Any], message: str, previous_targets: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]] | None, dict[str, Any] | None]:
@@ -742,6 +1003,18 @@ def _rule_ops(state: dict[str, Any], message: str, previous_targets: Any) -> tup
     if ops:
         return ops, locators, None
 
+    # An animation request that names a shot but quotes no phrase: pick the
+    # phrase from the shot's own narration rather than asking again.
+    if _wants_animation(message):
+        locator = resolve_targets(state, message, previous_targets=previous_targets)
+        locators.append(locator)
+        if locator.get("status") != "unique":
+            return [], locators, locator
+        animation_ops = _animation_ops(state, message, _as_list(locator.get("targets"))[0])
+        if animation_ops:
+            return animation_ops, locators, None
+        return [], locators, None
+
     if "整体优化" in message or "全片优化" in message or "优化一下" == message.strip():
         ops.append({"op": "optimize_cut", "scope": "global"})
         return ops, locators, None
@@ -767,7 +1040,7 @@ def _rule_ops(state: dict[str, Any], message: str, previous_targets: Any) -> tup
         if locator.get("status") != "unique":
             return [], locators, locator
         target = _as_list(locator.get("targets"))[0]
-        text = _after_change_marker(message)
+        text = _strip_trailing_qualifier(_after_change_marker(message))
         if text:
             ops.append({"op": "set_narration", "shot_id": target["shot_id"], "text": text})
             return ops, locators, None
@@ -778,9 +1051,13 @@ def _rule_ops(state: dict[str, Any], message: str, previous_targets: Any) -> tup
         if locator.get("status") != "unique":
             return [], locators, locator
         target = _as_list(locator.get("targets"))[0]
-        text = _after_change_marker(message)
+        text = _strip_trailing_qualifier(_after_change_marker(message))
         if text:
-            ops.append({"op": "set_subtitle", "shot_id": target["shot_id"], "text": text})
+            # Changing the caption normally means changing the line: leaving the
+            # voice-over on the old wording ships a cut whose audio contradicts
+            # its captions. Only an explicit "只改字幕" keeps them apart.
+            name = "set_subtitle" if wants_display_only_subtitle(message) else "set_narration"
+            ops.append({"op": name, "shot_id": target["shot_id"], "text": text})
             return ops, locators, None
 
     if "子镜头" in message and any(word in message for word in ("换成", "替换成", "换掉")):
@@ -847,6 +1124,7 @@ def _empty_turn(intent: str, reply: str, locator: dict[str, Any] | None = None) 
         "ops": [],
         "targets": [],
         "candidates": _as_list(loc.get("candidates")) if intent == "clarify" else [],
+        "located": (_as_list(loc.get("targets")) or [None])[0],
         "confidence": loc.get("confidence", 1.0 if intent == "question" else 0.0),
         "needs_confirm": [],
         "scope": loc.get("scope", {}),
@@ -871,10 +1149,64 @@ def _edit_turn(
         "ops": ops,
         "targets": targets,
         "candidates": [],
+        "located": (_as_list(locator.get("targets")) or _as_list(locator.get("candidates")) or [None])[0],
         "confidence": locator.get("confidence", 1.0),
         "needs_confirm": _needs_confirm(ops, state),
         "scope": locator.get("scope", {}),
     }
+
+
+def _memory_anchor(memory: Any) -> dict[str, Any] | None:
+    """The shot the conversation is already about, if any."""
+    if memory is None:
+        return None
+    pending = getattr(memory, "pending", None)
+    if pending is not None and getattr(pending, "target", None):
+        return pending.target
+    focus = getattr(memory, "focus", None)
+    return focus if isinstance(focus, dict) and focus else None
+
+
+def _autocommit(
+    state: dict[str, Any],
+    message: str,
+    locator_result: dict[str, Any],
+    memory: Any,
+) -> dict[str, Any] | None:
+    """Stop asking and act on the best candidate we have.
+
+    Reached only after the same question has been asked ``MAX_CLARIFY_STREAK``
+    times. Guessing one shot is recoverable — the user corrects it in a sentence
+    — whereas another round of the same question is not.
+    """
+    pending = getattr(memory, "pending", None)
+    # The shots we actually offered the user outrank a fresh fuzzy search: the
+    # user has been choosing from that list, so the answer is in it.
+    pool = (
+        _as_list(locator_result.get("targets"))
+        or (list(pending.candidates) if pending is not None else [])
+        or _as_list(locator_result.get("candidates"))
+    )
+    target = next((item for item in pool if isinstance(item, dict) and item.get("shot_id")), None)
+    target = target or _memory_anchor(memory)
+    if not target:
+        return None
+
+    instruction = (pending.instruction if pending is not None else "") or message
+    token = conversation.candidate_token(target)
+    merged = f"{token} {instruction}".strip()
+    previous = [{"shot_id": _as_text(target.get("shot_id")), "subclip_id": _as_text(target.get("subclip_id"))}]
+    ops, locators, blocked = _rule_ops(state, merged, previous)
+    if blocked is not None or not ops:
+        return None
+    locator = locators[-1] if locators else locator_result
+    turn = _edit_turn(ops, "", locator, state)
+    turn["located"] = target
+    turn["reply"] = (
+        f"我先按{_candidate_label(target)}来改，如果不是这个镜头，告诉我序号我马上换。\n"
+        + turn["reply"]
+    )
+    return turn
 
 
 def plan_edit(
@@ -882,8 +1214,14 @@ def plan_edit(
     message: str,
     previous_targets: Any = None,
     model_plan: Any = None,
+    memory: Any = None,
 ) -> dict:
-    """Prefer a validated model plan; fall back to deterministic rules."""
+    """Prefer a validated model plan; fall back to deterministic rules.
+
+    ``memory`` is an optional :class:`conversation.Memory`. The planner stays
+    stateless with respect to it — memory only decides *which* clarification to
+    ask (or whether to stop asking at all), never what the edit is.
+    """
     raw_message = _as_text(message).strip()
     if not raw_message:
         return _empty_turn("clarify", "请说清楚要改哪一章、哪一句或哪个子镜头。")
@@ -893,42 +1231,83 @@ def plan_edit(
     primary_locator = locators[-1] if locators else locator
     unique_rule_ops = rule_ops if blocked is None and rule_ops else []
 
+    def _fallback(locator_result: dict[str, Any]) -> dict[str, Any]:
+        """Every path that cannot produce ops funnels through here.
+
+        Including the model's own ``clarify`` turns: a model that decides to ask
+        a question has no memory of how many times it has already asked it, so
+        letting its reply through unchecked reopens exactly the loop this
+        function exists to close.
+
+        Order matters: act if we have asked enough, otherwise ask the *narrow*
+        question (what to change) whenever the shot is already known, and only
+        ask "which shot" when the shot really is unknown.
+        """
+        if memory is not None and memory.should_autocommit(raw_message):
+            committed = _autocommit(state, raw_message, locator_result, memory)
+            if committed is not None:
+                return committed
+        located = (_as_list(locator_result.get("targets")) or [None])[0]
+        if isinstance(located, dict) and located.get("shot_id"):
+            return _clarify_missing_action(raw_message, located, locator_result.get("scope"))
+        anchor = _memory_anchor(memory)
+        # 「是的」「第2个」 answer a question; searching the narration for them
+        # produces nonsense candidates and restarts the loop.
+        if anchor and (conversation.is_pure_pick(raw_message)
+                       or not _as_list(locator_result.get("candidates"))):
+            return _clarify_missing_action(raw_message, anchor, locator_result.get("scope"))
+        return _clarify_from_locator(raw_message, locator_result)
+
     if model_plan is not None:
         rewritten = _rewrite_model_targets(_extract_json_dict(model_plan), state)
         allowed_ids = _extract_allowed_ids(primary_locator) | _all_target_ids(state)
         validated = validate_model_plan(rewritten or model_plan, allowed_target_ids=allowed_ids)
-        if validated["ok"] and validated["ops"]:
+        model_ops, dropped = reconcile_ops(raw_message, validated["ops"]) if validated["ok"] else ([], [])
+        if validated["ok"] and model_ops:
+            # A reply written for the ops we just discarded would describe an
+            # edit that is not happening, so re-narrate from what survived.
+            reply = validated["reply"] if not dropped else ""
             return _edit_turn(
-                validated["ops"],
-                validated["reply"] or _describe_plan(validated["ops"], primary_locator),
+                model_ops,
+                reply or _describe_plan(model_ops, primary_locator),
+                primary_locator,
+                state,
+            )
+        if dropped and unique_rule_ops:
+            # The model answered a different question; the rules answered this
+            # one. Prefer being about the right thing over being model-authored.
+            return _edit_turn(
+                unique_rule_ops,
+                _describe_plan(unique_rule_ops, primary_locator),
                 primary_locator,
                 state,
             )
         if unique_rule_ops:
+            # Only narrate the edit with the model's words when the model also
+            # decided this was an edit. Its clarify text asks a question, and
+            # pairing "which shot did you mean?" with an edit we are about to
+            # perform is worse than saying nothing.
+            model_reply = (
+                validated.get("reply")
+                if validated.get("ok") and validated.get("intent") == "edit"
+                else ""
+            )
             return _edit_turn(
                 unique_rule_ops,
-                (validated.get("reply") if validated.get("ok") else "")
-                or _describe_plan(unique_rule_ops, primary_locator),
+                model_reply or _describe_plan(unique_rule_ops, primary_locator),
                 primary_locator,
                 state,
             )
-        if validated["ok"] and validated["reply"]:
-            intent = validated.get("intent") or "question"
-            if intent == "edit":
-                intent = "clarify"
-            return _empty_turn(intent, validated["reply"], primary_locator)
-        if blocked is not None:
-            return _clarify_from_locator(raw_message, blocked)
+        if validated["ok"] and validated["reply"] and validated.get("intent") == "question":
+            return _empty_turn("question", validated["reply"], primary_locator)
         small_talk = _small_talk_reply(raw_message)
         if small_talk:
             return _empty_turn("question", small_talk)
-        return _clarify_from_locator(raw_message, primary_locator)
+        return _fallback(blocked if blocked is not None else primary_locator)
 
     small_talk = _small_talk_reply(raw_message)
     if small_talk:
         return _empty_turn("question", small_talk)
-    if blocked is not None:
-        return _clarify_from_locator(raw_message, blocked)
     if unique_rule_ops:
         return _edit_turn(unique_rule_ops, _describe_plan(unique_rule_ops, primary_locator), primary_locator, state)
-    return _clarify_from_locator(raw_message, primary_locator)
+    return _fallback(blocked if blocked is not None else primary_locator)

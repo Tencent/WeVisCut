@@ -207,5 +207,66 @@ class BuildSubtitleCuesTest(unittest.TestCase):
                     self.assertLessEqual(len(line), 14)
 
 
+class CueBoundariesTest(unittest.TestCase):
+    """A cue is a complete clause, not the first half of one.
+
+    Splitting on length first used to strand「睡眠不足的人」in one cue and
+    「认知功能会明显下降」in the next, so the viewer read half a thought at a time.
+    """
+
+    #: Punctuation a readable unit is allowed to end on.
+    CLAUSE_END = "。！？!?…，；：,;:"
+
+    def _cues(self, text: str, duration: float = 8.0) -> list[dict]:
+        return build_subtitle_cues(
+            text, duration=duration, max_chars_per_line=14, max_lines=2)["cues"]
+
+    def test_every_cue_but_the_last_ends_on_punctuation(self) -> None:
+        text = "睡眠是大脑清洁时间，你知道吗，人脑在深睡时其实正在做一次彻底的清理。"
+        cues = self._cues(text)
+        self.assertGreater(len(cues), 1, cues)
+        for cue in cues[:-1]:
+            self.assertIn(cue["text"][-1], self.CLAUSE_END, cue["text"])
+
+    def test_a_clause_is_never_spread_over_two_cues(self) -> None:
+        text = "研究发现，睡眠不足的人，认知功能会明显下降，反应速度慢了百分之四十。"
+        cues = self._cues(text)
+        for cue in cues:
+            # Each cue is whole clauses, so stripping the clause marks off the
+            # end leaves no dangling fragment start.
+            self.assertIn(cue["text"][-1], self.CLAUSE_END, cue["text"])
+
+    def test_a_short_sentence_stays_in_one_cue(self) -> None:
+        cues = self._cues("请相信，今晚早睡一小时，就是给大脑最好的礼物。")
+        self.assertEqual(len(cues), 1, [c["text"] for c in cues])
+
+    def test_clause_packing_still_loses_no_characters(self) -> None:
+        text = "第一点，睡够七小时；第二点，别在睡前刷手机；第三点，固定起床时间，周末也一样。"
+        result = build_subtitle_cues(text, duration=12.0, max_chars_per_line=14, max_lines=2)
+        self.assertEqual("".join(c["text"] for c in result["cues"]), result["display_text"])
+        self.assertEqual(normalize_lexical(result["display_text"]), normalize_lexical(text))
+
+
+class BurnedInLinesMatchThePlanTest(unittest.TestCase):
+    """What ffmpeg draws has to be what the builder planned and validated."""
+
+    def test_render_uses_the_planned_line_breaks(self) -> None:
+        from pipeline.tools.timeline_compose import _wrap_subtitle_lines
+
+        cue = build_subtitle_cues(
+            "研究发现，睡眠不足的人，认知功能会明显下降。",
+            duration=6.0, max_chars_per_line=14, max_lines=2)["cues"][0]
+        drawn = _wrap_subtitle_lines(
+            cue["text"], max_chars_per_line=14, max_lines=2, planned=cue["lines"])
+        self.assertEqual(drawn, cue["lines"])
+
+    def test_render_never_drops_the_tail_of_a_cue(self) -> None:
+        from pipeline.tools.timeline_compose import _wrap_subtitle_lines
+
+        text = "这一整句必须完整出现在屏幕上一个字都不能少掉"
+        drawn = _wrap_subtitle_lines(text, max_chars_per_line=14, max_lines=2)
+        self.assertEqual("".join(drawn), text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
