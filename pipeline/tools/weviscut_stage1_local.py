@@ -2,7 +2,7 @@
 
 These five tools are only reachable in data-pipeline mode, which reproduces the
 training-data preparation flow. They require a separate `data_pipeline` checkout
-pointed at by `WEVISIONCUT_PIPELINE_ROOT`; that checkout is not part of this
+pointed at by `WEVISCUT_PIPELINE_ROOT`; that checkout is not part of this
 repository and the studio's generation path never calls into it.
 """
 
@@ -22,8 +22,8 @@ from tqdm import tqdm
 
 
 AICUT_PIPELINE_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_WEVISIONCUT_PIPELINE_ROOT = Path(os.environ.get(
-    "WEVISIONCUT_PIPELINE_ROOT",
+DEFAULT_WEVISCUT_PIPELINE_ROOT = Path(os.environ.get(
+    "WEVISCUT_PIPELINE_ROOT",
     str(AICUT_PIPELINE_ROOT / "external_tool" / "data_pipeline"),
 ))
 
@@ -31,7 +31,7 @@ DEFAULT_WEVISIONCUT_PIPELINE_ROOT = Path(os.environ.get(
 def _prepare_external_data_pipeline() -> None:
     """Make the external `data_pipeline` package win over any local namesake."""
     local_root = str(AICUT_PIPELINE_ROOT)
-    external_root = str(DEFAULT_WEVISIONCUT_PIPELINE_ROOT)
+    external_root = str(DEFAULT_WEVISCUT_PIPELINE_ROOT)
 
     sys.path[:] = [p for p in sys.path if p not in {"", local_root}]
     if external_root in sys.path:
@@ -51,13 +51,13 @@ def _load_cfg(config_path: str | None = None) -> Any:
     from data_pipeline.utils.config import PipelineConfig
 
     cfg = PipelineConfig.load(Path(config_path).expanduser().resolve())
-    storage_root = os.getenv("WEVISIONCUT_STORAGE_ROOT")
+    storage_root = os.getenv("WEVISCUT_STORAGE_ROOT")
     if storage_root:
         cfg.paths.storage_root = storage_root
 
-    qwen_base_url = os.getenv("OPENAI_BASE_URL") or os.getenv("WEVISIONCUT_QWEN_BASE_URL")
-    qwen_api_key = os.getenv("OPENAI_API_KEY") or os.getenv("WEVISIONCUT_QWEN_API_KEY")
-    qwen_model = os.getenv("WEVISIONCUT_QWEN_MODEL")
+    qwen_base_url = os.getenv("OPENAI_BASE_URL") or os.getenv("WEVISCUT_QWEN_BASE_URL")
+    qwen_api_key = os.getenv("OPENAI_API_KEY") or os.getenv("WEVISCUT_QWEN_API_KEY")
+    qwen_model = os.getenv("WEVISCUT_QWEN_MODEL")
     if qwen_base_url:
         cfg.services.qwen.base_url = qwen_base_url
     if qwen_api_key:

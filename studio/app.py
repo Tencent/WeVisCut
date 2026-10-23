@@ -108,13 +108,13 @@ class Studio:
 
 
 studio = Studio()
-app = FastAPI(title="WevisionCut Studio", version="1.1.0")
+app = FastAPI(title="WeVisCut Studio", version="1.1.0")
 
 # The signed-in user for the request being handled. A context var rather than a
 # FastAPI dependency so that ~30 existing handler signatures stay untouched.
 CURRENT_USER: ContextVar[auth_mod.User | None] = ContextVar("current_user", default=None)
 
-SESSION_COOKIE = "wevisioncut_session"
+SESSION_COOKIE = "weviscut_session"
 # Paths reachable without a session: the login screen itself, its API, and the
 # static assets that screen needs to render.
 PUBLIC_PREFIXES = ("/login", "/api/auth/", "/static/")

@@ -6,14 +6,14 @@
 # <output_root>/_state/session_config.yaml; workers read that copy so a
 # finished corpus can be reconstructed later.
 #
-#   bash data_construct_pipeline/scripts/launch_wevisioncut_ui.sh
+#   bash data_construct_pipeline/scripts/launch_weviscut_ui.sh
 # ============================================================================
 
 # ---------------------------------------------------------------------------
 # 1. Environment
 # ---------------------------------------------------------------------------
 pipeline:
-  root: ${AICUT_PIPELINE_ROOT:-${WEVISIONCUT_ROOT:-}}
+  root: ${AICUT_PIPELINE_ROOT:-${WEVISCUT_ROOT:-}}
   pipeline_config: config/pipeline_runtime.yaml
   system_prompt_file: configs/unified_v5_system_prompt.txt
   stage_config_file: configs/stage_allowed_tools.yaml

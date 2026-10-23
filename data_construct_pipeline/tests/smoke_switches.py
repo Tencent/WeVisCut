@@ -24,7 +24,7 @@ PKG_SRC = Path(__file__).resolve().parents[1] / "src"
 if str(PKG_SRC) not in sys.path:
     sys.path.append(str(PKG_SRC))
 
-PIPELINE_ROOT = os.environ.get("AICUT_PIPELINE_ROOT") or os.environ.get("WEVISIONCUT_ROOT", "")
+PIPELINE_ROOT = os.environ.get("AICUT_PIPELINE_ROOT") or os.environ.get("WEVISCUT_ROOT", "")
 
 _failures: list[str] = []
 
@@ -76,7 +76,7 @@ def main() -> int:
     )
 
     if not PIPELINE_ROOT:
-        print("skip: set AICUT_PIPELINE_ROOT or WEVISIONCUT_ROOT to a checkout with server/infer_graph.py")
+        print("skip: set AICUT_PIPELINE_ROOT or WEVISCUT_ROOT to a checkout with server/infer_graph.py")
         return 0
     bootstrap_pipeline_paths(PIPELINE_ROOT)
     from server.infer_graph import InferenceOrchestrator  # type: ignore[import-not-found]

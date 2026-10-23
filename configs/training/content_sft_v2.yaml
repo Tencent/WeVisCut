@@ -7,12 +7,12 @@
 input:
   # 复用 v1 构建好的 transitions_valid.jsonl 来取得 split/source_file；
   # 再回读原始 trajectory 和 artifact_path 抽取完整 segments/shots。
-  processed_dir: ${WEVISIONCUT_DATA_ROOT}/Training_DATA/processed
+  processed_dir: ${WEVISCUT_DATA_ROOT}/Training_DATA/processed
   transitions_file: transitions_valid.jsonl
   include_source_kinds: [base, augmented]
 
 output:
-  output_dir: ${WEVISIONCUT_DATA_ROOT}/Training_DATA/processed_content_v2
+  output_dir: ${WEVISCUT_DATA_ROOT}/Training_DATA/processed_content_v2
 
 limits:
   # 单条样本过长时丢弃，避免 16k/32k 训练时被硬截断成坏监督。

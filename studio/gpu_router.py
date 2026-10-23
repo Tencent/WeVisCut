@@ -113,7 +113,7 @@ class Router:
 
 def build_app(backend_urls: list[str], timeout: float = 1800.0) -> FastAPI:
     router = Router([Backend(url=u.rstrip("/")) for u in backend_urls], timeout=timeout)
-    app = FastAPI(title="WevisionCut GPU router", version="1.0.0")
+    app = FastAPI(title="WeVisCut GPU router", version="1.0.0")
     state: dict[str, Any] = {}
 
     def _client() -> httpx.AsyncClient:
@@ -246,7 +246,7 @@ def build_app(backend_urls: list[str], timeout: float = 1800.0) -> FastAPI:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="WevisionCut GPU router")
+    ap = argparse.ArgumentParser(description="WeVisCut GPU router")
     ap.add_argument("--backends", required=True,
                     help="逗号分隔的后端地址，例如 http://127.0.0.1:8100,http://127.0.0.1:8101")
     ap.add_argument("--host", default="127.0.0.1")

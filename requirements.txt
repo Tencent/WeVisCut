@@ -1,5 +1,5 @@
 # ==========================================================================
-#  WevisionCut — core Python dependencies
+#  WeVisCut — core Python dependencies
 #
 #      pip install -r requirements.txt
 #

@@ -1,6 +1,6 @@
 # Asset providers: plugging in your own footage and music
 
-Everything in WevisionCut is self-contained except the two places that have to
+Everything in WeVisCut is self-contained except the two places that have to
 reach into whatever media library you own: **footage retrieval** (one search per
 shot) and **BGM retrieval** (one search per cut). Both are pluggable.
 
@@ -186,7 +186,7 @@ services:
   providers:
     plugins:
       - my_providers                        # importable module, or
-      - /opt/wevisioncut/my_providers.py     # a file path
+      - /opt/weviscut/my_providers.py     # a file path
     my_footage:                             # arrives as query.options
       index_url: https://index.internal
       shard: production

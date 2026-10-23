@@ -116,16 +116,16 @@ def test_bootstrap_rejects_a_tree_without_the_agent_loop(tmp_path):
         bootstrap_pipeline_paths(root)
 
 
-def make_wevisioncut_checkout(tmp_path):
-    """Build a minimal tree shaped like this WevisionCut repository."""
-    root = tmp_path / "WevisionCut"
+def make_weviscut_checkout(tmp_path):
+    """Build a minimal tree shaped like this WeVisCut repository."""
+    root = tmp_path / "WeVisCut"
     (root / "pipeline").mkdir(parents=True)
     (root / "pipeline" / "__init__.py").write_text("", encoding="utf-8")
     server = root / "server"
     server.mkdir()
     (server / "__init__.py").write_text("", encoding="utf-8")
     (server / "infer_graph.py").write_text("", encoding="utf-8")
-    (server / "tool_schema.py").write_text("MARKER = 'wevisioncut'\n", encoding="utf-8")
+    (server / "tool_schema.py").write_text("MARKER = 'weviscut'\n", encoding="utf-8")
     (root / "configs").mkdir()
     (root / "configs" / "unified_v5_system_prompt.txt").write_text("SYSTEM\n", encoding="utf-8")
     (root / "configs" / "stage_allowed_tools.yaml").write_text(
@@ -134,8 +134,8 @@ def make_wevisioncut_checkout(tmp_path):
     return root
 
 
-def test_bootstrap_accepts_wevisioncut_layout(tmp_path):
-    root = make_wevisioncut_checkout(tmp_path)
+def test_bootstrap_accepts_weviscut_layout(tmp_path):
+    root = make_weviscut_checkout(tmp_path)
     resolved_root, infer_dir = bootstrap_pipeline_paths(root)
 
     assert resolved_root == root.resolve()
@@ -144,11 +144,11 @@ def test_bootstrap_accepts_wevisioncut_layout(tmp_path):
 
     import server.tool_schema as tool_schema  # noqa: PLC0415
 
-    assert tool_schema.MARKER == "wevisioncut"
+    assert tool_schema.MARKER == "weviscut"
 
 
-def test_load_pipeline_assets_from_wevisioncut_layout(tmp_path):
-    root = make_wevisioncut_checkout(tmp_path)
+def test_load_pipeline_assets_from_weviscut_layout(tmp_path):
+    root = make_weviscut_checkout(tmp_path)
     pkg_runtime = (
         Path(__file__).resolve().parents[1] / "config" / "pipeline_runtime.yaml"
     )

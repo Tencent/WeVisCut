@@ -1,5 +1,5 @@
 # ==========================================================================
-#  WevisionCut — inference stack (GPU machines only)
+#  WeVisCut — inference stack (GPU machines only)
 #
 #  Install torch for your CUDA version FIRST, from the PyTorch index:
 #      pip install torch --index-url https://download.pytorch.org/whl/cu121

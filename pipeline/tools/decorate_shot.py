@@ -26,7 +26,7 @@ from ..llm import LLMClient
 logger = logging.getLogger("aicut_pipeline")
 
 SYSTEM_PROMPT = """\
-你是视频模板装饰专家(WevisionCut Agent)。你为重点镜头(spotlight)选择合适的
+你是视频模板装饰专家(WeVisCut Agent)。你为重点镜头(spotlight)选择合适的
 Gold Template 结构，填充文本槽位，并设计叠加动效。
 
 核心原则：

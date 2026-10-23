@@ -1,6 +1,6 @@
 # Model weights on Hugging Face
 
-How to consume the released WevisionCut checkpoint, and how to publish your own.
+How to consume the released WeVisCut checkpoint, and how to publish your own.
 
 ---
 
@@ -10,15 +10,15 @@ The checkpoint is a `qwen3_5` architecture, roughly 18 GB in bf16.
 
 ```bash
 pip install -U "huggingface_hub[cli]"
-hf download <org>/WevisionCut-9B --local-dir checkpoints/wevisioncut-9b
+hf download <org>/WeVisCut-9B --local-dir checkpoints/weviscut-9b
 ```
 
-`checkpoints/wevisioncut-9b` is the path `studio_config.yaml` looks in by default,
+`checkpoints/weviscut-9b` is the path `studio_config.yaml` looks in by default,
 so nothing else is needed. To keep weights elsewhere — a shared volume, a
 different disk — point the config at them:
 
 ```bash
-export WEVISIONCUT_MODEL_PATH=/data/models/wevisioncut-9b
+export WEVISCUT_MODEL_PATH=/data/models/weviscut-9b
 ```
 
 Behind a mirror:
@@ -45,9 +45,9 @@ To serve a base model plus an adapter, use the `transformers` profile — vLLM i
 this setup loads merged weights only:
 
 ```bash
-export WEVISIONCUT_MODEL_PROFILE=wevisioncut_9b_hf
-export WEVISIONCUT_MODEL_PATH=/data/models/base
-export WEVISIONCUT_LORA_PATH=/data/models/my_adapter
+export WEVISCUT_MODEL_PROFILE=weviscut_9b_hf
+export WEVISCUT_MODEL_PATH=/data/models/base
+export WEVISCUT_LORA_PATH=/data/models/my_adapter
 ```
 
 `transformers` is markedly slower than vLLM. For anything beyond a quick
@@ -90,7 +90,7 @@ the `<think>` and `<tool_call>` framing the model was trained with, and the
 studio's parsing assumes it. Verify locally first:
 
 ```bash
-export WEVISIONCUT_MODEL_PATH=/path/to/your/checkpoint
+export WEVISCUT_MODEL_PATH=/path/to/your/checkpoint
 bash run_studio.sh --check
 bash run_studio.sh          # generate one video end to end
 ```
@@ -102,8 +102,8 @@ If `enable_thinking` produces an empty thinking panel, the template is closing
 
 ```bash
 hf auth login
-hf repo create <org>/WevisionCut-9B --type model
-hf upload <org>/WevisionCut-9B /path/to/your/checkpoint . --repo-type model
+hf repo create <org>/WeVisCut-9B --type model
+hf upload <org>/WeVisCut-9B /path/to/your/checkpoint . --repo-type model
 ```
 
 Large uploads resume, so an interrupted transfer can simply be re-run.
@@ -153,7 +153,7 @@ WORKDIR /app
 COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN bash scripts/setup_external_tools.sh
-ENV WEVISIONCUT_WORKSPACE=/data/workspace
+ENV WEVISCUT_WORKSPACE=/data/workspace
 CMD ["bash", "run_studio.sh", "--port", "7860"]
 ```
 
@@ -174,5 +174,5 @@ loading weights.
 
 If you release training data, keep it in a separate dataset repo and reference it
 from the model card. `configs/training/` documents the expected layout and the
-environment variables (`WEVISIONCUT_DATA_ROOT` and friends) that point the
+environment variables (`WEVISCUT_DATA_ROOT` and friends) that point the
 training configs at a local copy.

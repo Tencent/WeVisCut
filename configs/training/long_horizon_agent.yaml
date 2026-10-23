@@ -1,9 +1,9 @@
 input:
-  raw_root: ${WEVISIONCUT_RESULT_ROOT}/raw_trajectories/latest/trajectory_results/all
+  raw_root: ${WEVISCUT_RESULT_ROOT}/raw_trajectories/latest/trajectory_results/all
   include_source_kinds: [base, augmented]
 
 output:
-  output_dir: ${WEVISIONCUT_TRAINING_REPO}/preprocess_ori_data/processed_long_horizon
+  output_dir: ${WEVISCUT_TRAINING_REPO}/preprocess_ori_data/processed_long_horizon
 
 split:
   train: 0.82

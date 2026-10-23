@@ -551,7 +551,7 @@ def _all_target_ids(state: dict[str, Any]) -> set[str]:
     return allowed
 
 
-SYSTEM_PROMPT = """你是 WevisionCut 的剪辑助手。用户已经有一支成片，正在用中文口语跟你说想怎么改。
+SYSTEM_PROMPT = """你是 WeVisCut 的剪辑助手。用户已经有一支成片，正在用中文口语跟你说想怎么改。
 你的工作是理解他这句话真正想做什么，然后要么直接给出编辑操作，要么像同事一样回答他。
 
 只输出一个 JSON 对象，不要 Markdown、不要代码块、不要任何解释文字：

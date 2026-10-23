@@ -138,9 +138,9 @@ class TestConfigSwitch:
         assert provider == "asset_retrieval_tool"
 
     def test_config_provider_env_override(self, monkeypatch):
-        """WEVISIONCUT_VIDEO_PROVIDER selects a provider without editing YAML."""
+        """WEVISCUT_VIDEO_PROVIDER selects a provider without editing YAML."""
         from studio.config import load
-        monkeypatch.setenv("WEVISIONCUT_VIDEO_PROVIDER", "local_folder_video")
+        monkeypatch.setenv("WEVISCUT_VIDEO_PROVIDER", "local_folder_video")
         cfg = load()
         assert cfg.pipeline_config.get("retrieval_provider") == "local_folder_video"
 

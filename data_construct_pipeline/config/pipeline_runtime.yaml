@@ -2,8 +2,8 @@
 # This is *not* studio_config.yaml — the studio and the training-time loop
 # share pipeline/ + server/ but read different top-level documents.
 #
-# Paths are resolved against pipeline.root (the WevisionCut repo by default).
-# ${REPO_ROOT} is *not* injected here; use WEVISIONCUT_GOLD_TEMPLATE / relative
+# Paths are resolved against pipeline.root (the WeVisCut repo by default).
+# ${REPO_ROOT} is *not* injected here; use WEVISCUT_GOLD_TEMPLATE / relative
 # paths instead.
 
 execution:
@@ -30,10 +30,10 @@ tts:
   service_url: ${AICUT_TTS_URL:-http://127.0.0.1:7865}
 
 paths:
-  gold_template_root: ${WEVISIONCUT_GOLD_TEMPLATE:-external_tool/gold_template}
-  asset_library: ${WEVISIONCUT_ASSET_LIBRARY:-workspace/asset_library}
-  output_root: ${WEVISIONCUT_WORKSPACE:-workspace}/pipeline_out
-  storage_root: ${WEVISIONCUT_WORKSPACE:-workspace}/storage
+  gold_template_root: ${WEVISCUT_GOLD_TEMPLATE:-external_tool/gold_template}
+  asset_library: ${WEVISCUT_ASSET_LIBRARY:-workspace/asset_library}
+  output_root: ${WEVISCUT_WORKSPACE:-workspace}/pipeline_out
+  storage_root: ${WEVISCUT_WORKSPACE:-workspace}/storage
 
 stage3_trajectory:
   max_workers: 4
@@ -52,4 +52,4 @@ music: {}
 render_split:
   enabled: true
   overlay_format: webm
-  cache_dir: /tmp/wevisioncut_render_split
+  cache_dir: /tmp/weviscut_render_split

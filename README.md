@@ -1,17 +1,54 @@
+<div align="center">
 
-<p align="center">
-  <img src="assets/wevisioncut_logo.png" alt="WevisionCut logo" width="420" />
-</p>
+<img src="assets/weviscut_logo.png" alt="WeVisCut logo" width="420" />
 
-# WevisionCut
+# WeVisCut
 
-**A long-horizon tool agent that turns a knowledge article / narration script into a multi-minute edited video.**
+### *A Long-Horizon Tool Agent for Turning Knowledge Articles into Edited Videos*
 
-Paste a long-form script. A single 9B policy ([tencent/WevisionCut](https://huggingface.co/tencent/WevisionCut)) calls tools one at a time: it segments the article, plans shots, synthesizes narration, retrieves footage, fills animated templates, picks BGM, reviews itself, repairs, and stitches the cut. There is no hardcoded stage machine telling it what to do next.
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg?logo=python&logoColor=white)](requirements.txt)
+[![Model](https://img.shields.io/badge/%F0%9F%A4%97%20Model-WeVisCut--9B-FFD21E.svg)](https://huggingface.co/tencent/WeVisCut)
+[![Tools](https://img.shields.io/badge/Tools-12%20editing%20tools-2EA44F.svg)](#how-it-works-short)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20NVIDIA%20GPU-76B900.svg)](requirements-gpu.txt)
 
-[English](README.md) · [中文](README_zh.md) · [Model](https://huggingface.co/tencent/WevisionCut) · [Paper code](https://github.com/Tencent/WevisionCut)
+[English](README.md) · [中文](README_zh.md) · [Model](https://huggingface.co/tencent/WeVisCut) · [Code](https://github.com/Tencent/WeVisCut) · [Docs](docs/architecture.md)
 
-![WevisionCut overview](assets/overview.png)
+</div>
+
+---
+
+## Abstract
+
+**WeVisCut** is a long-horizon tool agent that turns a knowledge article or narration script into a multi-minute edited video. A single 9B policy ([`tencent/WeVisCut`](https://huggingface.co/tencent/WeVisCut)) reads the current editing state and emits **one tool call at a time** — segment the article, plan shots, synthesize narration, retrieve footage, fill animated templates, pick BGM, judge, reflect, repair, stitch — for roughly twelve calls per rollout. There is no hardcoded stage machine: the trajectory is decided by the policy, and guardrails only *reject* illegal calls, never replace them. The released runtime is **training-aligned** — the same 12 tools and the same state JSON the model saw during training — and ships together with the studio UI and the trajectory-collection pipeline that produced the data.
+
+![WeVisCut overview](assets/overview.png)
+
+---
+
+## At a glance
+
+| | |
+|---|---|
+| **Task** | long-form script → multi-minute edited video |
+| **Policy** | one 9B model, one tool call per step (~12 calls / rollout) |
+| **Action space** | 12 editing tools (segment, plan, TTS, retrieval, template, compose, BGM, judge, reflect, probe, stitch) |
+| **Runtime** | `studio/` — live timeline, pause / resume, manual & chat editing, per-shot re-render, version rollback |
+| **Data** | `data_construct_pipeline/` — long-horizon trajectory annotation (orchestrator / generator / critic) |
+| **Requirements** | Python ≥ 3.11, ~24 GB NVIDIA GPU for bf16 9B (UI-only mode needs none) |
+| **License** | Apache-2.0 ([LICENSE](LICENSE)) |
+
+---
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Use the studio](#use-the-studio)
+- [Data-construct pipeline](#data-construct-pipeline)
+- [How it works (short)](#how-it-works-short)
+- [Tests (offline, no GPU)](#tests-offline-no-gpu)
+- [Citation](#citation)
+- [License](#license)
 
 ---
 
@@ -29,8 +66,8 @@ Paste a long-form script. A single 9B policy ([tencent/WevisionCut](https://hugg
 **Need:** Python ≥ 3.11, an NVIDIA GPU with ~24 GB for bf16 9B (UI-only: `--no-model`). Node and ffmpeg are installed by the setup script.
 
 ```bash
-git clone https://github.com/Tencent/WevisionCut.git
-cd WevisionCut
+git clone https://github.com/Tencent/WeVisCut.git
+cd WeVisCut
 
 pip install -r requirements.txt
 # GPU machines: install torch for your CUDA, then
@@ -39,13 +76,13 @@ pip install -r requirements-gpu.txt
 bash scripts/setup_external_tools.sh          # ffmpeg, Node, renderer, ~1.1 GB
 
 pip install -U "huggingface_hub[cli]"
-hf download tencent/WevisionCut --local-dir checkpoints/wevisioncut-9b
+hf download tencent/WeVisCut --local-dir checkpoints/weviscut-9b
 
 bash run_studio.sh --check                   # path check, no GPU
 bash run_studio.sh                          # default http://<host>:8081/
 ```
 
-Weights load in the background (30–60 s). The UI is up immediately. Put the checkpoint somewhere else with `export WEVISIONCUT_MODEL_PATH=/path/to/WevisionCut`.
+Weights load in the background (30–60 s). The UI is up immediately. Put the checkpoint somewhere else with `export WEVISCUT_MODEL_PATH=/path/to/WeVisCut`.
 
 If `github.com` is blocked, `pip install deepagents==0.7.7` instead of the git pin in `requirements.txt`. The loader needs an `ms-swift` that registers `qwen3_5` (`AICUT_MS_SWIFT_PATH` if yours does not).
 
@@ -117,10 +154,25 @@ node tests/test_frontend.js
 | Symptom | Check |
 |---|---|
 | Missing modules | `requirements.txt` / `requirements-gpu.txt` |
-| Model stuck on “loading” | Log; `checkpoints/wevisioncut-9b` (or `WEVISIONCUT_MODEL_PATH`); GPU visible |
+| Model stuck on “loading” | Log; `checkpoints/weviscut-9b` (or `WEVISCUT_MODEL_PATH`); GPU visible |
 | A tool loops | Frontend terminal — usually TTS / retrieval / renderer |
 | Empty thinking panel | `model.enable_thinking: true` |
 | Port in use | `bash run_studio.sh --port <free>` |
+
+## Citation
+
+If you use WeVisCut in your research, please cite:
+
+```bibtex
+@misc{weviscut2026,
+  title        = {WeVisCut: A Long-Horizon Tool Agent for Turning Knowledge Articles into Edited Videos},
+  author       = {WeVisCut Team},
+  organization = {Tencent},
+  year         = {2026},
+  howpublished = {\url{https://github.com/Tencent/WeVisCut}},
+  note         = {Technical report and code release}
+}
+```
 
 ## License
 

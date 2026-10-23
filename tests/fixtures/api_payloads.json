@@ -112,7 +112,7 @@
         "sft_v5_merged",
         "lora_transformers"
       ],
-      "base_model": "/srv/wevisioncut/trained_model/aicut_unified_v6_qwen3_5_9b_merged_step800",
+      "base_model": "/srv/weviscut/trained_model/aicut_unified_v6_qwen3_5_9b_merged_step800",
       "adapter": "",
       "backend": "vllm",
       "device": "cuda:0"
@@ -131,7 +131,7 @@
     "projects": [
       {
         "project_id": "aicut_fixture_0001",
-        "project_dir": "/srv/wevisioncut/Studio_260811/projects/aicut_fixture_0001",
+        "project_dir": "/srv/weviscut/Studio_260811/projects/aicut_fixture_0001",
         "title": "为什么大模型的上下文窗口越来越长？这期讲清楚三件事。",
         "shot_count": 4,
         "final_video_path": "/tmp/aicut/final.mp4",
@@ -143,7 +143,7 @@
   },
   "project": {
     "project_id": "aicut_fixture_0001",
-    "project_dir": "/srv/wevisioncut/Studio_260811/projects/aicut_fixture_0001",
+    "project_dir": "/srv/weviscut/Studio_260811/projects/aicut_fixture_0001",
     "progress": {
       "track_order": [
         "segments",
@@ -595,7 +595,7 @@
     ],
     "ok": true,
     "project_id": "aicut_fixture_0001",
-    "project_dir": "/srv/wevisioncut/Studio_260811/projects/aicut_fixture_0001",
+    "project_dir": "/srv/weviscut/Studio_260811/projects/aicut_fixture_0001",
     "progress": {
       "track_order": [
         "segments",
@@ -1778,5 +1778,5 @@
       "validation_errors": []
     }
   },
-  "project_dir": "/srv/wevisioncut/Studio_260811/projects/aicut_fixture_0001"
+  "project_dir": "/srv/weviscut/Studio_260811/projects/aicut_fixture_0001"
 }

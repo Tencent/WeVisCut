@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manage WevisionCut accounts in ``users.yaml``.
+"""Manage WeVisCut accounts in ``users.yaml``.
 
 Passwords are read from a prompt (never from argv, so they stay out of shell
 history and out of ``ps``) and only their PBKDF2 hash is written to disk.
@@ -45,7 +45,7 @@ def _load(path: Path) -> dict:
 def _save(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     header = (
-        "# WevisionCut 账号文件。只存 PBKDF2 哈希，不存明文密码。\n"
+        "# WeVisCut 账号文件。只存 PBKDF2 哈希，不存明文密码。\n"
         "# 用 scripts/manage_users.py 维护，不要手写 password_hash。\n"
     )
     path.write_text(
@@ -163,7 +163,7 @@ def cmd_list(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="WevisionCut 账号管理")
+    ap = argparse.ArgumentParser(description="WeVisCut 账号管理")
     ap.add_argument("--file", default=str(DEFAULT_FILE), help="users.yaml 路径")
     sub = ap.add_subparsers(dest="cmd", required=True)
 

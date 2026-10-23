@@ -1,8 +1,8 @@
-# WevisionCut data-construct pipeline
+# WeVisCut data-construct pipeline
 
-[English](README.md) · [中文](README_zh.md) · [back to WevisionCut](../README.md)
+[English](README.md) · [中文](README_zh.md) · [back to WeVisCut](../README.md)
 
-This package records **training trajectories** for WevisionCut: one narration
+This package records **training trajectories** for WeVisCut: one narration
 script in, one finished cut plus three role-split data streams out.
 
 It is the data-construction side of the paper, not the deployed studio. The
@@ -53,20 +53,20 @@ policy whose content skills and judge skills are separately replaceable.
 
 ## Relation to the rest of this repository
 
-| This package | Released WevisionCut studio |
+| This package | Released WeVisCut studio |
 |---|---|
 | Training-time loop in `server/infer_graph.py` | `aicut_agent/` deepagents / LangGraph harness |
 | Runtime may redirect illegal / repeated calls so annotation finishes | Guardrails observe; they do not substitute a different tool |
 | Writes orchestrator / generator / critic SFT+RL dumps | Serves one trained 9B policy in the browser |
 
-`pipeline.root` defaults to **this WevisionCut checkout** (`pipeline/` +
+`pipeline.root` defaults to **this WeVisCut checkout** (`pipeline/` +
 `server/`). You do not need a second internal repository to run it.
 
 ---
 
 ## Install
 
-From the WevisionCut repo root:
+From the WeVisCut repo root:
 
 ```bash
 pip install -e data_construct_pipeline            # core (httpx + pyyaml)
@@ -76,7 +76,7 @@ pip install -e "data_construct_pipeline[web]"     # campaign UI
 
 A real rollout also needs:
 
-- this WevisionCut tree (`pipeline/`, `server/`, `configs/`, `external_tool/`)
+- this WeVisCut tree (`pipeline/`, `server/`, `configs/`, `external_tool/`)
 - an OpenAI-compatible served model (vLLM / SGLang)
 - TTS: `bash data_construct_pipeline/services/tts/run_qwen3_tts_service.sh`
 - `ffmpeg` / `ffprobe` (see the parent [external tools guide](../docs/external_tools.md))
@@ -170,7 +170,7 @@ the orchestrator reads (execution, TTS, templates) — not `studio_config.yaml`.
 | `recording` | Output root, prompt retention |
 | `batch` | Input glob, workers, resume |
 
-Useful environment variables: `WEVISIONCUT_ROOT`, `AICUT_PIPELINE_ROOT`,
+Useful environment variables: `WEVISCUT_ROOT`, `AICUT_PIPELINE_ROOT`,
 `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `LVP_MODEL`, `LVP_PROFILE`,
 `LVP_OUTPUT_ROOT`, `LVP_INPUT_DIR`.
 
@@ -197,7 +197,7 @@ cd data_construct_pipeline && PYTHONPATH=src python -m pytest -q
 
 | Symptom | What to check |
 |---|---|
-| `pipeline.root does not exist` | Point `pipeline.root` at this WevisionCut repo, or export `WEVISIONCUT_ROOT` |
+| `pipeline.root does not exist` | Point `pipeline.root` at this WeVisCut repo, or export `WEVISCUT_ROOT` |
 | `missing server/infer_graph.py` | Checkout is incomplete; the loop is `server/infer_graph.py` |
 | `agent_mode=... does not select the long-horizon loop` | Set `agent.agent_mode: long_horizon` |
 | every step `parse_ok: false` | Served model has no native tool calling → `native_tool_calls: false` |

@@ -3,7 +3,7 @@
 The loop lives in ``server.infer_graph.InferenceOrchestrator``. Two checkout
 layouts are supported:
 
-- **WevisionCut** (this repository): ``pipeline/`` and ``server/`` sit at the
+- **WeVisCut** (this repository): ``pipeline/`` and ``server/`` sit at the
   repo root. ``pipeline.root`` can point here and nothing else is required.
 - **Legacy AICutPipeline**: the inference package lives under
   ``Infer_Vis_new/server`` and a second ``server`` package (TTS) sits at the
@@ -41,7 +41,7 @@ def _infer_dir_for(root: Path) -> Path:
 
     Prefer the legacy ``Infer_Vis_new`` tree when it exists — that checkout
     also has a TTS ``server`` package at the repo root, and only the nested
-    one is the agent loop. Fall back to the WevisionCut layout, where
+    one is the agent loop. Fall back to the WeVisCut layout, where
     ``server/`` at the repo root *is* the loop.
     """
     legacy = root / _INFER_DIR_NAME
@@ -60,7 +60,7 @@ def bootstrap_pipeline_paths(pipeline_root: str | Path) -> tuple[Path, Path]:
     """Put the video-editing environment and its inference server on ``sys.path``.
 
     Args:
-        pipeline_root: Path to a WevisionCut or AICutPipeline checkout.
+        pipeline_root: Path to a WeVisCut or AICutPipeline checkout.
 
     Returns:
         ``(pipeline_root, infer_dir)`` as resolved absolute paths.
@@ -71,12 +71,12 @@ def bootstrap_pipeline_paths(pipeline_root: str | Path) -> tuple[Path, Path]:
     root = Path(pipeline_root).expanduser().resolve()
     if not (root / "pipeline").is_dir():
         raise FileNotFoundError(
-            f"{root} does not look like a WevisionCut / AICutPipeline checkout "
+            f"{root} does not look like a WeVisCut / AICutPipeline checkout "
             "(no pipeline/ dir)"
         )
     infer_dir = _infer_dir_for(root)
     # Insert root first so infer_dir lands at index 0 when the two differ.
-    # When they are the same (WevisionCut), insert once.
+    # When they are the same (WeVisCut), insert once.
     ordered = [str(root)]
     if str(infer_dir) != str(root):
         ordered.append(str(infer_dir))

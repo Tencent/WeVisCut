@@ -540,13 +540,13 @@ function testMarkupContract() {
 function testLoginBranding() {
   section('login branding');
   const html = read(path.join(ROOT, 'static', 'newvis', 'login.html'));
-  check('login title uses WevisionCut',
-    html.includes('<title>WevisionCut · 登录</title>'),
+  check('login title uses WeVisCut',
+    html.includes('<title>WeVisCut · 登录</title>'),
     html.match(/<title>[^<]+<\/title>/)?.[0]);
-  check('login brand text uses WevisionCut',
-    html.includes('<b>WevisionCut</b>') && !html.includes('<b>WEDirector</b>'),
+  check('login brand text uses WeVisCut',
+    html.includes('<b>WeVisCut</b>') && !html.includes('<b>WEDirector</b>'),
     html);
-  check('login logo uses public WevisionCut mark',
+  check('login logo uses public WeVisCut mark',
     html.includes('logo_aicut.png') && html.includes('/static/newvis0907/assets/logo_aicut.png') && !html.includes('/api/media?path='),
     html);
 }

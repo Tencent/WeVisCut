@@ -10,7 +10,7 @@
 
 input:
   # batch_anno_script 的 cluster output_root（与 batch_cluster_config.yaml 对齐）
-  batch_output_root: ${WEVISIONCUT_RESULT_ROOT}/raw_trajectories
+  batch_output_root: ${WEVISCUT_RESULT_ROOT}/raw_trajectories
   # 额外直接扫描的目录（可选）
   extra_dirs: []
   # 额外直接指定的文件（可选）
@@ -21,7 +21,7 @@ input:
   max_files: 0
 
 output:
-  processed_dir: ${WEVISIONCUT_DATA_ROOT}/Training_DATA/processed
+  processed_dir: ${WEVISCUT_DATA_ROOT}/Training_DATA/processed
 
 split:
   train: 0.8

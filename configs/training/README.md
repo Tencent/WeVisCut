@@ -13,8 +13,8 @@ recipe behind the released checkpoint is documented rather than implied.
 | `agent_sft_v3.yaml` | Verifiable agentic-control SFT stage |
 | `long_horizon_agent.yaml` | Long-horizon trajectory SFT (the v5/v6 lineage) |
 
-Paths have been replaced with `${WEVISIONCUT_DATA_ROOT}`,
-`${WEVISIONCUT_RESULT_ROOT}` and `${WEVISIONCUT_TRAINING_REPO}` placeholders.
+Paths have been replaced with `${WEVISCUT_DATA_ROOT}`,
+`${WEVISCUT_RESULT_ROOT}` and `${WEVISCUT_TRAINING_REPO}` placeholders.
 Export those before reusing a file.
 
 The code that rolls out scripts and writes the three role streams is

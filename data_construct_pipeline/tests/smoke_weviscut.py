@@ -10,7 +10,7 @@ which need a model endpoint:
 
 Run::
 
-    python3 tests/smoke_wevisioncut.py
+    python3 tests/smoke_weviscut.py
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ if str(PKG_SRC) not in sys.path:
     sys.path.append(str(PKG_SRC))
 
 DATASET_ROOT = Path(os.environ.get("LVP_SMOKE_DATASET", ""))
-GOLD_ROOT = Path(os.environ.get("WEVISIONCUT_GOLD_TEMPLATE", ""))
+GOLD_ROOT = Path(os.environ.get("WEVISCUT_GOLD_TEMPLATE", ""))
 SAMPLE_EPISODE = Path(os.environ.get("LVP_SMOKE_EPISODE", ""))
 
 _failures: list[str] = []

@@ -101,7 +101,7 @@ class _FakeBackend:
 
         @app.get("/v1/models")
         async def models():
-            return {"data": [{"id": "wevisioncut-9b"}]}
+            return {"data": [{"id": "weviscut-9b"}]}
 
         @app.post("/v1/chat/completions")
         async def chat(payload: dict):
@@ -255,7 +255,7 @@ class StudioClusterEndpointTest(unittest.TestCase):
     def _point_at(self, base: str) -> None:
         self.model["infer_backend"] = "openai"
         self.model["openai_base_url"] = base
-        self.model["openai_model"] = "wevisioncut-9b"
+        self.model["openai_model"] = "weviscut-9b"
 
     def test_single_gpu_reports_disabled(self):
         self.model["infer_backend"] = "vllm"
@@ -278,7 +278,7 @@ class StudioClusterEndpointTest(unittest.TestCase):
             self.assertEqual(body["total"], 2)
             self.assertEqual(body["healthy"], 2)
             self.assertEqual(body["inflight"], 0)
-            self.assertEqual(body["model"], "wevisioncut-9b")
+            self.assertEqual(body["model"], "weviscut-9b")
             self.assertEqual(len(body["backends"]), 2)
         finally:
             router.stop()

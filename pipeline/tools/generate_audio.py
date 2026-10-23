@@ -303,7 +303,7 @@ def _download_audio_url(audio_url: str, output_path: str, timeout_sec: int = 90)
     if not audio_url:
         raise ValueError("empty audio_url")
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    req = urllib.request.Request(audio_url, headers={"User-Agent": "WevisionCut/1.0"})
+    req = urllib.request.Request(audio_url, headers={"User-Agent": "WeVisCut/1.0"})
     with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
         data = resp.read()
     if not data:
