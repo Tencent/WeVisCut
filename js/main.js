@@ -11,6 +11,102 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pad = n => String(n).padStart(2, "0");
 const tc = f => `${pad(Math.floor(f / 86400))}:${pad(Math.floor(f / 1440) % 60)}:${pad(Math.floor(f / 24) % 60)}:${pad(f % 24)}`;
 
+/* One audible clip at a time. Replay flushes the media pipeline so a
+   previous play() cannot keep sounding under the new one. */
+const evalVideoEl = $("#evalVideo");
+let evalInView = false, evalResumeT = 0;
+
+const audibleVideos = () => $$("video").filter(v => v.id !== "evalVideo");
+function claimAudible(keep) {
+  const allow = new Set(keep || []);
+  audibleVideos().forEach(v => { if (!allow.has(v) && !v.paused) v.pause(); });
+  if (evalVideoEl && !evalVideoEl.paused) evalVideoEl.pause();
+}
+function stopVideo(video) {
+  if (!video) return;
+  const hot = !video.paused || video.currentTime > 0.05;
+  video.pause();
+  video.dataset.done = "";
+  if (hot && video.getAttribute("src")) flushPipeline(video);
+  video.muted = false;
+}
+function armNativeReplay(video, keep) {
+  video.addEventListener("ended", () => { video.dataset.done = "1"; maybeResumeEval(); });
+  video.addEventListener("play", () => {
+    claimAudible(keep);
+    if (video.dataset.guard === "1" || video.dataset.done !== "1") return;
+    if (!video.getAttribute("src")) return;
+    video.dataset.done = "";
+    video.dataset.guard = "1";
+    video.pause();
+    flushPipeline(video);
+    video.muted = false;
+    video.play().catch(() => {}).finally(() => { video.dataset.guard = ""; });
+  });
+}
+function maybeResumeEval() {
+  clearTimeout(evalResumeT);
+  evalResumeT = setTimeout(() => {
+    if (!evalVideoEl || !evalInView) return;
+    if (audibleVideos().some(v => !v.paused && !v.ended)) return;
+    evalVideoEl.muted = true;
+    evalVideoEl.play().catch(() => {});
+  }, 280);
+}
+function whenSeeked(video, timeout = 500) {
+  return new Promise(resolve => {
+    if (!video || (!video.seeking && video.currentTime <= 0.05)) { resolve(); return; }
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      video.removeEventListener("seeked", done);
+      resolve();
+    };
+    video.addEventListener("seeked", done);
+    setTimeout(done, timeout);
+  });
+}
+function flushPipeline(video) {
+  const src = video.getAttribute("src");
+  const poster = video.getAttribute("poster");
+  video.pause();
+  video.muted = true;
+  video.removeAttribute("src");
+  video.load();
+  if (poster) video.setAttribute("poster", poster);
+  if (src) video.setAttribute("src", src);
+}
+async function playClean(video, { fromStart = true, muted = false, alive = () => true } = {}) {
+  if (!video || !alive()) return;
+  const replay = fromStart && video.played && video.played.length > 0;
+  video.pause();
+  video.muted = true;
+  if (replay) flushPipeline(video);
+  else if (fromStart) {
+    try { video.currentTime = 0; } catch (_) {}
+    await whenSeeked(video);
+  }
+  if (!alive()) { video.pause(); return; }
+  video.muted = muted;
+  try { await video.play(); } catch (_) { if (!muted) video.muted = false; }
+  if (!alive()) video.pause();
+}
+if (evalVideoEl) {
+  evalVideoEl.muted = true;
+  evalVideoEl.removeAttribute("autoplay");
+  new IntersectionObserver(es => es.forEach(e => {
+    evalInView = e.isIntersecting;
+    if (evalInView) maybeResumeEval();
+    else evalVideoEl.pause();
+  }), { threshold: .3 }).observe(evalVideoEl);
+}
+const pvVideo = $("#pvVideo");
+if (pvVideo) {
+  armNativeReplay(pvVideo, [pvVideo]);
+  pvVideo.addEventListener("pause", maybeResumeEval);
+}
+
 /* ───────────── 1. clocks (24fps timecode) ───────────── */
 const navTc = $("#navTc"), deckClock = $("#deckClock");
 let frame = 0;
@@ -227,6 +323,7 @@ if (stream && nle) {
   async function run() {
     const token = ++runToken;
     const alive = () => token === runToken;
+    stopVideo(pvVideo);
     stream.innerHTML = ""; buildLanes();
     preview.classList.remove("live");
     runProgress.style.width = "0%";
@@ -444,16 +541,34 @@ if (stream && nle) {
 /* ───────────── 5. lightbox ───────────── */
 const lb = $("#lightbox"), lbVideo = $("#lightboxVideo");
 if (lb) {
-  $$(".card").forEach(c => c.addEventListener("click", () => {
+  let lbTicket = 0;
+  armNativeReplay(lbVideo, [lbVideo]);
+  lbVideo.addEventListener("pause", maybeResumeEval);
+  $$(".card").forEach(c => c.addEventListener("click", async () => {
+    const ticket = ++lbTicket;
+    claimAudible([lbVideo]);
+    lbVideo.dataset.done = "";
+    lbVideo.pause();
+    lbVideo.muted = true;
+    lbVideo.removeAttribute("src");
+    lbVideo.load();
     lbVideo.src = c.dataset.video;
     lb.classList.add("open");
     document.body.style.overflow = "hidden";
-    lbVideo.play().catch(() => {});
+    lbVideo.muted = false;
+    try { await lbVideo.play(); } catch (_) {}
+    if (ticket !== lbTicket) lbVideo.pause();
   }));
   const close = () => {
+    ++lbTicket;
     lb.classList.remove("open");
-    lbVideo.pause(); lbVideo.removeAttribute("src"); lbVideo.load();
+    lbVideo.pause();
+    lbVideo.muted = true;
+    lbVideo.removeAttribute("src");
+    lbVideo.load();
+    lbVideo.muted = false;
     document.body.style.overflow = "";
+    maybeResumeEval();
   };
   $("#lightboxClose").addEventListener("click", close);
   lb.addEventListener("click", e => { if (e.target === lb) close(); });
@@ -470,27 +585,52 @@ if (vsOurs && vsTheirs && vsTabs) {
     nature:   { ours: "assets/videos/vs/our_nature.mp4",   theirs: "assets/videos/vs/cr_nature.mp4",   title: "我们为什么探索宇宙" },
     society:  { ours: "assets/videos/vs/our_society.mp4",  theirs: "assets/videos/vs/cr_society.mp4",  title: "现代人为何越来越孤独" },
   };
-  let playing = false, curPair = "tech";
+  let playing = false, curPair = "tech", vsTicket = 0;
 
-  const setPlaying = on => {
+  const setPairUi = on => {
     playing = on;
     vsPlay.classList.toggle("playing", on);
     vsPlay.querySelector(".pp").textContent = on ? "❚❚" : "▶";
-    if (on) {
-      vsTheirs.currentTime = vsOurs.currentTime = 0;
-      vsOurs.play().catch(() => {}); vsTheirs.play().catch(() => {});
-    } else { vsOurs.pause(); vsTheirs.pause(); }
+  };
+  const setPlaying = async on => {
+    const ticket = ++vsTicket;
+    setPairUi(on);
+    if (!on) {
+      vsOurs.pause();
+      vsTheirs.pause();
+      maybeResumeEval();
+      return;
+    }
+    claimAudible([vsOurs, vsTheirs]);
+    vsTheirs.muted = true;
+    const alive = () => ticket === vsTicket && playing;
+    await Promise.all([
+      playClean(vsOurs, { fromStart: true, muted: false, alive }),
+      playClean(vsTheirs, { fromStart: true, muted: true, alive }),
+    ]);
+    if (!alive()) { vsOurs.pause(); vsTheirs.pause(); }
   };
   const loadPair = key => {
+    const ticket = ++vsTicket;
     curPair = key;
-    setPlaying(false);
+    setPairUi(false);
     const p = PAIRS[key];
     const frames = $$(".vs-frame");
     frames.forEach(f => f.classList.add("fading"));
+    [vsOurs, vsTheirs].forEach(v => {
+      v.pause();
+      v.muted = true;
+      v.removeAttribute("src");
+      v.load();
+    });
     setTimeout(() => {
-      vsOurs.src = p.ours;   vsOurs.poster = p.ours.replace(/\.mp4$/, ".jpg");
-      vsTheirs.src = p.theirs; vsTheirs.poster = p.theirs.replace(/\.mp4$/, ".jpg");
-      vsOurs.load(); vsTheirs.load();
+      if (ticket !== vsTicket) return;
+      vsOurs.poster = p.ours.replace(/\.mp4$/, ".jpg");
+      vsTheirs.poster = p.theirs.replace(/\.mp4$/, ".jpg");
+      vsOurs.src = p.ours;
+      vsTheirs.src = p.theirs;
+      vsOurs.muted = false;
+      vsTheirs.muted = true;
       vsCaption.textContent = "SCRIPT · " + p.title;
       frames.forEach(f => f.classList.remove("fading"));
     }, 200);
@@ -502,11 +642,13 @@ if (vsOurs && vsTheirs && vsTabs) {
   }));
   vsPlay.addEventListener("click", () => setPlaying(!playing));
   [vsOurs, vsTheirs].forEach(v => v.addEventListener("click", () => setPlaying(!playing)));
+  [vsOurs, vsTheirs].forEach(v => v.addEventListener("play", () => claimAudible([vsOurs, vsTheirs])));
   setInterval(() => {
-    if (playing && Math.abs(vsOurs.currentTime - vsTheirs.currentTime) > .3)
-      vsTheirs.currentTime = vsOurs.currentTime;
-  }, 500);
-  vsOurs.addEventListener("ended", () => setPlaying(false));
+    if (!playing || vsOurs.paused || vsTheirs.seeking || !vsTheirs.getAttribute("src")) return;
+    if (Math.abs(vsOurs.currentTime - vsTheirs.currentTime) > .45)
+      try { vsTheirs.currentTime = vsOurs.currentTime; } catch (_) {}
+  }, 700);
+  vsOurs.addEventListener("ended", () => { if (playing) setPlaying(false); });
 }
 
 /* ═════════════ 7. EVAL SANDBOX — sample → cite → anchored score ═════════════ */
