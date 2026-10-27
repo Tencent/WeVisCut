@@ -7,7 +7,7 @@
 ### 面向知识类长文成片的长程工具智能体
 
 <p>
-  <a href="https://xd-mu.github.io/WeVisCut/"><img src="https://img.shields.io/badge/Project-Page-4285F4?logo=googlechrome&logoColor=white" alt="项目主页"></a>
+  <a href="https://tencent.github.io/WeVisCut/"><img src="https://img.shields.io/badge/Project-Page-4285F4?logo=googlechrome&logoColor=white" alt="项目主页"></a>
   <a href="https://huggingface.co/tencent/WeVisCut"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-WeVisCut--9B-FBBC04" alt="WeVisCut-9B"></a>
   <a href="https://github.com/Tencent/WeVisCut"><img src="https://img.shields.io/badge/Code-GitHub-181717?logo=github&logoColor=white" alt="代码"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="许可"></a>
@@ -45,7 +45,7 @@
 ## 📢 新闻
 
 - **[2026-10]** 🎉 我们发布 **WeVisCut**：技术报告、9B 策略权重、Studio 推理运行时与轨迹构建管线。
-- **[2026-10]** 🌐 项目主页上线：[xd-mu.github.io/WeVisCut](https://xd-mu.github.io/WeVisCut/)。
+- **[2026-10]** 🌐 项目主页上线：[xd-mu.github.io/WeVisCut](https://tencent.github.io/WeVisCut/)。
 
 ## 🏗️ 工作原理
 
@@ -163,7 +163,7 @@ longvideo-polar run --script-file /path/to/script.txt --output ./rollouts/demo
   author       = {WeVisCut Team},
   organization = {Tencent},
   year         = {2026},
-  howpublished = {\url{https://xd-mu.github.io/WeVisCut/}},
+  howpublished = {\url{https://tencent.github.io/WeVisCut/}},
   note         = {Technical report and code release}
 }
 ```
