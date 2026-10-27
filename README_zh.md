@@ -45,7 +45,7 @@
 ## 📢 新闻
 
 - **[2026-10]** 🎉 我们发布 **WeVisCut**：技术报告、9B 策略权重、Studio 推理运行时与轨迹构建管线。
-- **[2026-10]** 🌐 项目主页上线：[xd-mu.github.io/WeVisCut](https://tencent.github.io/WeVisCut/)。
+- **[2026-10]** 🌐 项目主页上线：[WeVisCut项目链接](https://tencent.github.io/WeVisCut/)。
 
 ## 🏗️ 工作原理
 
