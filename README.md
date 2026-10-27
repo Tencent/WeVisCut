@@ -7,7 +7,7 @@
 ### A Long-Horizon Tool Agent for Turning Knowledge Articles into Edited Videos
 
 <p>
-  <a href="https://xd-mu.github.io/WeVisCut/"><img src="https://img.shields.io/badge/Project-Page-4285F4?logo=googlechrome&logoColor=white" alt="Project Page"></a>
+  <a href="https://tencent.github.io/WeVisCut/"><img src="https://img.shields.io/badge/Project-Page-4285F4?logo=googlechrome&logoColor=white" alt="Project Page"></a>
   <a href="https://huggingface.co/tencent/WeVisCut"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-WeVisCut--9B-FBBC04" alt="WeVisCut-9B"></a>
   <a href="https://github.com/Tencent/WeVisCut"><img src="https://img.shields.io/badge/Code-GitHub-181717?logo=github&logoColor=white" alt="Code"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="License"></a>
@@ -45,7 +45,7 @@
 ## 📢 News
 
 - **[2026-10]** 🎉 We release **WeVisCut**: the technical report, the 9B policy weights, the Studio runtime and the trajectory-construction pipeline.
-- **[2026-10]** 🌐 The project page is live at [xd-mu.github.io/WeVisCut](https://xd-mu.github.io/WeVisCut/).
+- **[2026-10]** 🌐 The project page is live at [xd-mu.github.io/WeVisCut](https://tencent.github.io/WeVisCut/).
 
 ## 🏗️ How It Works
 
@@ -163,7 +163,7 @@ If WeVisCut is helpful to your work, please consider giving us a ⭐ and citing:
   author       = {WeVisCut Team},
   organization = {Tencent},
   year         = {2026},
-  howpublished = {\url{https://xd-mu.github.io/WeVisCut/}},
+  howpublished = {\url{https://tencent.github.io/WeVisCut/}},
   note         = {Technical report and code release}
 }
 ```
