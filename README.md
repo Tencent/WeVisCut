@@ -45,7 +45,7 @@
 ## 📢 News
 
 - **[2026-10]** 🎉 We release **WeVisCut**: the technical report, the 9B policy weights, the Studio runtime and the trajectory-construction pipeline.
-- **[2026-10]** 🌐 The project page is live at [xd-mu.github.io/WeVisCut](https://tencent.github.io/WeVisCut/).
+- **[2026-10]** 🌐 The project page is live at [WeVisCut Project Link](https://tencent.github.io/WeVisCut/).
 
 ## 🏗️ How It Works
 
