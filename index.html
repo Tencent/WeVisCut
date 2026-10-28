@@ -431,7 +431,7 @@
     <div class="tag mono">HEAD-TO-HEAD</div>
     <h2>One Script, Two Cuts <span class="cn-sub"></span></h2>
     <p>Four held-out scripts, each produced by both systems from the same script, source pool,
-       duration and aspect ratio. Pick a domain — both sides switch together; press play, both rolls run in sync.</p>
+       duration and aspect ratio. Pick a domain — both sides switch together. Play each cut on its own.</p>
   </div>
 
   <div class="vs reveal" id="vsBox">
@@ -444,15 +444,14 @@
     <div class="vs-stage">
       <div class="vs-side ours-side">
         <div class="vs-tag mono"><span class="vs-dot teal"></span>WeVisCut · OURS</div>
-        <div class="vs-frame"><video id="vsOurs" playsinline preload="metadata"></video></div>
+        <div class="vs-frame"><video id="vsOurs" controls playsinline preload="metadata"></video></div>
       </div>
-      <div class="vs-mid">
-        <button class="vs-play" id="vsPlay" aria-label="play both"><span class="pp">▶</span></button>
-        <span class="vs-label mono">SYNCED</span>
+      <div class="vs-mid" aria-hidden="true">
+        <span class="vs-label mono">VS</span>
       </div>
       <div class="vs-side">
         <div class="vs-tag mono"><span class="vs-dot gray"></span>CRAYOTTER</div>
-        <div class="vs-frame dim-frame"><video id="vsTheirs" playsinline preload="metadata" muted></video></div>
+        <div class="vs-frame dim-frame"><video id="vsTheirs" controls playsinline preload="metadata"></video></div>
       </div>
     </div>
     <div class="vs-caption mono" id="vsCaption">SCRIPT · 人工智能如何改变生活</div>

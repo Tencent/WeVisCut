@@ -575,8 +575,8 @@ if (lb) {
   addEventListener("keydown", e => { if (e.key === "Escape") close(); });
 }
 
-/* ───────────── 6. versus — paired domains, synced playback ───────────── */
-const vsOurs = $("#vsOurs"), vsTheirs = $("#vsTheirs"), vsPlay = $("#vsPlay"),
+/* ───────────── 6. versus — paired domains, independent playback ───────────── */
+const vsOurs = $("#vsOurs"), vsTheirs = $("#vsTheirs"),
       vsTabs = $("#vsTabs"), vsCaption = $("#vsCaption");
 if (vsOurs && vsTheirs && vsTabs) {
   const PAIRS = {
@@ -585,41 +585,24 @@ if (vsOurs && vsTheirs && vsTabs) {
     nature:   { ours: "assets/videos/vs/our_nature.mp4",   theirs: "assets/videos/vs/cr_nature.mp4",   title: "我们为什么探索宇宙" },
     society:  { ours: "assets/videos/vs/our_society.mp4",  theirs: "assets/videos/vs/cr_society.mp4",  title: "现代人为何越来越孤独" },
   };
-  let playing = false, curPair = "tech", vsTicket = 0;
+  let curPair = "tech", vsTicket = 0;
 
-  const setPairUi = on => {
-    playing = on;
-    vsPlay.classList.toggle("playing", on);
-    vsPlay.querySelector(".pp").textContent = on ? "❚❚" : "▶";
-  };
-  const setPlaying = async on => {
-    const ticket = ++vsTicket;
-    setPairUi(on);
-    if (!on) {
-      vsOurs.pause();
-      vsTheirs.pause();
-      maybeResumeEval();
-      return;
-    }
-    claimAudible([vsOurs, vsTheirs]);
-    vsTheirs.muted = true;
-    const alive = () => ticket === vsTicket && playing;
-    await Promise.all([
-      playClean(vsOurs, { fromStart: true, muted: false, alive }),
-      playClean(vsTheirs, { fromStart: true, muted: true, alive }),
-    ]);
-    if (!alive()) { vsOurs.pause(); vsTheirs.pause(); }
-  };
+  [vsOurs, vsTheirs].forEach(v => {
+    armNativeReplay(v, [v]);
+    v.addEventListener("pause", maybeResumeEval);
+    v.addEventListener("play", () => { v.muted = false; });
+  });
+
   const loadPair = key => {
     const ticket = ++vsTicket;
     curPair = key;
-    setPairUi(false);
     const p = PAIRS[key];
     const frames = $$(".vs-frame");
     frames.forEach(f => f.classList.add("fading"));
     [vsOurs, vsTheirs].forEach(v => {
       v.pause();
       v.muted = true;
+      v.dataset.done = "";
       v.removeAttribute("src");
       v.load();
     });
@@ -630,7 +613,7 @@ if (vsOurs && vsTheirs && vsTabs) {
       vsOurs.src = p.ours;
       vsTheirs.src = p.theirs;
       vsOurs.muted = false;
-      vsTheirs.muted = true;
+      vsTheirs.muted = false;
       vsCaption.textContent = "SCRIPT · " + p.title;
       frames.forEach(f => f.classList.remove("fading"));
     }, 200);
@@ -640,15 +623,6 @@ if (vsOurs && vsTheirs && vsTabs) {
   $$(".vs-tab", vsTabs).forEach(t => t.addEventListener("click", () => {
     if (t.dataset.pair !== curPair) loadPair(t.dataset.pair);
   }));
-  vsPlay.addEventListener("click", () => setPlaying(!playing));
-  [vsOurs, vsTheirs].forEach(v => v.addEventListener("click", () => setPlaying(!playing)));
-  [vsOurs, vsTheirs].forEach(v => v.addEventListener("play", () => claimAudible([vsOurs, vsTheirs])));
-  setInterval(() => {
-    if (!playing || vsOurs.paused || vsTheirs.seeking || !vsTheirs.getAttribute("src")) return;
-    if (Math.abs(vsOurs.currentTime - vsTheirs.currentTime) > .45)
-      try { vsTheirs.currentTime = vsOurs.currentTime; } catch (_) {}
-  }, 700);
-  vsOurs.addEventListener("ended", () => { if (playing) setPlaying(false); });
 }
 
 /* ═════════════ 7. EVAL SANDBOX — sample → cite → anchored score ═════════════ */
