@@ -158,13 +158,14 @@ A full rollout additionally needs a served OpenAI-compatible model, TTS and ffmp
 If WeVisCut is helpful to your work, please consider giving us a ⭐ and citing:
 
 ```bibtex
-@misc{weviscut2026,
-  title        = {WeVisCut: A Long-Horizon Tool Agent for Turning Knowledge Articles into Edited Videos},
-  author       = {WeVisCut Team},
-  organization = {Tencent},
-  year         = {2026},
-  howpublished = {\url{https://tencent.github.io/WeVisCut/}},
-  note         = {Technical report and code release}
+@misc{mu2026weviscuteditingroomagent,
+      title={WeVisCut: The Whole Editing Room in One Agent From Narration to Long-Form Video}, 
+      author={Chenyu Mu and Wenming Weng and Qinrui Wang and Xingsong Ye and Hao Yu and Jun He and Chong Sun and Chen Li and Jing Lyu and Erkun Yang and Cheng Deng},
+      year={2026},
+      eprint={2610.38352},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2610.38352}, 
 }
 ```
 
